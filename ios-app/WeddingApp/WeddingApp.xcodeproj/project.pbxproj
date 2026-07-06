@@ -1,0 +1,667 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		035AF906A60D5C648325037D /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D0DD303F2FDFC63749C416E /* Message.swift */; };
+		0D71A393A1EC1B1A463747DD /* VendorFilterCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D3783A1E540184C23FFBCB /* VendorFilterCatalog.swift */; };
+		10AB9FA04246BA92BF82D102 /* Inspiration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F6C71F94963025F9C4F9B /* Inspiration.swift */; };
+		1418F57E349E1313D8DDD346 /* Envelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3619889A92A2A17CD923A4B /* Envelope.swift */; };
+		18B85273F3B08047F2F37E87 /* WeddingBudget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C11B60AED301D45107514A /* WeddingBudget.swift */; };
+		1B8830B6DBF77584AF572B73 /* Vendor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DECBA0D14DF64C4B0638DB /* Vendor.swift */; };
+		212039ED3B73E5FAC3091964 /* CoupleAvatarImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 593CDE1B148ACE38C2CD2AEB /* CoupleAvatarImage.swift */; };
+		23378BE8B8E41D3AC2AE8434 /* CustomerPaymentMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 332CE37C58326829BF4FF5AC /* CustomerPaymentMethod.swift */; };
+		25AEAB62609A4939D23D93D0 /* WeddingInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F18A592865524BFDADC440 /* WeddingInfo.swift */; };
+		26009046ABE9B4778E63875F /* DetailChecklistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 231E37A2B9EDC80033B33221 /* DetailChecklistView.swift */; };
+		2623B06B8BF9414B9AAB7A5B /* WeddingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC0978DEE3CCA1F954F7AE4 /* WeddingDetailView.swift */; };
+		2A29818E1E3C109B4B9067DD /* GuestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD2C9039C69CAABFCCF955A /* GuestView.swift */; };
+		2D521145F418FAAA549BC1CE /* VendorCategoriesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A371133D9E50C20C43062070 /* VendorCategoriesStore.swift */; };
+		2F19080C49864A870E99936F /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC6C65A5DCEC1768E8778404 /* LoginView.swift */; };
+		2FCA7E6B56B447540F51A43E /* AddExpenseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3D4585344A162087FADF83 /* AddExpenseView.swift */; };
+		38E761E75F2255260509BB9F /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133726E37291C60910E4D29C /* APIError.swift */; };
+		3F3851214712298DD7E11642 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02770B7ECD82B4248458F711 /* RegisterView.swift */; };
+		4C84D79AC810B920F86F596E /* BudgetComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6781C0FB527DA8A7A8AE446B /* BudgetComponents.swift */; };
+		4FF19C60045AE14C45CB909E /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4320310CC4658809C0147A4 /* MessagesView.swift */; };
+		55A6539D0B16FB4A72ADD780 /* WeddingDetailEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B79086DC38F3F4C7B20A09 /* WeddingDetailEditView.swift */; };
+		56D7C034044589365761FC7F /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D7053CD3852CB794DC77BB /* AppTheme.swift */; };
+		59FAA22B04A4EF49FC08B419 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6485577B65E9B38A3ADC0AFC /* Poppins-SemiBold.ttf */; };
+		5AA318B8DC038A02B5F473BB /* InfoTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DBA25AF9695A54AF27D61E /* InfoTabView.swift */; };
+		5E50C8E32B2CB4CE86A09ABC /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DB220400741C1B1D1B0B7989 /* Poppins-Medium.ttf */; };
+		6097B6059B2D7441EE99E827 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AB7B45237C490B6BB02C9224 /* Poppins-Bold.ttf */; };
+		697AA0B21EDA4EBBCA04D6BC /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDFCF8C5FAA8E51366CE40B3 /* APIConfig.swift */; };
+		6B4F02E9BACF09F01A80CB08 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 572F06071E523ED69487AB40 /* Assets.xcassets */; };
+		7183263BD10CBB6F4DD55E3F /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132DC1579D81BF788964DE9E /* DashboardView.swift */; };
+		7AEBBFA8F4CAE02008531BF7 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E37E72152E136EB6B8D1A465 /* Poppins-Regular.ttf */; };
+		81A2D9B28855CE712FFAB1D9 /* BudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17291C4B3BE6AEF88E8FDCE9 /* BudgetView.swift */; };
+		85066D7C482FBF24F94AD35E /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0C8AF2F077E3E91DEA53164 /* SessionStore.swift */; };
+		85F7C03FFFE9BBE22D9FE0DD /* AuthComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6798143AC0A1EDB41E90A7B /* AuthComponents.swift */; };
+		8ABDFBFB73F1C94BDA30B7ED /* EventListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E78B3E8A14118A5F4A8299 /* EventListView.swift */; };
+		8E8BD989EEDD88CB0F7BCE4D /* BudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EF1EF74D6E80C28D3DF8CEC /* BudgetCategory.swift */; };
+		8F029C1BBBADF2050AA7169D /* VendorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AF956B4117204E2C03178F /* VendorDetailView.swift */; };
+		91CC10CB78BBA17F0D2745A5 /* BudgetPaymentFlows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7419D2082AB21BE0E69718B6 /* BudgetPaymentFlows.swift */; };
+		930E0BC7C68B50C5E0F52A95 /* MoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0999072473E2F9FD2AD577D0 /* MoreView.swift */; };
+		934F5B80A83049FBD3BB5F56 /* WeddingAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 828DBA56CBCC51CA03F24D8C /* WeddingAppApp.swift */; };
+		969666756A35079C4E8C30AA /* CormorantGaramond.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 90831799F7F7B3032F1F9B8F /* CormorantGaramond.ttf */; };
+		9733A9706BD6D0F6F2414921 /* AppFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A25D10DD84D74B4AA1F646 /* AppFont.swift */; };
+		9853A72C9DD97BF33809FF8F /* PackageFacilitiesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A024004DC72691427E1F422 /* PackageFacilitiesView.swift */; };
+		9F090550A10C3895927788E7 /* IndonesiaRegionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9129EF3C2E5BB8D4637C985 /* IndonesiaRegionsStore.swift */; };
+		A969A747AD436E4DE7BEF466 /* PreparationTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5991A37E37A82DCABA7294C /* PreparationTask.swift */; };
+		AB002054C6F0267D97E2DB53 /* Guest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCD85018A621401946D41EB /* Guest.swift */; };
+		AD317EE1E0DD5B9BBBB301BD /* WeddingEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7CCFD316971D1D35A0FE8A /* WeddingEvent.swift */; };
+		B12049ECAB9092D171AFBEED /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC274742DFC3A894FD5A01C5 /* RootView.swift */; };
+		BB264A2C6090E53167473204 /* WeddingQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73BFBBCEA4B0B78151C63E79 /* WeddingQuote.swift */; };
+		C580E6ABB0C8110F1E29C3F6 /* LuxuryWeddingBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C3FC5964802FB1C13461BE /* LuxuryWeddingBackground.swift */; };
+		CF00DD9220D1443B58F0D379 /* StatusBarBlur.swift in Sources */ = {isa = PBXBuildFile; fileRef = 263D47DCFC4217D8D018C526 /* StatusBarBlur.swift */; };
+		D40372828EAD8C23C7A28DB0 /* IncomingPayment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0ACB983947A33577652C7C9 /* IncomingPayment.swift */; };
+		DD5A63251536426E75551075 /* InspirationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E504F470302D80533488281 /* InspirationView.swift */; };
+		DEFBA832267F8E79C8F8EF06 /* ChecklistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D807FF94849263D9B3B62E85 /* ChecklistView.swift */; };
+		DF3634BB65A1ADAAA3D6EE8B /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E57979FBEA0C155CE8EDFA9 /* APIClient.swift */; };
+		E268E61073CC3BD0BBABE273 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A276F84CAD304FBC4CC5011 /* User.swift */; };
+		E407FF1D04680A373745866F /* PaymentSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B48DDF80072FF58C7291561 /* PaymentSchedule.swift */; };
+		E4A8CE18134DC529D97C428C /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F98766A9F27330C7919FAF /* KeychainStore.swift */; };
+		E6D1138B5B9C76A2697C4EE4 /* VendorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E2B1F6CB207E402D70B466 /* VendorView.swift */; };
+		FDCD04B6DB74A508FAA07FCB /* GuestListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC7D8FB4105675850E6F9AB /* GuestListView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		02770B7ECD82B4248458F711 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+		06D3783A1E540184C23FFBCB /* VendorFilterCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorFilterCatalog.swift; sourceTree = "<group>"; };
+		0999072473E2F9FD2AD577D0 /* MoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreView.swift; sourceTree = "<group>"; };
+		0A024004DC72691427E1F422 /* PackageFacilitiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackageFacilitiesView.swift; sourceTree = "<group>"; };
+		0D9F6C71F94963025F9C4F9B /* Inspiration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inspiration.swift; sourceTree = "<group>"; };
+		11DBA25AF9695A54AF27D61E /* InfoTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoTabView.swift; sourceTree = "<group>"; };
+		132DC1579D81BF788964DE9E /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		133726E37291C60910E4D29C /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
+		17291C4B3BE6AEF88E8FDCE9 /* BudgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetView.swift; sourceTree = "<group>"; };
+		1AC0978DEE3CCA1F954F7AE4 /* WeddingDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingDetailView.swift; sourceTree = "<group>"; };
+		21E78B3E8A14118A5F4A8299 /* EventListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventListView.swift; sourceTree = "<group>"; };
+		231E37A2B9EDC80033B33221 /* DetailChecklistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailChecklistView.swift; sourceTree = "<group>"; };
+		23A25D10DD84D74B4AA1F646 /* AppFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFont.swift; sourceTree = "<group>"; };
+		25C11B60AED301D45107514A /* WeddingBudget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingBudget.swift; sourceTree = "<group>"; };
+		263D47DCFC4217D8D018C526 /* StatusBarBlur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarBlur.swift; sourceTree = "<group>"; };
+		2A276F84CAD304FBC4CC5011 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		332CE37C58326829BF4FF5AC /* CustomerPaymentMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomerPaymentMethod.swift; sourceTree = "<group>"; };
+		37DECBA0D14DF64C4B0638DB /* Vendor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Vendor.swift; sourceTree = "<group>"; };
+		3B48DDF80072FF58C7291561 /* PaymentSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentSchedule.swift; sourceTree = "<group>"; };
+		3EC7D8FB4105675850E6F9AB /* GuestListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestListView.swift; sourceTree = "<group>"; };
+		46D8AD39291CE696AD47C739 /* WeddingApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WeddingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E57979FBEA0C155CE8EDFA9 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		50F98766A9F27330C7919FAF /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		572F06071E523ED69487AB40 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		593CDE1B148ACE38C2CD2AEB /* CoupleAvatarImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoupleAvatarImage.swift; sourceTree = "<group>"; };
+		5D0DD303F2FDFC63749C416E /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		5E504F470302D80533488281 /* InspirationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationView.swift; sourceTree = "<group>"; };
+		6485577B65E9B38A3ADC0AFC /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
+		6781C0FB527DA8A7A8AE446B /* BudgetComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetComponents.swift; sourceTree = "<group>"; };
+		6CCD85018A621401946D41EB /* Guest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guest.swift; sourceTree = "<group>"; };
+		73BFBBCEA4B0B78151C63E79 /* WeddingQuote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingQuote.swift; sourceTree = "<group>"; };
+		7419D2082AB21BE0E69718B6 /* BudgetPaymentFlows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetPaymentFlows.swift; sourceTree = "<group>"; };
+		828DBA56CBCC51CA03F24D8C /* WeddingAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingAppApp.swift; sourceTree = "<group>"; };
+		8AD2C9039C69CAABFCCF955A /* GuestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestView.swift; sourceTree = "<group>"; };
+		8EF1EF74D6E80C28D3DF8CEC /* BudgetCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCategory.swift; sourceTree = "<group>"; };
+		90831799F7F7B3032F1F9B8F /* CormorantGaramond.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = CormorantGaramond.ttf; sourceTree = "<group>"; };
+		A1AF956B4117204E2C03178F /* VendorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorDetailView.swift; sourceTree = "<group>"; };
+		A371133D9E50C20C43062070 /* VendorCategoriesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorCategoriesStore.swift; sourceTree = "<group>"; };
+		A3E2B1F6CB207E402D70B466 /* VendorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorView.swift; sourceTree = "<group>"; };
+		A4320310CC4658809C0147A4 /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
+		AB7B45237C490B6BB02C9224 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Bold.ttf"; sourceTree = "<group>"; };
+		AC6C65A5DCEC1768E8778404 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		B0D7053CD3852CB794DC77BB /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		B3619889A92A2A17CD923A4B /* Envelope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Envelope.swift; sourceTree = "<group>"; };
+		B5C3FC5964802FB1C13461BE /* LuxuryWeddingBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LuxuryWeddingBackground.swift; sourceTree = "<group>"; };
+		BDFCF8C5FAA8E51366CE40B3 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
+		BF3D4585344A162087FADF83 /* AddExpenseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExpenseView.swift; sourceTree = "<group>"; };
+		CA7CCFD316971D1D35A0FE8A /* WeddingEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingEvent.swift; sourceTree = "<group>"; };
+		D0ACB983947A33577652C7C9 /* IncomingPayment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncomingPayment.swift; sourceTree = "<group>"; };
+		D6798143AC0A1EDB41E90A7B /* AuthComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthComponents.swift; sourceTree = "<group>"; };
+		D807FF94849263D9B3B62E85 /* ChecklistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChecklistView.swift; sourceTree = "<group>"; };
+		DB220400741C1B1D1B0B7989 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Medium.ttf"; sourceTree = "<group>"; };
+		E0C8AF2F077E3E91DEA53164 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		E37E72152E136EB6B8D1A465 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Regular.ttf"; sourceTree = "<group>"; };
+		E4F18A592865524BFDADC440 /* WeddingInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingInfo.swift; sourceTree = "<group>"; };
+		E5991A37E37A82DCABA7294C /* PreparationTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreparationTask.swift; sourceTree = "<group>"; };
+		EC274742DFC3A894FD5A01C5 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		F2B79086DC38F3F4C7B20A09 /* WeddingDetailEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingDetailEditView.swift; sourceTree = "<group>"; };
+		F9129EF3C2E5BB8D4637C985 /* IndonesiaRegionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndonesiaRegionsStore.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0E6E6E43BE6533CA25DBB034 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				4E57979FBEA0C155CE8EDFA9 /* APIClient.swift */,
+				BDFCF8C5FAA8E51366CE40B3 /* APIConfig.swift */,
+				133726E37291C60910E4D29C /* APIError.swift */,
+				50F98766A9F27330C7919FAF /* KeychainStore.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		2178136A456F36417D2DCDFE /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				CCBD1D67951A2C047B3D2779 /* Auth */,
+				C8651D35F684C3132AC3C18D /* Budget */,
+				C821A5207D0A2C7E8B6D2FB4 /* Checklist */,
+				82A53C6C8758EEE2A62E32F6 /* Dashboard */,
+				34A684F1D8179B2A36175BF6 /* Events */,
+				3F6AE6B05BAB27059475A2B0 /* Guests */,
+				FF346B87A3F3A9937E1ED1D6 /* Inspiration */,
+				4D92F69A5575C4B1D9DC2DDB /* Messages */,
+				CFA6A820C1FE8A6EBB8C2BC4 /* More */,
+				B0499BBDB0AD705EB82B4D8D /* Vendor */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		261F7081F3786EA1F0D7B857 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				572F06071E523ED69487AB40 /* Assets.xcassets */,
+				8CFAEB7E9152CFA035F83142 /* Fonts */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		2DBBCCC82A0CBC5489C70B76 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				8EF1EF74D6E80C28D3DF8CEC /* BudgetCategory.swift */,
+				332CE37C58326829BF4FF5AC /* CustomerPaymentMethod.swift */,
+				B3619889A92A2A17CD923A4B /* Envelope.swift */,
+				6CCD85018A621401946D41EB /* Guest.swift */,
+				D0ACB983947A33577652C7C9 /* IncomingPayment.swift */,
+				F9129EF3C2E5BB8D4637C985 /* IndonesiaRegionsStore.swift */,
+				0D9F6C71F94963025F9C4F9B /* Inspiration.swift */,
+				5D0DD303F2FDFC63749C416E /* Message.swift */,
+				3B48DDF80072FF58C7291561 /* PaymentSchedule.swift */,
+				E5991A37E37A82DCABA7294C /* PreparationTask.swift */,
+				2A276F84CAD304FBC4CC5011 /* User.swift */,
+				37DECBA0D14DF64C4B0638DB /* Vendor.swift */,
+				A371133D9E50C20C43062070 /* VendorCategoriesStore.swift */,
+				06D3783A1E540184C23FFBCB /* VendorFilterCatalog.swift */,
+				25C11B60AED301D45107514A /* WeddingBudget.swift */,
+				CA7CCFD316971D1D35A0FE8A /* WeddingEvent.swift */,
+				E4F18A592865524BFDADC440 /* WeddingInfo.swift */,
+				73BFBBCEA4B0B78151C63E79 /* WeddingQuote.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		34A684F1D8179B2A36175BF6 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				21E78B3E8A14118A5F4A8299 /* EventListView.swift */,
+			);
+			path = Events;
+			sourceTree = "<group>";
+		};
+		3F6AE6B05BAB27059475A2B0 /* Guests */ = {
+			isa = PBXGroup;
+			children = (
+				3EC7D8FB4105675850E6F9AB /* GuestListView.swift */,
+				8AD2C9039C69CAABFCCF955A /* GuestView.swift */,
+			);
+			path = Guests;
+			sourceTree = "<group>";
+		};
+		4D92F69A5575C4B1D9DC2DDB /* Messages */ = {
+			isa = PBXGroup;
+			children = (
+				A4320310CC4658809C0147A4 /* MessagesView.swift */,
+			);
+			path = Messages;
+			sourceTree = "<group>";
+		};
+		5EC1B818A8B9F3F9B6E74C3F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				46D8AD39291CE696AD47C739 /* WeddingApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6DB1042BF417795125F2E18D = {
+			isa = PBXGroup;
+			children = (
+				A39C665F6B707DD691CCAAD4 /* Sources */,
+				5EC1B818A8B9F3F9B6E74C3F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		82A53C6C8758EEE2A62E32F6 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				593CDE1B148ACE38C2CD2AEB /* CoupleAvatarImage.swift */,
+				132DC1579D81BF788964DE9E /* DashboardView.swift */,
+				11DBA25AF9695A54AF27D61E /* InfoTabView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		8CFAEB7E9152CFA035F83142 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				90831799F7F7B3032F1F9B8F /* CormorantGaramond.ttf */,
+				AB7B45237C490B6BB02C9224 /* Poppins-Bold.ttf */,
+				DB220400741C1B1D1B0B7989 /* Poppins-Medium.ttf */,
+				E37E72152E136EB6B8D1A465 /* Poppins-Regular.ttf */,
+				6485577B65E9B38A3ADC0AFC /* Poppins-SemiBold.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		9A2FD4970BF160BBC9023B9E /* App */ = {
+			isa = PBXGroup;
+			children = (
+				23A25D10DD84D74B4AA1F646 /* AppFont.swift */,
+				B0D7053CD3852CB794DC77BB /* AppTheme.swift */,
+				B5C3FC5964802FB1C13461BE /* LuxuryWeddingBackground.swift */,
+				EC274742DFC3A894FD5A01C5 /* RootView.swift */,
+				263D47DCFC4217D8D018C526 /* StatusBarBlur.swift */,
+				828DBA56CBCC51CA03F24D8C /* WeddingAppApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A39C665F6B707DD691CCAAD4 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				9A2FD4970BF160BBC9023B9E /* App */,
+				2178136A456F36417D2DCDFE /* Features */,
+				2DBBCCC82A0CBC5489C70B76 /* Models */,
+				0E6E6E43BE6533CA25DBB034 /* Networking */,
+				261F7081F3786EA1F0D7B857 /* Resources */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		B0499BBDB0AD705EB82B4D8D /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				0A024004DC72691427E1F422 /* PackageFacilitiesView.swift */,
+				A1AF956B4117204E2C03178F /* VendorDetailView.swift */,
+				A3E2B1F6CB207E402D70B466 /* VendorView.swift */,
+			);
+			path = Vendor;
+			sourceTree = "<group>";
+		};
+		C821A5207D0A2C7E8B6D2FB4 /* Checklist */ = {
+			isa = PBXGroup;
+			children = (
+				D807FF94849263D9B3B62E85 /* ChecklistView.swift */,
+				231E37A2B9EDC80033B33221 /* DetailChecklistView.swift */,
+			);
+			path = Checklist;
+			sourceTree = "<group>";
+		};
+		C8651D35F684C3132AC3C18D /* Budget */ = {
+			isa = PBXGroup;
+			children = (
+				BF3D4585344A162087FADF83 /* AddExpenseView.swift */,
+				6781C0FB527DA8A7A8AE446B /* BudgetComponents.swift */,
+				7419D2082AB21BE0E69718B6 /* BudgetPaymentFlows.swift */,
+				17291C4B3BE6AEF88E8FDCE9 /* BudgetView.swift */,
+			);
+			path = Budget;
+			sourceTree = "<group>";
+		};
+		CCBD1D67951A2C047B3D2779 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				D6798143AC0A1EDB41E90A7B /* AuthComponents.swift */,
+				AC6C65A5DCEC1768E8778404 /* LoginView.swift */,
+				02770B7ECD82B4248458F711 /* RegisterView.swift */,
+				E0C8AF2F077E3E91DEA53164 /* SessionStore.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		CFA6A820C1FE8A6EBB8C2BC4 /* More */ = {
+			isa = PBXGroup;
+			children = (
+				0999072473E2F9FD2AD577D0 /* MoreView.swift */,
+				F2B79086DC38F3F4C7B20A09 /* WeddingDetailEditView.swift */,
+				1AC0978DEE3CCA1F954F7AE4 /* WeddingDetailView.swift */,
+			);
+			path = More;
+			sourceTree = "<group>";
+		};
+		FF346B87A3F3A9937E1ED1D6 /* Inspiration */ = {
+			isa = PBXGroup;
+			children = (
+				5E504F470302D80533488281 /* InspirationView.swift */,
+			);
+			path = Inspiration;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		41365A33FC09EF6D728C067A /* WeddingApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF87FA08A3A55DE3B51C113C /* Build configuration list for PBXNativeTarget "WeddingApp" */;
+			buildPhases = (
+				4257EC0EF4041951390962FC /* Sources */,
+				7AA6B7184D18C8F69FBD8350 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WeddingApp;
+			packageProductDependencies = (
+			);
+			productName = WeddingApp;
+			productReference = 46D8AD39291CE696AD47C739 /* WeddingApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1DA7CD348065E91DD17ACE44 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					41365A33FC09EF6D728C067A = {
+						DevelopmentTeam = LHH9LVRYVY;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 4A1D6840445C27FC755067CD /* Build configuration list for PBXProject "WeddingApp" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6DB1042BF417795125F2E18D;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 5EC1B818A8B9F3F9B6E74C3F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				41365A33FC09EF6D728C067A /* WeddingApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7AA6B7184D18C8F69FBD8350 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B4F02E9BACF09F01A80CB08 /* Assets.xcassets in Resources */,
+				969666756A35079C4E8C30AA /* CormorantGaramond.ttf in Resources */,
+				6097B6059B2D7441EE99E827 /* Poppins-Bold.ttf in Resources */,
+				5E50C8E32B2CB4CE86A09ABC /* Poppins-Medium.ttf in Resources */,
+				7AEBBFA8F4CAE02008531BF7 /* Poppins-Regular.ttf in Resources */,
+				59FAA22B04A4EF49FC08B419 /* Poppins-SemiBold.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4257EC0EF4041951390962FC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DF3634BB65A1ADAAA3D6EE8B /* APIClient.swift in Sources */,
+				697AA0B21EDA4EBBCA04D6BC /* APIConfig.swift in Sources */,
+				38E761E75F2255260509BB9F /* APIError.swift in Sources */,
+				2FCA7E6B56B447540F51A43E /* AddExpenseView.swift in Sources */,
+				9733A9706BD6D0F6F2414921 /* AppFont.swift in Sources */,
+				56D7C034044589365761FC7F /* AppTheme.swift in Sources */,
+				85F7C03FFFE9BBE22D9FE0DD /* AuthComponents.swift in Sources */,
+				8E8BD989EEDD88CB0F7BCE4D /* BudgetCategory.swift in Sources */,
+				4C84D79AC810B920F86F596E /* BudgetComponents.swift in Sources */,
+				91CC10CB78BBA17F0D2745A5 /* BudgetPaymentFlows.swift in Sources */,
+				81A2D9B28855CE712FFAB1D9 /* BudgetView.swift in Sources */,
+				DEFBA832267F8E79C8F8EF06 /* ChecklistView.swift in Sources */,
+				212039ED3B73E5FAC3091964 /* CoupleAvatarImage.swift in Sources */,
+				23378BE8B8E41D3AC2AE8434 /* CustomerPaymentMethod.swift in Sources */,
+				7183263BD10CBB6F4DD55E3F /* DashboardView.swift in Sources */,
+				26009046ABE9B4778E63875F /* DetailChecklistView.swift in Sources */,
+				1418F57E349E1313D8DDD346 /* Envelope.swift in Sources */,
+				8ABDFBFB73F1C94BDA30B7ED /* EventListView.swift in Sources */,
+				AB002054C6F0267D97E2DB53 /* Guest.swift in Sources */,
+				FDCD04B6DB74A508FAA07FCB /* GuestListView.swift in Sources */,
+				2A29818E1E3C109B4B9067DD /* GuestView.swift in Sources */,
+				D40372828EAD8C23C7A28DB0 /* IncomingPayment.swift in Sources */,
+				9F090550A10C3895927788E7 /* IndonesiaRegionsStore.swift in Sources */,
+				5AA318B8DC038A02B5F473BB /* InfoTabView.swift in Sources */,
+				10AB9FA04246BA92BF82D102 /* Inspiration.swift in Sources */,
+				DD5A63251536426E75551075 /* InspirationView.swift in Sources */,
+				E4A8CE18134DC529D97C428C /* KeychainStore.swift in Sources */,
+				2F19080C49864A870E99936F /* LoginView.swift in Sources */,
+				C580E6ABB0C8110F1E29C3F6 /* LuxuryWeddingBackground.swift in Sources */,
+				035AF906A60D5C648325037D /* Message.swift in Sources */,
+				4FF19C60045AE14C45CB909E /* MessagesView.swift in Sources */,
+				930E0BC7C68B50C5E0F52A95 /* MoreView.swift in Sources */,
+				9853A72C9DD97BF33809FF8F /* PackageFacilitiesView.swift in Sources */,
+				E407FF1D04680A373745866F /* PaymentSchedule.swift in Sources */,
+				A969A747AD436E4DE7BEF466 /* PreparationTask.swift in Sources */,
+				3F3851214712298DD7E11642 /* RegisterView.swift in Sources */,
+				B12049ECAB9092D171AFBEED /* RootView.swift in Sources */,
+				85066D7C482FBF24F94AD35E /* SessionStore.swift in Sources */,
+				CF00DD9220D1443B58F0D379 /* StatusBarBlur.swift in Sources */,
+				E268E61073CC3BD0BBABE273 /* User.swift in Sources */,
+				1B8830B6DBF77584AF572B73 /* Vendor.swift in Sources */,
+				2D521145F418FAAA549BC1CE /* VendorCategoriesStore.swift in Sources */,
+				8F029C1BBBADF2050AA7169D /* VendorDetailView.swift in Sources */,
+				0D71A393A1EC1B1A463747DD /* VendorFilterCatalog.swift in Sources */,
+				E6D1138B5B9C76A2697C4EE4 /* VendorView.swift in Sources */,
+				934F5B80A83049FBD3BB5F56 /* WeddingAppApp.swift in Sources */,
+				18B85273F3B08047F2F37E87 /* WeddingBudget.swift in Sources */,
+				55A6539D0B16FB4A72ADD780 /* WeddingDetailEditView.swift in Sources */,
+				2623B06B8BF9414B9AAB7A5B /* WeddingDetailView.swift in Sources */,
+				AD317EE1E0DD5B9BBBB301BD /* WeddingEvent.swift in Sources */,
+				25AEAB62609A4939D23D93D0 /* WeddingInfo.swift in Sources */,
+				BB264A2C6090E53167473204 /* WeddingQuote.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2340D6BCBFA6C9BA77D865FC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LHH9LVRYVY;
+				INFOPLIST_FILE = Generated/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Wedding App";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.weddingapp.ios;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		452E5D520A8CE2C2F082DBD3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		4D4D5E10846108ACDFCF8455 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LHH9LVRYVY;
+				INFOPLIST_FILE = Generated/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Wedding App";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.weddingapp.ios;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		8EDE7F2A54EC8A057364FBD2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4A1D6840445C27FC755067CD /* Build configuration list for PBXProject "WeddingApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8EDE7F2A54EC8A057364FBD2 /* Debug */,
+				452E5D520A8CE2C2F082DBD3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FF87FA08A3A55DE3B51C113C /* Build configuration list for PBXNativeTarget "WeddingApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2340D6BCBFA6C9BA77D865FC /* Debug */,
+				4D4D5E10846108ACDFCF8455 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1DA7CD348065E91DD17ACE44 /* Project object */;
+}
