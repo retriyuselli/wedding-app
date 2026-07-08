@@ -5,9 +5,7 @@ namespace App\Filament\Resources\CustomerNotifications;
 use App\Filament\Resources\CustomerNotifications\Pages\CreateCustomerNotification;
 use App\Filament\Resources\CustomerNotifications\Pages\EditCustomerNotification;
 use App\Filament\Resources\CustomerNotifications\Pages\ListCustomerNotifications;
-use App\Filament\Resources\CustomerNotifications\Pages\ViewCustomerNotification;
 use App\Filament\Resources\CustomerNotifications\Schemas\CustomerNotificationForm;
-use App\Filament\Resources\CustomerNotifications\Schemas\CustomerNotificationInfolist;
 use App\Filament\Resources\CustomerNotifications\Tables\CustomerNotificationsTable;
 use App\Models\CustomerNotification;
 use BackedEnum;
@@ -27,14 +25,13 @@ class CustomerNotificationResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    protected static ?string $modelLabel = 'Notifikasi Customer';
+
+    protected static ?string $pluralModelLabel = 'Notifikasi Customer';
+
     public static function form(Schema $schema): Schema
     {
         return CustomerNotificationForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return CustomerNotificationInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class CustomerNotificationResource extends Resource
         return [
             'index' => ListCustomerNotifications::route('/'),
             'create' => CreateCustomerNotification::route('/create'),
-            'view' => ViewCustomerNotification::route('/{record}'),
             'edit' => EditCustomerNotification::route('/{record}/edit'),
         ];
     }

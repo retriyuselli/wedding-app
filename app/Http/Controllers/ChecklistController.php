@@ -142,7 +142,6 @@ class ChecklistController extends Controller
         CustomerPreparationSection::create([
             'user_id' => Auth::id(),
             'title' => $request->title,
-            'sort_order' => CustomerPreparationSection::where('user_id', Auth::id())->count(),
         ]);
 
         return redirect()->route('checklist', ['event' => $request->event_id])

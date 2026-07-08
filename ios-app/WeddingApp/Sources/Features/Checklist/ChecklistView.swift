@@ -7,7 +7,7 @@ struct ChecklistView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    @State private var selectedFilter = "Semua"
+    @State private var selectedFilter = L10n.Common.all
     @State private var expandedSections: Set<Int> = []
     @State private var showAllSections: Set<Int> = []
     @State private var selectedTask: PreparationTask?
@@ -21,7 +21,7 @@ struct ChecklistView: View {
     private var groups: [ChecklistGroup] {
         var source = tasks.isEmpty && events.isEmpty ? ChecklistGroup.samples : buildGroups()
 
-        if selectedFilter != "Semua" {
+        if selectedFilter != L10n.Common.all {
             source = source.filter { $0.title == selectedFilter }
         }
 
@@ -41,7 +41,7 @@ struct ChecklistView: View {
     }
 
     private var filterOptions: [String] {
-        var options = ["Semua"]
+        var options = [L10n.Common.all]
         options.append(contentsOf: allGroups.map(\.title))
         return options
     }
@@ -158,11 +158,11 @@ struct ChecklistView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Checklist")
+                Text(L10n.Checklist.title)
                     .font(.system(size: 32, weight: .bold, design: .serif))
                     .foregroundStyle(AppTheme.sageDark)
 
-                Text("Rencanakan setiap momen,\nwujudkan pernikahan impian.")
+                Text(L10n.Checklist.subtitle)
                     .lineSpacing(1)
                     .font(.system(size: 12, weight: .regular, design: .serif))
                     .foregroundStyle(AppTheme.gold)
@@ -192,7 +192,7 @@ struct ChecklistView: View {
                     .font(.system(size: 15))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
 
-                TextField("Cari tugas...", text: $searchText)
+                TextField(L10n.Checklist.searchPlaceholder, text: $searchText)
                     .font(AppFont.regular(15))
                     .foregroundStyle(AppTheme.ink)
                     .autocorrectionDisabled()
@@ -221,7 +221,7 @@ struct ChecklistView: View {
                     searchText = ""
                 }
             } label: {
-                Text("Batal")
+                Text(L10n.Common.cancel)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.sageDark)
             }
@@ -244,9 +244,9 @@ struct ChecklistView: View {
                 .frame(width: 104, height: 104)
 
             HStack(spacing: 0) {
-                summaryStat(icon: "checkmark.circle.fill", tint: AppTheme.sageDark, label: "Selesai", value: doneTasks)
-                summaryStat(icon: "clock.fill", tint: AppTheme.gold, label: "Berjalan", value: inProgressTasks)
-                summaryStat(icon: "circle", tint: AppTheme.mist, label: "Belum Mulai", value: pendingTasks)
+                summaryStat(icon: "checkmark.circle.fill", tint: AppTheme.sageDark, label: L10n.Checklist.done, value: doneTasks)
+                summaryStat(icon: "clock.fill", tint: AppTheme.gold, label: L10n.Checklist.running, value: inProgressTasks)
+                summaryStat(icon: "circle", tint: AppTheme.mist, label: L10n.Checklist.notStarted, value: pendingTasks)
             }
             .frame(maxWidth: .infinity)
         }
@@ -275,7 +275,7 @@ struct ChecklistView: View {
                 .font(AppFont.medium(20))
                 .foregroundStyle(AppTheme.sageDark)
 
-            Text("Tugas")
+            Text(L10n.Checklist.tasks)
                 .font(AppFont.regular(10))
                 .foregroundStyle(AppTheme.ink.opacity(0.4))
         }
@@ -347,7 +347,7 @@ struct ChecklistView: View {
                         .frame(height: 6)
 
                     HStack {
-                        Text("\(doneCount) dari \(group.tasks.count) tugas selesai")
+                        Text(L10n.Checklist.tasksCompleted(doneCount, group.tasks.count))
                             .font(AppFont.regular(12))
                             .foregroundStyle(AppTheme.ink.opacity(0.45))
                         Spacer()
@@ -357,7 +357,7 @@ struct ChecklistView: View {
             .buttonStyle(.plain)
 
             if isExpanded {
-                VStack(spacing: 10) {
+                LazyVStack(spacing: 10) {
                     ForEach(visibleTasks) { task in
                         Button {
                             selectedTask = task
@@ -521,23 +521,31 @@ private struct TaskRow: View {
             if let date = task.dueDate, let formatted = Self.displayDate(date) {
                 return "Selesai pada \(formatted)"
             }
-            return "Selesai"
+            return L10n.Checklist.done
         case .inProgress:
-            return "In Progress"
+            return L10n.Checklist.running
         case .pending:
-            return "Belum Mulai"
+            return L10n.Checklist.notStarted
         }
     }
 
+    private static let inputDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private static let outputDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "id_ID")
+        f.dateFormat = "d MMM yyyy"
+        return f
+    }()
+
     private static func displayDate(_ raw: String) -> String? {
-        let input = DateFormatter()
-        input.locale = Locale(identifier: "en_US_POSIX")
-        input.dateFormat = "yyyy-MM-dd"
-        guard let date = input.date(from: raw) else { return nil }
-        let output = DateFormatter()
-        output.locale = Locale(identifier: "id_ID")
-        output.dateFormat = "d MMM yyyy"
-        return output.string(from: date)
+        guard let date = inputDateFormatter.date(from: raw) else { return nil }
+        return outputDateFormatter.string(from: date)
     }
 }
 
@@ -578,7 +586,7 @@ private struct ChecklistRing: View {
                 .rotationEffect(.degrees(-90))
 
             VStack(spacing: 0) {
-                Text("Total Progress")
+                Text(L10n.Checklist.totalProgress)
                     .font(AppFont.regular(8))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
 
@@ -586,7 +594,7 @@ private struct ChecklistRing: View {
                     .font(AppFont.medium(26))
                     .foregroundStyle(AppTheme.sageDark)
 
-                Text("Selesai")
+                Text(L10n.Checklist.done)
                     .font(AppFont.regular(9))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
             }

@@ -1,25 +1,23 @@
 import SwiftUI
 
-enum InspirationCategory: String, CaseIterable, Identifiable, Hashable {
+enum InspirationCategory: String, CaseIterable, Identifiable, Hashable, Decodable {
     case all = "all"
     case dekorasi = "dekorasi"
-    case tema = "tema"
-    case warna = "warna"
-    case busana = "busana"
-    case foto = "foto"
-    case undangan = "undangan"
+    case gaun = "gaun"
+    case makeup = "makeup"
+    case katering = "katering"
+    case venue = "venue"
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
-        case .all: return "Semua"
-        case .dekorasi: return "Dekorasi"
-        case .tema: return "Tema"
-        case .warna: return "Warna"
-        case .busana: return "Busana"
-        case .foto: return "Foto"
-        case .undangan: return "Undangan"
+        case .all: return L10n.Common.all
+        case .dekorasi: return L10n.InspirationCategory.decoration
+        case .gaun: return L10n.InspirationCategory.dress
+        case .makeup: return L10n.InspirationCategory.makeup
+        case .katering: return L10n.InspirationCategory.catering
+        case .venue: return L10n.InspirationCategory.venue
         }
     }
 
@@ -27,137 +25,78 @@ enum InspirationCategory: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .all: return "square.grid.2x2"
         case .dekorasi: return "leaf"
-        case .tema: return "theatermasks"
-        case .warna: return "paintpalette"
-        case .busana: return "figure.dress.line.vertical"
-        case .foto: return "camera"
-        case .undangan: return "envelope"
+        case .gaun: return "figure.dress.line.vertical"
+        case .makeup: return "paintbrush"
+        case .katering: return "fork.knife"
+        case .venue: return "building.2"
+        }
+    }
+
+    var thumbnailTint: Color {
+        switch self {
+        case .all, .dekorasi: return AppTheme.sage
+        case .gaun: return AppTheme.peach
+        case .makeup: return AppTheme.plum
+        case .katering: return AppTheme.gold
+        case .venue: return AppTheme.sageDark
         }
     }
 
     static var filterableCases: [InspirationCategory] {
         allCases.filter { $0 != .all }
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = InspirationCategory(rawValue: raw) ?? .dekorasi
+    }
 }
 
-struct InspirationFeatured: Identifiable {
-    let id: Int
-    let eyebrow: String
-    let title: String
-    let subtitle: String
-    let buttonTitle: String
-    let imageName: String?
-    let gradient: [Color]
-
-    static let samples: [InspirationFeatured] = [
-        InspirationFeatured(
-            id: 1,
-            eyebrow: "Featured Inspiration",
-            title: "Garden Wedding",
-            subtitle: "Nuansa alami yang romantis dan elegan untuk hari bahagiamu.",
-            buttonTitle: "Lihat Ide",
-            imageName: "FloralHeader",
-            gradient: [AppTheme.surface, AppTheme.lightSage]
-        ),
-        InspirationFeatured(
-            id: 2,
-            eyebrow: "Featured Inspiration",
-            title: "Classic White",
-            subtitle: "Kesederhanaan putih yang timeless untuk momen sakralmu.",
-            buttonTitle: "Lihat Ide",
-            imageName: "CouplePortrait",
-            gradient: [AppTheme.surface, AppTheme.mist]
-        ),
-        InspirationFeatured(
-            id: 3,
-            eyebrow: "Featured Inspiration",
-            title: "Rustic Charm",
-            subtitle: "Sentuhan kayu dan bunga kering yang hangat dan personal.",
-            buttonTitle: "Lihat Ide",
-            imageName: nil,
-            gradient: [AppTheme.cream, AppTheme.softPeach]
-        ),
-        InspirationFeatured(
-            id: 4,
-            eyebrow: "Featured Inspiration",
-            title: "Modern Minimal",
-            subtitle: "Garis bersih dan palet netral untuk pernikahan kontemporer.",
-            buttonTitle: "Lihat Ide",
-            imageName: nil,
-            gradient: [AppTheme.mist, AppTheme.sage.opacity(0.35)]
-        ),
-    ]
-}
-
-struct InspirationItem: Identifiable, Hashable {
+struct InspirationItem: Identifiable, Hashable, Decodable {
     let id: Int
     let title: String
+    let description: String?
     let category: InspirationCategory
     let likes: Int
-    let imageName: String?
+    let views: Int
+    let imageUrl: String?
     let thumbnailSymbol: String
-    let thumbnailTint: Color
-    let isSaved: Bool
+    var isSaved: Bool
+    var isLiked: Bool
 
-    static let popularSamples: [InspirationItem] = [
-        InspirationItem(
-            id: 1,
-            title: "White Elegant",
-            category: .dekorasi,
-            likes: 1240,
-            imageName: "FloralHeader",
-            thumbnailSymbol: "sparkles",
-            thumbnailTint: AppTheme.sage,
-            isSaved: false
-        ),
-        InspirationItem(
-            id: 2,
-            title: "Rustic Garden",
-            category: .tema,
-            likes: 980,
-            imageName: nil,
-            thumbnailSymbol: "leaf.fill",
-            thumbnailTint: AppTheme.gold,
-            isSaved: true
-        ),
-        InspirationItem(
-            id: 3,
-            title: "Sage & Cream",
-            category: .warna,
-            likes: 860,
-            imageName: nil,
-            thumbnailSymbol: "paintpalette.fill",
-            thumbnailTint: AppTheme.plum,
-            isSaved: false
-        ),
-        InspirationItem(
-            id: 4,
-            title: "Lace Gown",
-            category: .busana,
-            likes: 740,
-            imageName: "CouplePortrait",
-            thumbnailSymbol: "figure.dress.line.vertical",
-            thumbnailTint: AppTheme.peach,
-            isSaved: false
-        ),
-    ]
+    var thumbnailTint: Color { category.thumbnailTint }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, title, description, category, likes, views, imageUrl, thumbnailSymbol, isSaved, isLiked
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        category = try container.decodeIfPresent(InspirationCategory.self, forKey: .category) ?? .dekorasi
+        likes = try container.decodeIfPresent(Int.self, forKey: .likes) ?? 0
+        views = try container.decodeIfPresent(Int.self, forKey: .views) ?? 0
+        imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        thumbnailSymbol = try container.decodeIfPresent(String.self, forKey: .thumbnailSymbol) ?? "sparkles"
+        isSaved = try container.decodeIfPresent(Bool.self, forKey: .isSaved) ?? false
+        isLiked = try container.decodeIfPresent(Bool.self, forKey: .isLiked) ?? false
+    }
 }
 
 struct InspirationCategoryGroup: Identifiable {
     let id: InspirationCategory
     let count: Int
-    let imageName: String?
-    let thumbnailSymbol: String
-    let thumbnailTint: Color
 
-    static let samples: [InspirationCategoryGroup] = [
-        InspirationCategoryGroup(id: .dekorasi, count: 356, imageName: "FloralHeader", thumbnailSymbol: "leaf.fill", thumbnailTint: AppTheme.sage),
-        InspirationCategoryGroup(id: .tema, count: 124, imageName: nil, thumbnailSymbol: "theatermasks.fill", thumbnailTint: AppTheme.gold),
-        InspirationCategoryGroup(id: .warna, count: 98, imageName: nil, thumbnailSymbol: "paintpalette.fill", thumbnailTint: AppTheme.plum),
-        InspirationCategoryGroup(id: .busana, count: 210, imageName: "CouplePortrait", thumbnailSymbol: "figure.dress.line.vertical", thumbnailTint: AppTheme.peach),
-        InspirationCategoryGroup(id: .foto, count: 167, imageName: nil, thumbnailSymbol: "camera.fill", thumbnailTint: AppTheme.ink),
-        InspirationCategoryGroup(id: .undangan, count: 89, imageName: nil, thumbnailSymbol: "envelope.fill", thumbnailTint: AppTheme.sageDark),
-    ]
+    static func from(items: [InspirationItem]) -> [InspirationCategoryGroup] {
+        InspirationCategory.filterableCases.compactMap { category in
+            let count = items.filter { $0.category == category }.count
+            guard count > 0 else { return nil }
+            return InspirationCategoryGroup(id: category, count: count)
+        }
+    }
 }
 
 struct InspirationFilter: Equatable {
@@ -171,8 +110,8 @@ struct InspirationFilter: Equatable {
 
     static let likesOptions: [(label: String, value: Int?)] = [
         ("Semua", nil),
+        ("200+", 200),
         ("500+", 500),
-        ("1.000+", 1000),
     ]
 
     mutating func reset() {

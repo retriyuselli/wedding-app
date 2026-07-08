@@ -15,6 +15,7 @@ class WeddingQuotesTable
     {
         return $table
             ->defaultSort('sort_order')
+            ->description('Urutan kutipan diatur otomatis. Gunakan tombol "Atur urutan" untuk drag & drop.')
             ->reorderable('sort_order')
             ->columns([
                 TextColumn::make('quote')
@@ -25,7 +26,8 @@ class WeddingQuotesTable
                 TextColumn::make('sort_order')
                     ->label('Urutan')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_active')
                     ->label('Aktif')
                     ->boolean(),

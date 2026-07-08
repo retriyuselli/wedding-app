@@ -16,23 +16,23 @@ private struct NativeDashboardTabs: View {
             HomeDashboardView { tab in
                 selectedTab = tab
             }
-            .tabItem { Label("Home", systemImage: DashboardTab.home.iconName) }
+            .tabItem { Label(L10n.Tab.home, systemImage: DashboardTab.home.iconName) }
             .tag(DashboardTab.home)
 
             ChecklistView()
-                .tabItem { Label("Checklist", systemImage: DashboardTab.checklist.iconName) }
+                .tabItem { Label(L10n.Tab.checklist, systemImage: DashboardTab.checklist.iconName) }
                 .tag(DashboardTab.checklist)
 
             GuestView()
-                .tabItem { Label("Guest", systemImage: DashboardTab.guests.iconName) }
+                .tabItem { Label(L10n.Tab.guest, systemImage: DashboardTab.guests.iconName) }
                 .tag(DashboardTab.guests)
 
             BudgetView()
-                .tabItem { Label("Budget", systemImage: DashboardTab.budget.iconName) }
+                .tabItem { Label(L10n.Tab.budget, systemImage: DashboardTab.budget.iconName) }
                 .tag(DashboardTab.budget)
 
             MoreView()
-                .tabItem { Label("More", systemImage: DashboardTab.more.iconName) }
+                .tabItem { Label(L10n.Tab.more, systemImage: DashboardTab.more.iconName) }
                 .tag(DashboardTab.more)
         }
         .tint(AppTheme.sageDark)
@@ -60,17 +60,20 @@ private enum DashboardTab: String, CaseIterable {
 private struct HomeDashboardView: View {
     let selectTab: (DashboardTab) -> Void
 
+    @ObservedObject private var categoriesStore = BudgetCategoriesStore.shared
     @State private var info = WeddingInfo(id: nil, groomName: "", brideName: "", budaya: "", songlist: [])
-    @State private var budget = WeddingBudget(id: nil, totalBudget: 0, currency: "IDR", notes: "")
+    @State private var budget = WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
     @State private var events: [WeddingEvent] = []
     @State private var guests: [Guest] = []
     @State private var quotes: [WeddingQuote] = []
+    @State private var checklistSummary: ChecklistSummary?
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var quoteIndex = 0
     @State private var showVendor = false
     @State private var showInspiration = false
     @State private var showMessages = false
+    @State private var showNotifications = false
 
     private var displayQuotes: [WeddingQuote] {
         quotes.isEmpty ? WeddingQuote.fallback : quotes
@@ -81,7 +84,7 @@ private struct HomeDashboardView: View {
     private var weddingDate: Date? {
         events.compactMap { event in
             guard let tglAcara = event.tglAcara else { return nil }
-            return DateFormatter.weddingInput.date(from: tglAcara)
+            return DateFormatter.apiInput.date(from: tglAcara)
         }
         .sorted()
         .last
@@ -110,7 +113,7 @@ private struct HomeDashboardView: View {
     }
 
     private var preparationProgress: Double {
-        0.68
+        checklistSummary?.progress ?? 0
     }
 
     var body: some View {
@@ -144,6 +147,9 @@ private struct HomeDashboardView: View {
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
                 Task { await load() }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .openMessages)) { _ in
+                showMessages = true
+            }
             .navigationDestination(isPresented: $showVendor) {
                 VendorView()
             }
@@ -153,13 +159,16 @@ private struct HomeDashboardView: View {
             .navigationDestination(isPresented: $showMessages) {
                 MessagesView()
             }
+            .sheet(isPresented: $showNotifications) {
+                NotificationsSheet()
+            }
         }
     }
 
     private var homeHeader: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Welcome to")
+                Text(L10n.Dashboard.welcome)
                     .fontWeight(.bold)
                     .font(.system(size: 17, weight: .bold, design: .serif))
                     .foregroundStyle(AppTheme.sageDark.opacity(0.78))
@@ -176,7 +185,7 @@ private struct HomeDashboardView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.58)
 
-                Text("Plan beautifully. Together.")
+                Text(L10n.Dashboard.planTogether)
                     .font(.system(size: 12, weight: .regular, design: .serif))
                     .foregroundStyle(AppTheme.gold)
                     .lineSpacing(2)
@@ -185,7 +194,7 @@ private struct HomeDashboardView: View {
             Spacer(minLength: 8)
 
             Button {
-                selectTab(.more)
+                showNotifications = true
             } label: {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: "bell")
@@ -205,7 +214,7 @@ private struct HomeDashboardView: View {
                         .offset(x: 1, y: -1)
                 }
             }
-            .accessibilityLabel("Notifications")
+            .accessibilityLabel(L10n.Dashboard.notifications)
             .padding(.top, 2)
         }
         .frame(height: 128, alignment: .top)
@@ -224,7 +233,7 @@ private struct HomeDashboardView: View {
                     .minimumScaleFactor(0.6)
 
                 VStack(alignment: .leading, spacing: 7) {
-                    Label(weddingDate.map { DateFormatter.weddingDateOnly.string(from: $0) } ?? "Set wedding date", systemImage: "calendar")
+                    Label(weddingDate.map { DateFormatter.weddingDateOnly.string(from: $0) } ?? L10n.More.dateNotSet, systemImage: "calendar")
                     Label(primaryLocation, systemImage: "mappin")
                 }
                 .font(AppFont.medium(12))
@@ -239,7 +248,7 @@ private struct HomeDashboardView: View {
                     VStack(alignment: .leading, spacing: -2) {
                         Text(daysRemaining.map(String.init) ?? "385")
                             .font(AppFont.medium(24))
-                        Text("days to go")
+                        Text(L10n.Dashboard.daysToGo)
                             .font(AppFont.medium(12))
                     }
                 }
@@ -254,7 +263,6 @@ private struct HomeDashboardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             CoupleAvatarImage(
-                avatarUrl: info.avatarUrl,
                 width: 168,
                 height: cardHeight
             )
@@ -272,7 +280,7 @@ private struct HomeDashboardView: View {
     private var weddingProgressCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Wedding Progress")
+                Text(L10n.Dashboard.weddingProgress)
                     .font(AppFont.medium(18))
                     .fontWeight(.medium)
                     .foregroundStyle(AppTheme.sageDark)
@@ -282,7 +290,7 @@ private struct HomeDashboardView: View {
                 Button {
                     selectTab(.checklist)
                 } label: {
-                    Label("See All", systemImage: "chevron.right")
+                    Label(L10n.Common.seeAll, systemImage: "chevron.right")
                         .font(AppFont.regular(13))
                         .labelStyle(.titleAndIcon)
                         .foregroundStyle(.secondary)
@@ -294,11 +302,11 @@ private struct HomeDashboardView: View {
                     .frame(width: 100, height: 100)
 
                 VStack(spacing: 12) {
-                    ProgressStatRow(color: AppTheme.sageDark, title: "Completed", value: "34")
+                    ProgressStatRow(color: AppTheme.sageDark, title: L10n.Dashboard.completed, value: "\(checklistSummary?.completed ?? 0)")
                     Divider()
-                    ProgressStatRow(color: AppTheme.gold, title: "In Progress", value: "12")
+                    ProgressStatRow(color: AppTheme.gold, title: L10n.Dashboard.inProgress, value: "\(checklistSummary?.inProgress ?? 0)")
                     Divider()
-                    ProgressStatRow(color: AppTheme.mist, title: "To Do", value: "14")
+                    ProgressStatRow(color: AppTheme.mist, title: L10n.Dashboard.toDo, value: "\(checklistSummary?.todo ?? 0)")
                 }
             }
         }
@@ -321,8 +329,8 @@ private struct HomeDashboardView: View {
             TabView(selection: $quoteIndex) {
                 ForEach(displayQuotes) { item in
                     Text(item.quote)
-                        .font(AppFont.regular(14))
-                        .lineSpacing(3)
+                        .font(AppFont.regular(12))
+                        .lineSpacing(1)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white)
                         .fixedSize(horizontal: false, vertical: true)
@@ -379,7 +387,7 @@ private struct HomeDashboardView: View {
     private var nextUpSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("Next Up")
+                Text(L10n.Dashboard.nextUp)
                     .font(AppFont.semibold(18))
                     .fontWeight(.semibold)
                     .foregroundStyle(AppTheme.sageDark)
@@ -389,7 +397,7 @@ private struct HomeDashboardView: View {
                 Button {
                     selectTab(.checklist)
                 } label: {
-                    Label("See All", systemImage: "chevron.right")
+                    Label(L10n.Common.seeAll, systemImage: "chevron.right")
                         .font(AppFont.regular(13))
                         .labelStyle(.titleAndIcon)
                         .foregroundStyle(.secondary)
@@ -411,11 +419,11 @@ private struct HomeDashboardView: View {
 
     private var quickActionsCard: some View {
         HStack(spacing: 0) {
-            QuickActionButton(title: "Tasks", iconName: "list.clipboard") { selectTab(.checklist) }
-            QuickActionButton(title: "Vendors", iconName: "storefront") { showVendor = true }
-            QuickActionButton(title: "Inspiration", iconName: "heart") { showInspiration = true }
-            QuickActionButton(title: "Budget", iconName: "creditcard") { selectTab(.budget) }
-            QuickActionButton(title: "Messages", iconName: "bubble.left") { showMessages = true }
+            QuickActionButton(title: L10n.Dashboard.tasks, iconName: "list.clipboard") { selectTab(.checklist) }
+            QuickActionButton(title: L10n.Dashboard.vendors, iconName: "storefront") { showVendor = true }
+            QuickActionButton(title: L10n.Dashboard.inspiration, iconName: "heart") { showInspiration = true }
+            QuickActionButton(title: L10n.Tab.budget, iconName: "creditcard") { selectTab(.budget) }
+            QuickActionButton(title: L10n.Dashboard.messages, iconName: "bubble.left") { showMessages = true }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 16)
@@ -433,7 +441,7 @@ private struct HomeDashboardView: View {
             NextUpItem(
                 id: event.id,
                 title: event.jenisLabel ?? event.jenisAcara.capitalized,
-                dateText: event.tglAcara.flatMap { DateFormatter.weddingInput.date(from: $0) }.map { DateFormatter.nextUpDisplay.string(from: $0) } ?? "Set date",
+                dateText: event.tglAcara.flatMap { DateFormatter.apiInput.date(from: $0) }.map { DateFormatter.nextUpDisplay.string(from: $0) } ?? "Set date",
                 badgeText: event.tglAcara.flatMap(daysUntilText) ?? "Upcoming",
                 iconName: ["person.2", "birthday.cake", "figure.dress.line.vertical.figure"][index % 3]
             )
@@ -451,7 +459,7 @@ private struct HomeDashboardView: View {
     }
 
     private func daysUntilText(from rawDate: String) -> String? {
-        guard let date = DateFormatter.weddingInput.date(from: rawDate) else { return nil }
+        guard let date = DateFormatter.apiInput.date(from: rawDate) else { return nil }
         let start = Calendar.current.startOfDay(for: Date())
         let end = Calendar.current.startOfDay(for: date)
         let days = Calendar.current.dateComponents([.day], from: start, to: end).day ?? 0
@@ -473,11 +481,13 @@ private struct HomeDashboardView: View {
             async let budgetEnvelope: Envelope<WeddingBudget> = APIClient.shared.request("wedding-budget")
             async let eventEnvelope: Envelope<[WeddingEvent]> = APIClient.shared.request("wedding-events")
             async let guestEnvelope: Envelope<[Guest]> = APIClient.shared.request("guests")
+            async let summaryEnvelope: Envelope<ChecklistSummary> = APIClient.shared.request("customer-preparation-tasks/summary")
 
             info = try await infoEnvelope.data
             budget = try await budgetEnvelope.data
             events = try await eventEnvelope.data
             guests = try await guestEnvelope.data
+            checklistSummary = try await summaryEnvelope.data
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -514,7 +524,7 @@ private struct ProgressRing: View {
                     .font(AppFont.medium(27))
                     .foregroundStyle(AppTheme.sageDark)
 
-                Text("Completed")
+                Text(L10n.Dashboard.completed)
                     .font(AppFont.regular(10))
                     .foregroundStyle(.secondary)
                     .opacity(showSubtitle ? 1 : 0)
@@ -635,14 +645,46 @@ private struct QuickActionButton: View {
     }
 }
 
-private extension DateFormatter {
-    static let weddingInput: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
+private struct NotificationsSheet: View {
+    @Environment(\.dismiss) private var dismiss
 
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                LuxuryWeddingBackground()
+
+                VStack(spacing: 20) {
+                    Image(systemName: "bell.slash")
+                        .font(.system(size: 48, weight: .light))
+                        .foregroundStyle(AppTheme.sageDark.opacity(0.4))
+
+                    VStack(spacing: 6) {
+                        Text(L10n.Dashboard.noNotifications)
+                            .font(.system(size: 20, weight: .semibold, design: .serif))
+                            .foregroundStyle(AppTheme.sageDark)
+
+                        Text(L10n.Dashboard.noNotificationsSub)
+                            .font(AppFont.regular(13))
+                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(3)
+                    }
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.Common.close) { dismiss() }
+                        .font(AppFont.medium(15))
+                        .foregroundStyle(AppTheme.sageDark)
+                }
+            }
+            .navigationTitle(L10n.Dashboard.notifications)
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
+private extension DateFormatter {
     static let weddingDateOnly: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")

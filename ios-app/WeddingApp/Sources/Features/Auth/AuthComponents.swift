@@ -148,11 +148,11 @@ struct AuthBackButton: View {
 struct AuthHeroHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Wedding App")
+            Text(L10n.Auth.appName)
                 .font(.system(size: 34, weight: .bold, design: .serif))
                 .foregroundStyle(AppTheme.sageDark)
 
-            Text("Teman terbaik dalam merencanakan hari bahagia Anda.")
+            Text(L10n.Auth.tagline)
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink.opacity(0.5))
                 .lineSpacing(3)
@@ -163,7 +163,7 @@ struct AuthHeroHeader: View {
                     .font(.system(size: 10))
                     .foregroundStyle(AppTheme.gold)
 
-                Text("Every love story is beautiful")
+                Text(L10n.Auth.taglineQuote)
                     .font(.custom("Snell Roundhand", size: 17))
                     .foregroundStyle(AppTheme.gold)
             }
@@ -439,9 +439,9 @@ struct AuthSocialFullButton: View {
 
         var label: String {
             switch self {
-            case .apple: return "Lanjutkan dengan Apple"
-            case .google: return "Lanjutkan dengan Google"
-            case .phone: return "Lanjutkan dengan Nomor Telepon"
+            case .apple: return L10n.Auth.continueApple
+            case .google: return L10n.Auth.continueGoogle
+            case .phone: return L10n.Auth.continuePhone
             }
         }
 
@@ -586,7 +586,7 @@ struct AuthSecureField: View {
 
 struct AuthDivider: View {
     var body: some View {
-        AuthSocialDivider(text: "atau")
+        AuthSocialDivider(text: L10n.Auth.or)
     }
 }
 

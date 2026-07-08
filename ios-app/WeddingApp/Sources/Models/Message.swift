@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum MessageCategory: String, CaseIterable, Identifiable, Hashable {
+enum MessageCategory: String, CaseIterable, Identifiable, Hashable, Decodable {
     case all = "all"
     case vendor = "vendor"
     case committee = "committee"
@@ -25,108 +25,124 @@ enum MessageCategory: String, CaseIterable, Identifiable, Hashable {
         case .support: return "headphones"
         }
     }
+
+    /// SF Symbol untuk avatar thread berdasarkan kategori.
+    var avatarSymbol: String {
+        switch self {
+        case .all, .vendor: return "building.columns.fill"
+        case .committee: return "person.3.fill"
+        case .support: return "heart.circle.fill"
+        }
+    }
+
+    var avatarTint: Color {
+        switch self {
+        case .all, .vendor: return AppTheme.sageDark
+        case .committee: return AppTheme.plum
+        case .support: return AppTheme.peachDark
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = MessageCategory(rawValue: raw) ?? .support
+    }
 }
 
-struct MessageThread: Identifiable, Hashable {
+enum SupportMessageTopic: String, CaseIterable, Identifiable, Hashable {
+    case account
+    case budget
+    case checklist
+    case guests
+    case other
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .account: return "Akun & Login"
+        case .budget: return "Budget & Pembayaran"
+        case .checklist: return "Checklist & Persiapan"
+        case .guests: return "Tamu & Undangan"
+        case .other: return "Lainnya"
+        }
+    }
+}
+
+struct MessageThread: Identifiable, Hashable, Decodable {
     let id: Int
     let name: String
     let category: MessageCategory
-    let lastMessage: String
-    let timeLabel: String
-    let unreadCount: Int
+    let avatarUrl: String?
     let isOnline: Bool
-    let avatarSymbol: String
-    let avatarTint: Color
-    let messages: [ChatMessageItem]
+    let lastMessage: String?
+    let lastMessageAt: Date?
+    let unreadCount: Int
+    let hasUnread: Bool
+    var messages: [ChatMessageItem]
 
-    var hasUnread: Bool { unreadCount > 0 }
+    var avatarSymbol: String { category.avatarSymbol }
+    var avatarTint: Color { category.avatarTint }
 
-    static let samples: [MessageThread] = [
-        MessageThread(
-            id: 1,
-            name: "Grand Ballroom",
-            category: .vendor,
-            lastMessage: "Baik, kami konfirmasi jadwal survey venue besok pukul 14.00.",
-            timeLabel: "10:24",
-            unreadCount: 2,
-            isOnline: true,
-            avatarSymbol: "building.columns.fill",
-            avatarTint: AppTheme.sageDark,
-            messages: [
-                ChatMessageItem(id: 1, text: "Halo, apakah venue tersedia untuk tanggal 12 Agustus?", isOutgoing: true, timeLabel: "09:50"),
-                ChatMessageItem(id: 2, text: "Selamat pagi! Venue masih tersedia untuk tanggal tersebut.", isOutgoing: false, timeLabel: "10:05"),
-                ChatMessageItem(id: 3, text: "Baik, kami konfirmasi jadwal survey venue besok pukul 14.00.", isOutgoing: false, timeLabel: "10:24"),
-            ]
-        ),
-        MessageThread(
-            id: 2,
-            name: "Lavisa Decoration",
-            category: .vendor,
-            lastMessage: "Desain pelaminan sudah kami kirim via email. Silakan dicek ya.",
-            timeLabel: "Kemarin",
-            unreadCount: 0,
-            isOnline: false,
-            avatarSymbol: "leaf.fill",
-            avatarTint: AppTheme.gold,
-            messages: [
-                ChatMessageItem(id: 1, text: "Kami ingin tema rustic dengan dominasi putih dan sage green.", isOutgoing: true, timeLabel: "Kemarin"),
-                ChatMessageItem(id: 2, text: "Desain pelaminan sudah kami kirim via email. Silakan dicek ya.", isOutgoing: false, timeLabel: "Kemarin"),
-            ]
-        ),
-        MessageThread(
-            id: 3,
-            name: "Panitia Akad",
-            category: .committee,
-            lastMessage: "Checklist akad sudah 80% selesai. Mohon review bagian dekorasi.",
-            timeLabel: "Kemarin",
-            unreadCount: 1,
-            isOnline: true,
-            avatarSymbol: "person.3.fill",
-            avatarTint: AppTheme.plum,
-            messages: [
-                ChatMessageItem(id: 1, text: "Bagaimana progres persiapan akad minggu ini?", isOutgoing: true, timeLabel: "Kemarin"),
-                ChatMessageItem(id: 2, text: "Checklist akad sudah 80% selesai. Mohon review bagian dekorasi.", isOutgoing: false, timeLabel: "Kemarin"),
-            ]
-        ),
-        MessageThread(
-            id: 4,
-            name: "Srikandi Catering",
-            category: .vendor,
-            lastMessage: "Menu tasting dijadwalkan Sabtu, 10.00 WIB.",
-            timeLabel: "Sen",
-            unreadCount: 0,
-            isOnline: false,
-            avatarSymbol: "fork.knife",
-            avatarTint: AppTheme.sageDark,
-            messages: [
-                ChatMessageItem(id: 1, text: "Apakah menu prasmanan bisa disesuaikan untuk tamu vegetarian?", isOutgoing: true, timeLabel: "Sen"),
-                ChatMessageItem(id: 2, text: "Tentu, kami siapkan opsi menu khusus.", isOutgoing: false, timeLabel: "Sen"),
-                ChatMessageItem(id: 3, text: "Menu tasting dijadwalkan Sabtu, 10.00 WIB.", isOutgoing: false, timeLabel: "Sen"),
-            ]
-        ),
-        MessageThread(
-            id: 5,
-            name: "Support Wedding App",
-            category: .support,
-            lastMessage: "Ada yang bisa kami bantu terkait perencanaan pernikahan Anda?",
-            timeLabel: "Min",
-            unreadCount: 0,
-            isOnline: true,
-            avatarSymbol: "heart.circle.fill",
-            avatarTint: AppTheme.peachDark,
-            messages: [
-                ChatMessageItem(id: 1, text: "Halo, saya butuh bantuan mengatur checklist resepsi.", isOutgoing: true, timeLabel: "Min"),
-                ChatMessageItem(id: 2, text: "Ada yang bisa kami bantu terkait perencanaan pernikahan Anda?", isOutgoing: false, timeLabel: "Min"),
-            ]
-        ),
-    ]
+    var timeLabel: String {
+        guard let lastMessageAt else { return "" }
+        return MessageTimeFormatter.relativeLabel(for: lastMessageAt)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, category, avatarUrl, isOnline, lastMessage, lastMessageAt, unreadCount, hasUnread, messages
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        category = try container.decodeIfPresent(MessageCategory.self, forKey: .category) ?? .support
+        avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
+        isOnline = try container.decodeIfPresent(Bool.self, forKey: .isOnline) ?? false
+        lastMessage = try container.decodeIfPresent(String.self, forKey: .lastMessage)
+        lastMessageAt = try container.decodeIfPresent(Date.self, forKey: .lastMessageAt)
+        unreadCount = try container.decodeIfPresent(Int.self, forKey: .unreadCount) ?? 0
+        hasUnread = try container.decodeIfPresent(Bool.self, forKey: .hasUnread) ?? false
+        messages = try container.decodeIfPresent([ChatMessageItem].self, forKey: .messages) ?? []
+    }
 }
 
-struct ChatMessageItem: Identifiable, Hashable {
+struct ChatMessageItem: Identifiable, Hashable, Decodable {
     let id: Int
-    let text: String
+    let body: String
+    let topic: String?
     let isOutgoing: Bool
-    let timeLabel: String
+    let createdAt: Date?
+
+    var text: String { body }
+
+    var topicLabel: String? {
+        guard let topic else { return nil }
+        return SupportMessageTopic(rawValue: topic)?.label ?? topic
+    }
+
+    var timeLabel: String {
+        guard let createdAt else { return "Baru" }
+        return DateFormatter.messageThreadTime.string(from: createdAt)
+    }
+}
+
+enum MessageTimeFormatter {
+    static func relativeLabel(for date: Date) -> String {
+        let calendar = Calendar.current
+
+        if calendar.isDateInToday(date) {
+            return DateFormatter.messageThreadTime.string(from: date)
+        }
+
+        if calendar.isDateInYesterday(date) {
+            return "Kemarin"
+        }
+
+        return DateFormatter.messageThreadDate.string(from: date)
+    }
 }
 
 struct MessageFilter: Equatable {
@@ -140,4 +156,20 @@ struct MessageFilter: Equatable {
     mutating func reset() {
         self = MessageFilter()
     }
+}
+
+extension DateFormatter {
+    static let messageThreadTime: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "id_ID")
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
+    static let messageThreadDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "id_ID")
+        formatter.dateFormat = "d MMM"
+        return formatter
+    }()
 }

@@ -7,6 +7,7 @@ use App\Http\Resources\V1\CustomerPreparationSectionResource;
 use App\Models\CustomerPreparationSection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class CustomerPreparationSectionController extends Controller
 {
@@ -20,7 +21,11 @@ class CustomerPreparationSectionController extends Controller
     public function store(Request $request): CustomerPreparationSectionResource
     {
         $data = $this->validated($request);
-        $data['sort_order'] ??= $request->user()->preparationSections()->count();
+
+        if (! array_key_exists('sort_order', $data) || $data['sort_order'] === null) {
+            $maxOrder = $request->user()->preparationSections()->max('sort_order');
+            $data['sort_order'] = ((int) $maxOrder) + 1;
+        }
 
         $section = $request->user()->preparationSections()->create($data);
 
@@ -44,7 +49,7 @@ class CustomerPreparationSectionController extends Controller
         return new CustomerPreparationSectionResource($section);
     }
 
-    public function destroy(Request $request, int $customerPreparationSection): \Illuminate\Http\Response
+    public function destroy(Request $request, int $customerPreparationSection): Response
     {
         $this->findOwned($request, $customerPreparationSection)->delete();
 
@@ -57,8 +62,8 @@ class CustomerPreparationSectionController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'title'      => ['required', 'string', 'max:255'],
-            'icon'       => ['nullable', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
+            'icon' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
     }

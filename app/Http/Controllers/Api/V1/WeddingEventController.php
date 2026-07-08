@@ -7,6 +7,7 @@ use App\Http\Resources\V1\WeddingEventResource;
 use App\Models\WeddingEvent;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class WeddingEventController extends Controller
 {
@@ -33,7 +34,7 @@ class WeddingEventController extends Controller
 
     public function update(Request $request, int $weddingEvent): WeddingEventResource
     {
-        $data = $this->validated($request);
+        $data = $this->validatedForUpdate($request);
 
         $event = $this->findOwned($request, $weddingEvent);
         $event->update($data);
@@ -41,7 +42,7 @@ class WeddingEventController extends Controller
         return new WeddingEventResource($event);
     }
 
-    public function destroy(Request $request, int $weddingEvent): \Illuminate\Http\Response
+    public function destroy(Request $request, int $weddingEvent): Response
     {
         $this->findOwned($request, $weddingEvent)->delete();
 
@@ -54,10 +55,29 @@ class WeddingEventController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'jenis_acara'  => ['required', 'string', 'in:'.implode(',', array_keys(WeddingEvent::$jenisOptions))],
-            'tgl_acara'    => ['nullable', 'date'],
+            'jenis_acara' => ['required', 'string', 'in:'.implode(',', array_keys(WeddingEvent::$jenisOptions))],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'tgl_acara' => ['nullable', 'date'],
+            'waktu_mulai' => ['nullable', 'date_format:H:i'],
+            'jam_selesai' => ['nullable', 'date_format:H:i'],
             'lokasi_acara' => ['nullable', 'string', 'max:255'],
-            'catatan'      => ['nullable', 'string'],
+            'catatan' => ['nullable', 'string'],
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedForUpdate(Request $request): array
+    {
+        return $request->validate([
+            'jenis_acara' => ['sometimes', 'required', 'string', 'in:'.implode(',', array_keys(WeddingEvent::$jenisOptions))],
+            'sort_order' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'tgl_acara' => ['sometimes', 'nullable', 'date'],
+            'waktu_mulai' => ['sometimes', 'nullable', 'date_format:H:i'],
+            'jam_selesai' => ['sometimes', 'nullable', 'date_format:H:i'],
+            'lokasi_acara' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'catatan' => ['sometimes', 'nullable', 'string'],
         ]);
     }
 

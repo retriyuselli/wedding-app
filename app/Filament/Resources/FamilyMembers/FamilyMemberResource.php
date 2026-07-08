@@ -5,9 +5,7 @@ namespace App\Filament\Resources\FamilyMembers;
 use App\Filament\Resources\FamilyMembers\Pages\CreateFamilyMember;
 use App\Filament\Resources\FamilyMembers\Pages\EditFamilyMember;
 use App\Filament\Resources\FamilyMembers\Pages\ListFamilyMembers;
-use App\Filament\Resources\FamilyMembers\Pages\ViewFamilyMember;
 use App\Filament\Resources\FamilyMembers\Schemas\FamilyMemberForm;
-use App\Filament\Resources\FamilyMembers\Schemas\FamilyMemberInfolist;
 use App\Filament\Resources\FamilyMembers\Tables\FamilyMembersTable;
 use App\Models\FamilyMember;
 use BackedEnum;
@@ -27,14 +25,13 @@ class FamilyMemberResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static ?string $modelLabel = 'Anggota Keluarga';
+
+    protected static ?string $pluralModelLabel = 'Anggota Keluarga';
+
     public static function form(Schema $schema): Schema
     {
         return FamilyMemberForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return FamilyMemberInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class FamilyMemberResource extends Resource
         return [
             'index' => ListFamilyMembers::route('/'),
             'create' => CreateFamilyMember::route('/create'),
-            'view' => ViewFamilyMember::route('/{record}'),
             'edit' => EditFamilyMember::route('/{record}/edit'),
         ];
     }

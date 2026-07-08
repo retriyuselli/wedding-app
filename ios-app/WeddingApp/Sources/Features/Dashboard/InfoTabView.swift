@@ -2,9 +2,10 @@ import SwiftUI
 
 struct InfoTabView: View {
     @EnvironmentObject private var session: SessionStore
+    @StateObject private var categoriesStore = BudgetCategoriesStore.shared
 
     @State private var info = WeddingInfo(id: nil, groomName: "", brideName: "", budaya: "", songlist: [])
-    @State private var budget = WeddingBudget(id: nil, totalBudget: 0, currency: "IDR", notes: "")
+    @State private var budget = WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var savedMessage: String?
@@ -27,7 +28,7 @@ struct InfoTabView: View {
                 Section("Budget") {
                     TextField("Total Budget", value: $budget.totalBudget, format: .number)
                         .keyboardType(.decimalPad)
-                    TextField("Mata Uang", text: Binding($budget.currency, replacingNilWith: "IDR"))
+                    TextField("Mata Uang", text: Binding($budget.currency, replacingNilWith: categoriesStore.defaultCurrency))
                     TextField("Catatan", text: Binding($budget.notes, replacingNilWith: ""))
                 }
 
@@ -55,7 +56,10 @@ struct InfoTabView: View {
                 }
             }
             .navigationTitle("Wedding Info")
-            .task { await load() }
+            .task {
+                await categoriesStore.loadIfNeeded()
+                await load()
+            }
             .refreshable { await load() }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
                 Task { await load() }
@@ -102,7 +106,7 @@ struct InfoTabView: View {
                 method: "PUT",
                 json: [
                     "total_budget": budget.totalBudget,
-                    "currency": budget.currency ?? "IDR",
+                    "currency": budget.currency ?? categoriesStore.defaultCurrency,
                     "notes": budget.notes ?? "",
                 ]
             )

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Vendors\RelationManagers;
 
 use App\Models\VendorPackagePriceType;
 use App\Support\FacilityItemParser;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -124,7 +125,7 @@ class PackagesRelationManager extends RelationManager
                     ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
                 Textarea::make('exclusions')
                     ->label('Tidak Termasuk')
-                    ->placeholder("Tempel daftar item yang tidak termasuk — satu baris = satu item.")
+                    ->placeholder('Tempel daftar item yang tidak termasuk — satu baris = satu item.')
                     ->helperText('Copy-paste didukung. Nomor dan bullet otomatis dibersihkan.')
                     ->rows(4)
                     ->columnSpanFull()
@@ -147,6 +148,12 @@ class PackagesRelationManager extends RelationManager
     {
         return $table
             ->defaultSort('sort_order')
+            ->description('Urutan paket diatur otomatis. Gunakan tombol "Atur urutan" untuk drag & drop.')
+            ->reorderable('sort_order')
+            ->reorderRecordsTriggerAction(
+                fn (Action $action, bool $isReordering): Action => $action
+                    ->label($isReordering ? 'Selesai urutkan' : 'Atur urutan'),
+            )
             ->recordTitleAttribute('name')
             ->columns([
                 TextColumn::make('name')
@@ -175,7 +182,8 @@ class PackagesRelationManager extends RelationManager
                     ->boolean(),
                 TextColumn::make('sort_order')
                     ->label('Urutan')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
                 CreateAction::make(),

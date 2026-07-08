@@ -5,9 +5,7 @@ namespace App\Filament\Resources\WeddingInfos;
 use App\Filament\Resources\WeddingInfos\Pages\CreateWeddingInfo;
 use App\Filament\Resources\WeddingInfos\Pages\EditWeddingInfo;
 use App\Filament\Resources\WeddingInfos\Pages\ListWeddingInfos;
-use App\Filament\Resources\WeddingInfos\Pages\ViewWeddingInfo;
 use App\Filament\Resources\WeddingInfos\Schemas\WeddingInfoForm;
-use App\Filament\Resources\WeddingInfos\Schemas\WeddingInfoInfolist;
 use App\Filament\Resources\WeddingInfos\Tables\WeddingInfosTable;
 use App\Models\WeddingInfo;
 use BackedEnum;
@@ -25,16 +23,15 @@ class WeddingInfoResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Data Pernikahan';
 
-    protected static ?string $recordTitleAttribute = 'groom_name';
+    protected static ?string $recordTitleAttribute = 'couple_names';
+
+    protected static ?string $modelLabel = 'Info Pernikahan';
+
+    protected static ?string $pluralModelLabel = 'Info Pernikahan';
 
     public static function form(Schema $schema): Schema
     {
         return WeddingInfoForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return WeddingInfoInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class WeddingInfoResource extends Resource
         return [
             'index' => ListWeddingInfos::route('/'),
             'create' => CreateWeddingInfo::route('/create'),
-            'view' => ViewWeddingInfo::route('/{record}'),
             'edit' => EditWeddingInfo::route('/{record}/edit'),
         ];
     }

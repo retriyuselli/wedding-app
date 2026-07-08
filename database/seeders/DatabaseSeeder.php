@@ -32,6 +32,8 @@ class DatabaseSeeder extends Seeder
             VendorSeeder::class,
             VendorPackageSeeder::class,
             WeddingQuoteSeeder::class,
+            InspirationSeeder::class,
+            MessageThreadSeeder::class,
         ]);
     }
 }

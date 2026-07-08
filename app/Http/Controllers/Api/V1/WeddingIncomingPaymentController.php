@@ -7,6 +7,7 @@ use App\Http\Resources\V1\WeddingIncomingPaymentResource;
 use App\Models\WeddingIncomingPayment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class WeddingIncomingPaymentController extends Controller
 {
@@ -24,7 +25,8 @@ class WeddingIncomingPaymentController extends Controller
     public function store(Request $request): WeddingIncomingPaymentResource
     {
         $data = $this->validated($request);
-        $data['status'] = 'menunggu';
+        $data['status'] ??= config('wedding.default_incoming_payment_status', 'menunggu');
+        $data = $this->applyConfirmedTimestamp($data);
 
         $payment = $request->user()->incomingPayments()->create($data);
 
@@ -41,12 +43,13 @@ class WeddingIncomingPaymentController extends Controller
         $data = $this->validated($request);
 
         $payment = $this->findOwned($request, $weddingIncomingPayment);
+        $data = $this->applyConfirmedTimestamp($data, $payment);
         $payment->update($data);
 
         return new WeddingIncomingPaymentResource($payment);
     }
 
-    public function destroy(Request $request, int $weddingIncomingPayment): \Illuminate\Http\Response
+    public function destroy(Request $request, int $weddingIncomingPayment): Response
     {
         $this->findOwned($request, $weddingIncomingPayment)->delete();
 
@@ -59,14 +62,30 @@ class WeddingIncomingPaymentController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'bank_name'         => ['nullable', 'string', 'max:255'],
-            'amount'            => ['required', 'numeric', 'min:0'],
-            'transfer_date'     => ['required', 'date'],
-            'sender_name'       => ['required', 'string', 'max:255'],
-            'description'       => ['nullable', 'string', 'max:255'],
-            'reference_number'  => ['nullable', 'string', 'max:255'],
-            'notes'             => ['nullable', 'string'],
+            'bank_name' => ['nullable', 'string', 'max:255'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'transfer_date' => ['required', 'date'],
+            'sender_name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'reference_number' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string'],
+            'status' => ['nullable', 'string', 'in:'.implode(',', array_keys(WeddingIncomingPayment::$statusOptions))],
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyConfirmedTimestamp(array $data, ?WeddingIncomingPayment $existing = null): array
+    {
+        if (($data['status'] ?? null) === 'confirmed') {
+            $data['confirmed_at'] = $existing?->confirmed_at ?? now();
+        } elseif (array_key_exists('status', $data)) {
+            $data['confirmed_at'] = null;
+        }
+
+        return $data;
     }
 
     private function findOwned(Request $request, int $id): WeddingIncomingPayment

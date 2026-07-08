@@ -25,6 +25,20 @@ class CustomerNotification extends Model
         'is_unread' => 'boolean',
     ];
 
+    public static array $groupOptions = [
+        'payment' => 'Pembayaran',
+        'guest' => 'Tamu',
+        'preparation' => 'Persiapan',
+        'system' => 'Sistem',
+    ];
+
+    public static array $tintOptions = [
+        'success' => 'Sukses',
+        'warning' => 'Peringatan',
+        'danger' => 'Penting',
+        'info' => 'Info',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -41,8 +41,8 @@ class VendorResource extends JsonResource
                 fn () => $this->active_packages_count,
             ),
             'starting_price' => $this->when(
-                isset($this->active_packages_min_price),
-                fn () => $this->active_packages_min_price,
+                $this->active_packages_min_price !== null,
+                fn () => number_format((float) $this->active_packages_min_price, 2, '.', ''),
             ),
             'packages' => VendorPackageResource::collection($this->whenLoaded('activePackages')),
             'created_at' => $this->created_at,

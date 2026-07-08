@@ -5,11 +5,25 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\CustomerPreparationTaskResource;
 use App\Models\CustomerPreparationTask;
+use App\Services\CustomerPreparationSummaryCalculator;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class CustomerPreparationTaskController extends Controller
 {
+    public function __construct(
+        private readonly CustomerPreparationSummaryCalculator $summaryCalculator,
+    ) {}
+
+    public function summary(Request $request): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->summaryCalculator->calculate($request->user()),
+        ]);
+    }
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = CustomerPreparationTask::query()
@@ -32,8 +46,11 @@ class CustomerPreparationTaskController extends Controller
         $data = $this->validated($request);
         $data['status'] ??= 'pending';
         $data['priority'] ??= 'medium';
-        $data['sort_order'] ??= 0;
         $data['user_id'] = $request->user()->id;
+
+        if (! array_key_exists('sort_order', $data) || $data['sort_order'] === null) {
+            unset($data['sort_order']);
+        }
 
         $task = CustomerPreparationTask::create($data);
 
@@ -57,7 +74,7 @@ class CustomerPreparationTaskController extends Controller
         return new CustomerPreparationTaskResource($task->load(['subTasks', 'attachments']));
     }
 
-    public function destroy(Request $request, int $customerPreparationTask): \Illuminate\Http\Response
+    public function destroy(Request $request, int $customerPreparationTask): Response
     {
         $this->findOwned($request, $customerPreparationTask)->delete();
 
@@ -81,16 +98,16 @@ class CustomerPreparationTaskController extends Controller
         $userId = $request->user()->id;
 
         return $request->validate([
-            'title'            => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:255'],
-            'label'            => ['nullable', 'string', 'max:255'],
-            'description'      => ['nullable', 'string'],
-            'notes'            => ['nullable', 'string'],
-            'priority'         => ['nullable', 'string', 'in:'.implode(',', array_keys(CustomerPreparationTask::$priorityOptions))],
-            'status'           => ['nullable', 'string', 'in:'.implode(',', array_keys(CustomerPreparationTask::$statusOptions))],
-            'due_date'         => ['nullable', 'date'],
-            'sort_order'       => ['nullable', 'integer', 'min:0'],
+            'title' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:255'],
+            'label' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string'],
+            'priority' => ['nullable', 'string', 'in:'.implode(',', array_keys(CustomerPreparationTask::$priorityOptions))],
+            'status' => ['nullable', 'string', 'in:'.implode(',', array_keys(CustomerPreparationTask::$statusOptions))],
+            'due_date' => ['nullable', 'date'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
             'wedding_event_id' => ['nullable', 'integer', 'exists:wedding_events,id,user_id,'.$userId],
-            'section_id'       => ['nullable', 'integer', 'exists:customer_preparation_sections,id,user_id,'.$userId],
+            'section_id' => ['nullable', 'integer', 'exists:customer_preparation_sections,id,user_id,'.$userId],
         ]);
     }
 

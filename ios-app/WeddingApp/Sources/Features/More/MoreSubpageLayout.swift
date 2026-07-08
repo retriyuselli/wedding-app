@@ -1,0 +1,190 @@
+import SwiftUI
+
+struct MoreSubpageHeader: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 32, weight: .bold, design: .serif))
+                .foregroundStyle(AppTheme.sageDark)
+
+            Text(subtitle)
+                .font(.system(size: 12, weight: .regular, design: .serif))
+                .foregroundStyle(AppTheme.gold)
+                .lineSpacing(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct MoreSubpageNavigationHeader: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppTheme.ink.opacity(0.72))
+                        .frame(width: 42, height: 42)
+                        .background(.white.opacity(0.86), in: Circle())
+                        .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                VStack(spacing: 4) {
+                    Text(title)
+                        .font(AppFont.medium(18))
+                        .foregroundStyle(AppTheme.sageDark)
+                    Text(subtitle)
+                        .font(AppFont.regular(12))
+                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .multilineTextAlignment(.center)
+                }
+
+                Spacer()
+
+                Color.clear.frame(width: 42, height: 42)
+            }
+        }
+    }
+}
+
+struct MoreFormSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(AppFont.medium(14))
+                .foregroundStyle(AppTheme.sageDark)
+
+            VStack(spacing: 10) {
+                content()
+            }
+            .padding(14)
+            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+            }
+        }
+    }
+}
+
+struct MoreInputRow: View {
+    let icon: String
+    let placeholder: String
+    @Binding var text: String
+    var axis: Axis = .horizontal
+    var keyboard: UIKeyboardType = .default
+
+    var body: some View {
+        HStack(alignment: axis == .vertical ? .top : .center, spacing: 12) {
+            MoreFieldIcon(name: icon)
+
+            TextField(placeholder, text: $text, axis: axis)
+                .font(AppFont.regular(14))
+                .foregroundStyle(AppTheme.ink)
+                .lineLimit(axis == .vertical ? 3...5 : 1...1)
+                .keyboardType(keyboard)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .background(MoreFieldBackground())
+    }
+}
+
+struct MoreFieldIcon: View {
+    let name: String
+
+    var body: some View {
+        Image(systemName: name)
+            .font(.system(size: 16, weight: .regular))
+            .foregroundStyle(AppTheme.ink.opacity(0.45))
+            .frame(width: 36, height: 36)
+            .background(AppTheme.mist.opacity(0.65), in: Circle())
+    }
+}
+
+struct MoreFieldBackground: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(AppTheme.lightSage.opacity(0.35))
+    }
+}
+
+struct MoreEmptyState: View {
+    let icon: String
+    let title: String
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 34, weight: .light))
+                .foregroundStyle(AppTheme.sage.opacity(0.65))
+
+            Text(title)
+                .font(AppFont.medium(16))
+                .foregroundStyle(AppTheme.sageDark)
+
+            Text(message)
+                .font(AppFont.regular(13))
+                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 36)
+        .padding(.horizontal, 20)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        }
+    }
+}
+
+struct MorePrimaryButton: View {
+    let title: String
+    let isLoading: Bool
+    let isEnabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: "square.and.arrow.down")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                Text(title)
+                    .font(AppFont.medium(16))
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(isEnabled ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled || isLoading)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 12)
+        .background(.ultraThinMaterial)
+    }
+}

@@ -15,22 +15,23 @@ class WeddingPaymentScheduleResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'                         => $this->id,
-            'wedding_event_id'           => $this->wedding_event_id !== null ? (int) $this->wedding_event_id : null,
+            'id' => $this->id,
+            'wedding_event_id' => $this->wedding_event_id !== null ? (int) $this->wedding_event_id : null,
             'customer_payment_method_id' => $this->customer_payment_method_id !== null ? (int) $this->customer_payment_method_id : null,
-            'title'                      => $this->title,
-            'vendor_name'                => $this->vendor_name,
-            'category'                   => $this->category,
-            'category_label'             => $this->category_label,
-            'amount'                     => (float) $this->amount,
-            'due_date'                   => $this->due_date?->toDateString(),
-            'status'                     => $this->status,
-            'paid_at'                    => $this->paid_at,
-            'proof_url'                  => $this->proofUrl(),
-            'notes'                      => $this->notes,
-            'sort_order'                 => (int) $this->sort_order,
-            'created_at'                 => $this->created_at,
-            'updated_at'                 => $this->updated_at,
+            'title' => $this->title,
+            'vendor_name' => $this->vendor_name,
+            'category' => $this->category ?? config('wedding.default_expense_category', 'other'),
+            'category_label' => $this->category_label,
+            'amount' => (float) $this->amount,
+            'due_date' => $this->due_date?->toDateString(),
+            'status' => $this->status ?? config('wedding.default_expense_status', 'pending'),
+            'status_label' => $this->status_label,
+            'paid_at' => $this->paid_at,
+            'proof_url' => $this->proofUrl(),
+            'notes' => $this->notes,
+            'sort_order' => (int) $this->sort_order,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

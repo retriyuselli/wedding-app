@@ -13,6 +13,7 @@ enum KeychainStore {
 
         var attributes = query
         attributes[kSecValueData as String] = Data(token.utf8)
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         SecItemAdd(attributes as CFDictionary, nil)
     }
 

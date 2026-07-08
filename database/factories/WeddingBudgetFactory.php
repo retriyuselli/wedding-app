@@ -19,10 +19,10 @@ class WeddingBudgetFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'      => User::factory(),
+            'user_id' => User::factory(),
             'total_budget' => fake()->numberBetween(50, 500) * 1_000_000,
-            'currency'     => 'IDR',
-            'notes'        => fake()->optional()->sentence(),
+            'currency' => WeddingBudget::defaultCurrency(),
+            'notes' => fake()->optional()->sentence(),
         ];
     }
 }

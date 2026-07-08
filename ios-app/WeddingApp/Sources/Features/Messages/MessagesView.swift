@@ -3,10 +3,12 @@ import SwiftUI
 struct MessagesView: View {
     @Environment(\.dismiss) private var dismiss
 
-    @State private var threads: [MessageThread] = MessageThread.samples
+    @State private var threads: [MessageThread] = []
     @State private var searchText = ""
     @State private var filter = MessageFilter()
     @State private var selectedThread: MessageThread?
+    @State private var isLoading = false
+    @State private var errorMessage: String?
     @FocusState private var isSearchFocused: Bool
 
     private let searchBarID = "messages-search-bar"
@@ -18,7 +20,7 @@ struct MessagesView: View {
                 let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
                 let matchSearch = query.isEmpty
                     || thread.name.localizedCaseInsensitiveContains(query)
-                    || thread.lastMessage.localizedCaseInsensitiveContains(query)
+                    || (thread.lastMessage ?? "").localizedCaseInsensitiveContains(query)
                 let matchUnread = !filter.unreadOnly || thread.hasUnread
                 return matchCategory && matchSearch && matchUnread
             }
@@ -49,7 +51,6 @@ struct MessagesView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 24)
                 }
-                .refreshable {}
                 .onChange(of: isSearchFocused) { _, focused in
                     guard focused else { return }
                     withAnimation(.easeInOut(duration: 0.25)) {
@@ -60,12 +61,30 @@ struct MessagesView: View {
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
-        .navigationDestination(item: $selectedThread) { thread in
-            MessageDetailView(thread: thread) { updated in
-                if let index = threads.firstIndex(where: { $0.id == updated.id }) {
-                    threads[index] = updated
-                }
+        .overlay {
+            if isLoading && threads.isEmpty {
+                ProgressView()
             }
+        }
+        .task { await loadThreads() }
+        .refreshable { await loadThreads() }
+        .navigationDestination(item: $selectedThread) { thread in
+            MessageDetailView(thread: thread) {
+                Task { await loadThreads() }
+            }
+        }
+    }
+
+    private func loadThreads() async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let envelope: Envelope<[MessageThread]> = try await APIClient.shared.request("messages/threads")
+            threads = envelope.data
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -110,11 +129,11 @@ struct MessagesView: View {
                 }
             }
 
-            Text("Messages")
+            Text(L10n.Messages.title)
                 .font(.system(size: 32, weight: .bold, design: .serif))
                 .foregroundStyle(AppTheme.sageDark)
 
-            Text("Kelola percakapan dengan vendor,\npanitia, dan tim support.")
+            Text(L10n.Messages.subtitle)
                 .font(.system(size: 12, weight: .regular, design: .serif))
                 .foregroundStyle(AppTheme.gold)
                 .lineSpacing(2)
@@ -151,9 +170,9 @@ struct MessagesView: View {
 
     private var statsRow: some View {
         HStack(spacing: 0) {
-            statItem(label: "Total Chat", value: "\(threads.count)")
-            statItem(label: "Belum Dibaca", value: "\(totalUnread)", tint: AppTheme.gold)
-            statItem(label: "Vendor", value: "\(threads.filter { $0.category == .vendor }.count)")
+            statItem(label: L10n.Messages.totalChat, value: "\(threads.count)")
+            statItem(label: L10n.Messages.unread, value: "\(totalUnread)", tint: AppTheme.gold)
+            statItem(label: L10n.Dashboard.vendors, value: "\(threads.filter { $0.category == .vendor }.count)")
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
@@ -184,7 +203,7 @@ struct MessagesView: View {
                 .font(AppFont.medium(12))
                 .foregroundStyle(AppTheme.sageDark)
             Spacer()
-            Button("Reset") {
+            Button(L10n.Common.reset) {
                 filter.unreadOnly = false
             }
             .font(AppFont.medium(12))
@@ -203,7 +222,7 @@ struct MessagesView: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(isSearchFocused ? AppTheme.sageDark : AppTheme.ink.opacity(0.35))
 
-            TextField("Cari percakapan atau pesan...", text: $searchText)
+            TextField(L10n.Messages.searchPlaceholder, text: $searchText)
                 .font(AppFont.regular(13))
                 .foregroundStyle(AppTheme.ink)
                 .focused($isSearchFocused)
@@ -270,25 +289,10 @@ struct MessagesView: View {
             if filteredThreads.isEmpty {
                 emptyState
             } else {
-                VStack(spacing: 10) {
+                LazyVStack(spacing: 10) {
                     ForEach(filteredThreads) { thread in
                         Button {
-                            let opened = MessageThread(
-                                id: thread.id,
-                                name: thread.name,
-                                category: thread.category,
-                                lastMessage: thread.lastMessage,
-                                timeLabel: thread.timeLabel,
-                                unreadCount: 0,
-                                isOnline: thread.isOnline,
-                                avatarSymbol: thread.avatarSymbol,
-                                avatarTint: thread.avatarTint,
-                                messages: thread.messages
-                            )
-                            if let index = threads.firstIndex(where: { $0.id == thread.id }) {
-                                threads[index] = opened
-                            }
-                            selectedThread = opened
+                            selectedThread = thread
                         } label: {
                             MessageThreadRow(thread: thread)
                         }
@@ -304,10 +308,10 @@ struct MessagesView: View {
             Image(systemName: "bubble.left.and.bubble.right")
                 .font(.system(size: 28, weight: .light))
                 .foregroundStyle(AppTheme.ink.opacity(0.25))
-            Text("Percakapan tidak ditemukan")
+            Text(L10n.Messages.notFound)
                 .font(AppFont.medium(14))
                 .foregroundStyle(AppTheme.ink.opacity(0.55))
-            Text("Coba kata kunci lain atau ubah filter.")
+            Text(L10n.Messages.notFoundSub)
                 .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.ink.opacity(0.4))
         }
@@ -381,7 +385,7 @@ private struct MessageThreadRow: View {
                 }
 
                 HStack(alignment: .top) {
-                    Text(thread.lastMessage)
+                    Text(thread.lastMessage ?? "Belum ada pesan")
                         .font(AppFont.regular(12))
                         .foregroundStyle(thread.hasUnread ? AppTheme.ink.opacity(0.75) : AppTheme.ink.opacity(0.45))
                         .lineLimit(2)
@@ -420,17 +424,18 @@ private struct MessageThreadRow: View {
 
 struct MessageDetailView: View {
     let thread: MessageThread
-    let onUpdate: (MessageThread) -> Void
+    let onThreadUpdated: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var draftText = ""
-    @State private var messages: [ChatMessageItem]
+    @State private var messages: [ChatMessageItem] = []
+    @State private var isLoading = false
+    @State private var isSending = false
     @FocusState private var isInputFocused: Bool
 
-    init(thread: MessageThread, onUpdate: @escaping (MessageThread) -> Void) {
+    init(thread: MessageThread, onThreadUpdated: @escaping () -> Void) {
         self.thread = thread
-        self.onUpdate = onUpdate
-        _messages = State(initialValue: thread.messages)
+        self.onThreadUpdated = onThreadUpdated
     }
 
     var body: some View {
@@ -451,16 +456,16 @@ struct MessageDetailView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 16)
                     }
+                    .overlay {
+                        if isLoading && messages.isEmpty {
+                            ProgressView()
+                        }
+                    }
                     .onChange(of: messages.count) { _, _ in
                         if let last = messages.last {
                             withAnimation {
                                 proxy.scrollTo(last.id, anchor: .bottom)
                             }
-                        }
-                    }
-                    .onAppear {
-                        if let last = messages.last {
-                            proxy.scrollTo(last.id, anchor: .bottom)
                         }
                     }
                 }
@@ -470,6 +475,20 @@ struct MessageDetailView: View {
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
+        .task { await loadMessages() }
+    }
+
+    private func loadMessages() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let envelope: Envelope<MessageThread> = try await APIClient.shared.request("messages/threads/\(thread.id)")
+            messages = envelope.data.messages
+            onThreadUpdated()
+        } catch {
+            messages = thread.messages
+        }
     }
 
     private var detailHeader: some View {
@@ -511,7 +530,7 @@ struct MessageDetailView: View {
 
     private var composerBar: some View {
         HStack(spacing: 10) {
-            TextField("Tulis pesan...", text: $draftText, axis: .vertical)
+            TextField(L10n.Messages.writePlaceholder, text: $draftText, axis: .vertical)
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink)
                 .lineLimit(1 ... 4)
@@ -537,7 +556,7 @@ struct MessageDetailView: View {
                     )
             }
             .buttonStyle(.plain)
-            .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSending)
         }
         .padding(.horizontal, 16)
         .padding(.top, 10)
@@ -547,30 +566,26 @@ struct MessageDetailView: View {
 
     private func sendMessage() {
         let text = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty, !isSending else { return }
 
-        let newMessage = ChatMessageItem(
-            id: (messages.map(\.id).max() ?? 0) + 1,
-            text: text,
-            isOutgoing: true,
-            timeLabel: "Baru"
-        )
-        messages.append(newMessage)
         draftText = ""
+        isSending = true
 
-        let updated = MessageThread(
-            id: thread.id,
-            name: thread.name,
-            category: thread.category,
-            lastMessage: text,
-            timeLabel: "Baru",
-            unreadCount: 0,
-            isOnline: thread.isOnline,
-            avatarSymbol: thread.avatarSymbol,
-            avatarTint: thread.avatarTint,
-            messages: messages
-        )
-        onUpdate(updated)
+        Task {
+            defer { isSending = false }
+
+            do {
+                let envelope: Envelope<ChatMessageItem> = try await APIClient.shared.request(
+                    "messages/threads/\(thread.id)/send",
+                    method: "POST",
+                    json: ["body": text]
+                )
+                messages.append(envelope.data)
+                onThreadUpdated()
+            } catch {
+                draftText = text
+            }
+        }
     }
 }
 
@@ -582,6 +597,18 @@ private struct ChatBubble: View {
             if message.isOutgoing { Spacer(minLength: 48) }
 
             VStack(alignment: message.isOutgoing ? .trailing : .leading, spacing: 4) {
+                if let topicLabel = message.topicLabel, message.isOutgoing {
+                    Text(topicLabel)
+                        .font(AppFont.medium(10))
+                        .foregroundStyle(message.isOutgoing ? .white.opacity(0.85) : AppTheme.sageDark)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            message.isOutgoing ? Color.white.opacity(0.18) : AppTheme.lightSage,
+                            in: Capsule()
+                        )
+                }
+
                 Text(message.text)
                     .font(AppFont.regular(13))
                     .foregroundStyle(message.isOutgoing ? .white : AppTheme.ink)

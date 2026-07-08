@@ -19,6 +19,7 @@ class VendorsTable
     {
         return $table
             ->defaultSort('sort_order')
+            ->description('Urutan vendor diatur otomatis. Gunakan tombol "Atur urutan" untuk drag & drop.')
             ->columns([
                 ImageColumn::make('logo')
                     ->label('Logo')
@@ -63,7 +64,8 @@ class VendorsTable
                 TextColumn::make('sort_order')
                     ->label('Urutan')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('slug')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),

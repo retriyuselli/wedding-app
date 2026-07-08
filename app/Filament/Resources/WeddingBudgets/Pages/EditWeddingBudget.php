@@ -4,7 +4,6 @@ namespace App\Filament\Resources\WeddingBudgets\Pages;
 
 use App\Filament\Resources\WeddingBudgets\WeddingBudgetResource;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditWeddingBudget extends EditRecord
@@ -14,7 +13,6 @@ class EditWeddingBudget extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make(),
             DeleteAction::make(),
         ];
     }

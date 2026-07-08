@@ -26,6 +26,18 @@ enum APIError: LocalizedError {
 }
 
 extension Error {
+    var isRequestCancelled: Bool {
+        if self is CancellationError {
+            return true
+        }
+
+        if let urlError = self as? URLError, urlError.code == .cancelled {
+            return true
+        }
+
+        return false
+    }
+
     var userFacingMessage: String {
         if let localized = self as? LocalizedError, let message = localized.errorDescription {
             return message
@@ -33,19 +45,21 @@ extension Error {
 
         if let urlError = self as? URLError {
             switch urlError.code {
+            case .cancelled:
+                return ""
             case .notConnectedToInternet, .networkConnectionLost:
                 return "Tidak ada koneksi internet. Periksa Wi-Fi perangkat Anda."
             case .cannotConnectToHost, .cannotFindHost, .timedOut:
-                return "Tidak dapat terhubung ke server Laravel. Pastikan backend berjalan dengan `php artisan serve --host=0.0.0.0 --port=8000`."
+                return "Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi."
             default:
                 return "Gagal menghubungi server (\(urlError.localizedDescription))."
             }
         }
 
         if self is CancellationError {
-            return "Gagal memuat detail vendor."
+            return ""
         }
 
-        return "Gagal memuat detail vendor."
+        return "Gagal memuat data."
     }
 }

@@ -3,83 +3,81 @@ import SwiftUI
 struct InspirationView: View {
     @Environment(\.dismiss) private var dismiss
 
-    @State private var items: [InspirationItem] = InspirationItem.popularSamples
+    @State private var items: [InspirationItem] = []
     @State private var searchText = ""
     @State private var filter = InspirationFilter()
     @State private var draftFilter = InspirationFilter()
+    @State private var selectedCategory: InspirationCategory = .all
     @State private var showFilterSheet = false
     @State private var showSavedOnly = false
-    @State private var featuredIndex = 0
-    @State private var savedItemIDs: Set<Int> = Set(InspirationItem.popularSamples.filter(\.isSaved).map(\.id))
-    @FocusState private var isSearchFocused: Bool
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    @ObservedObject private var savedStore = SavedInspirationStore.shared
+    @ObservedObject private var likedStore = LikedInspirationStore.shared
 
-    private let featuredTimer = Timer.publish(every: 4, on: .main, in: .common).autoconnect()
-    private let searchBarID = "inspiration-search-bar"
-
-    private var filteredPopularItems: [InspirationItem] {
+    private var filteredItems: [InspirationItem] {
         items
             .filter { item in
-                let matchCategory = filter.categories.isEmpty || filter.categories.contains(item.category)
+                let matchCategory: Bool
+                if selectedCategory == .all {
+                    matchCategory = filter.categories.isEmpty || filter.categories.contains(item.category)
+                } else {
+                    matchCategory = item.category == selectedCategory
+                }
+
                 let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
                 let matchSearch = query.isEmpty
                     || item.title.localizedCaseInsensitiveContains(query)
+                    || (item.description?.localizedCaseInsensitiveContains(query) ?? false)
                     || item.category.label.localizedCaseInsensitiveContains(query)
+
                 let matchLikes = filter.minimumLikes == nil || item.likes >= (filter.minimumLikes ?? 0)
-                let matchSaved = !filter.savedOnly || savedItemIDs.contains(item.id)
-                let matchSavedHeader = !showSavedOnly || savedItemIDs.contains(item.id)
+                let matchSaved = !filter.savedOnly || savedStore.contains(item.id)
+                let matchSavedHeader = !showSavedOnly || savedStore.contains(item.id)
+
                 return matchCategory && matchSearch && matchLikes && matchSaved && matchSavedHeader
             }
             .sorted { $0.likes > $1.likes }
-    }
-
-    private var filteredCategoryGroups: [InspirationCategoryGroup] {
-        InspirationCategoryGroup.samples.filter { group in
-            let matchCategory = filter.categories.isEmpty || filter.categories.contains(group.id)
-            let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-            let matchSearch = query.isEmpty
-                || group.id.label.localizedCaseInsensitiveContains(query)
-            return matchCategory && matchSearch
-        }
     }
 
     var body: some View {
         ZStack {
             LuxuryWeddingBackground()
 
-            ScrollViewReader { proxy in
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 18) {
-                        header
-                        searchRow
-                            .id(searchBarID)
-                        categoryRow
-                        if filter.isActive {
-                            activeFilterRow
-                        }
-                        if isSearching || filter.isActive || showSavedOnly {
-                            searchResultsHeader
-                        }
-                        if !isSearching && !filter.isActive && !showSavedOnly {
-                            featuredCarousel
-                        }
-                        popularSection
-                        categoryGridSection
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 18) {
+                    header
+
+                    searchBar
+
+                    categorySection
+
+                    if filter.isActive {
+                        activeFilterRow
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
-                }
-                .refreshable {}
-                .onChange(of: isSearchFocused) { _, focused in
-                    guard focused else { return }
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        proxy.scrollTo(searchBarID, anchor: .top)
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(AppFont.regular(13))
+                            .foregroundStyle(.red)
                     }
+
+                    latestSection
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 28)
             }
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
+        .overlay {
+            if isLoading && items.isEmpty {
+                ProgressView()
+            }
+        }
+        .task { await load() }
+        .refreshable { await load() }
         .sheet(isPresented: $showFilterSheet) {
             InspirationFilterSheet(
                 filter: $draftFilter,
@@ -96,93 +94,221 @@ struct InspirationView: View {
         }
     }
 
-    private var isSearching: Bool {
-        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    private func activateSearch() {
-        isSearchFocused = true
-    }
-
-    private func openFilterSheet() {
-        draftFilter = filter
-        isSearchFocused = false
-        showFilterSheet = true
-    }
-
     // MARK: - Header
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppTheme.ink.opacity(0.8))
-                }
-                .buttonStyle(.plain)
-
-                Spacer()
-
-                HStack(spacing: 10) {
-                    Button(action: activateSearch) {
-                        circleButton("magnifyingglass", isActive: isSearchFocused || isSearching)
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showSavedOnly.toggle()
-                        }
-                    } label: {
-                        circleButton("bookmark", isActive: showSavedOnly)
-                    }
-                    .buttonStyle(.plain)
-                }
+        HStack(alignment: .top) {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppTheme.ink.opacity(0.72))
+                    .frame(width: 42, height: 42)
+                    .background(.white.opacity(0.86), in: Circle())
+                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
-
-            Text("Inspiration")
-                .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
-
-            Text("Temukan ide dan inspirasi untuk hari\nspesialmu.")
-                .font(.system(size: 12, weight: .regular, design: .serif))
-                .foregroundStyle(AppTheme.gold)
-                .lineSpacing(2)
-        }
-        .padding(.top, 4)
-    }
-
-    private func circleButton(_ icon: String, isActive: Bool = false) -> some View {
-        Image(systemName: icon)
-            .font(.system(size: 17, weight: .regular))
-            .foregroundStyle(isActive ? AppTheme.sageDark : AppTheme.ink.opacity(0.72))
-            .frame(width: 42, height: 42)
-            .background((isActive ? AppTheme.lightSage : .white).opacity(0.86), in: Circle())
-            .overlay {
-                Circle()
-                    .stroke(AppTheme.sage.opacity(isActive ? 0.35 : 0), lineWidth: 1)
-            }
-            .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
-    }
-
-    private var searchResultsHeader: some View {
-        HStack {
-            Text("\(filteredPopularItems.count) inspirasi ditemukan")
-                .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.sageDark)
+            .buttonStyle(.plain)
 
             Spacer()
 
-            if isSearching {
-                Button("Hapus") {
-                    searchText = ""
-                    isSearchFocused = false
+            VStack(spacing: 4) {
+                Text(L10n.Inspiration.title)
+                    .font(AppFont.medium(18))
+                    .foregroundStyle(AppTheme.sageDark)
+                Text(L10n.Inspiration.subtitle)
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .multilineTextAlignment(.center)
+            }
+
+            Spacer()
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showSavedOnly.toggle()
                 }
-                .font(AppFont.medium(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+            } label: {
+                Image(systemName: showSavedOnly ? "bookmark.fill" : "bookmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(showSavedOnly ? AppTheme.sageDark : AppTheme.ink.opacity(0.72))
+                    .frame(width: 42, height: 42)
+                    .background((showSavedOnly ? AppTheme.lightSage : .white).opacity(0.86), in: Circle())
+                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Search
+
+    private var searchBar: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+
+                TextField(L10n.Inspiration.searchPlaceholder, text: $searchText)
+                    .font(AppFont.regular(14))
+                    .foregroundStyle(AppTheme.ink)
+                    .autocorrectionDisabled()
+
+                if !searchText.isEmpty {
+                    Button { searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(AppTheme.ink.opacity(0.28))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
+            }
+
+            Button {
+                draftFilter = filter
+                showFilterSheet = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text(L10n.Common.filter)
+                        .font(AppFont.medium(13))
+                }
+                .foregroundStyle(filter.isActive ? AppTheme.sageDark : AppTheme.sageDark)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background((filter.isActive ? AppTheme.lightSage : AppTheme.surface), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(AppTheme.sage.opacity(filter.isActive ? 0.35 : 0.12), lineWidth: 1)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Categories
+
+    private var categorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(L10n.Common.category)
+                    .font(AppFont.medium(15))
+                    .foregroundStyle(AppTheme.ink)
+                Spacer()
+                NavigationLink {
+                    InspirationCategoriesView(items: items)
+                } label: {
+                    HStack(spacing: 3) {
+                        Text(L10n.Common.seeAll)
+                            .font(AppFont.regular(12))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                }
+                .buttonStyle(.plain)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(InspirationCategory.allCases) { category in
+                        categoryChip(category)
+                    }
+                }
+                .padding(.horizontal, 2)
+                .padding(.vertical, 2)
+            }
+        }
+    }
+
+    private func categoryChip(_ category: InspirationCategory) -> some View {
+        let isSelected = selectedCategory == category
+
+        return Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                selectedCategory = category
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: category.iconName)
+                    .font(.system(size: 12, weight: .medium))
+                Text(category.label)
+                    .font(AppFont.medium(12))
+                    .lineLimit(1)
+                Text("\(count(for: category))")
+                    .font(AppFont.medium(11))
+                    .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(
+                        (isSelected ? Color.white.opacity(0.25) : AppTheme.lightSage),
+                        in: Capsule()
+                    )
+            }
+            .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .background(
+                isSelected ? AppTheme.sageDark : AppTheme.surface,
+                in: Capsule()
+            )
+            .overlay {
+                Capsule()
+                    .stroke(AppTheme.sage.opacity(isSelected ? 0 : 0.15), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func count(for category: InspirationCategory) -> Int {
+        if category == .all {
+            return items.count
+        }
+        return items.filter { $0.category == category }.count
+    }
+
+    // MARK: - Latest Grid
+
+    private var latestSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(showSavedOnly ? L10n.Inspiration.saved : L10n.Inspiration.latest)
+                .font(AppFont.medium(15))
+                .foregroundStyle(AppTheme.ink)
+
+            if filteredItems.isEmpty {
+                emptyStateCard
+            } else {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                    ],
+                    spacing: 16
+                ) {
+                    ForEach(filteredItems) { item in
+                        NavigationLink {
+                            InspirationDetailView(item: item)
+                        } label: {
+                            InspirationGridCard(
+                                item: item,
+                                isSaved: savedStore.contains(item.id),
+                                isLiked: likedStore.contains(item.id),
+                                likes: likedStore.likesCount(for: item.id, fallback: item.likes)
+                            ) {
+                                savedStore.toggle(item.id)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
         }
     }
@@ -227,204 +353,142 @@ struct InspirationView: View {
         }
     }
 
-    // MARK: - Search
-
-    private var searchRow: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Button(action: activateSearch) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(isSearchFocused ? AppTheme.sageDark : AppTheme.ink.opacity(0.35))
-                }
-                .buttonStyle(.plain)
-
-                TextField("Cari inspirasi (dekorasi, tema, warna, dll)", text: $searchText)
-                    .font(AppFont.regular(13))
-                    .foregroundStyle(AppTheme.ink)
-                    .focused($isSearchFocused)
-                    .submitLabel(.search)
-                    .onSubmit { isSearchFocused = false }
-
-                if !searchText.isEmpty {
-                    Button { searchText = "" } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(AppTheme.ink.opacity(0.28))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(AppTheme.surface, in: Capsule())
-            .overlay {
-                Capsule()
-                    .stroke(
-                        isSearchFocused ? AppTheme.sageDark.opacity(0.35) : AppTheme.sage.opacity(0.10),
-                        lineWidth: isSearchFocused ? 1.5 : 1
-                    )
-            }
-
-            Button(action: openFilterSheet) {
-                HStack(spacing: 6) {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 13, weight: .medium))
-                    Text("Filter")
-                        .font(AppFont.medium(12))
-                }
-                .foregroundStyle(filter.isActive ? AppTheme.sageDark : AppTheme.ink.opacity(0.7))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .background((filter.isActive ? AppTheme.lightSage : AppTheme.surface).opacity(0.95), in: Capsule())
-                .overlay {
-                    Capsule()
-                        .stroke(
-                            filter.isActive ? AppTheme.sageDark.opacity(0.35) : AppTheme.sage.opacity(0.10),
-                            lineWidth: filter.isActive ? 1.5 : 1
-                        )
-                }
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    // MARK: - Categories
-
-    private var categoryRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 14) {
-                ForEach(InspirationCategory.allCases) { category in
-                    InspirationCategoryChip(
-                        category: category,
-                        isSelected: category == .all
-                            ? filter.categories.isEmpty
-                            : filter.categories == [category]
-                    ) {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            if category == .all {
-                                filter.categories = []
-                            } else {
-                                filter.categories = [category]
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.vertical, 2)
-        }
-    }
-
-    // MARK: - Featured
-
-    private var featuredCarousel: some View {
+    private var emptyStateCard: some View {
         VStack(spacing: 10) {
-            TabView(selection: $featuredIndex) {
-                ForEach(InspirationFeatured.samples.indices, id: \.self) { index in
-                    InspirationFeaturedCard(featured: InspirationFeatured.samples[index])
-                        .tag(index)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 168)
+            Image(systemName: "sparkles")
+                .font(.system(size: 32, weight: .light))
+                .foregroundStyle(AppTheme.sage.opacity(0.65))
 
-            HStack(spacing: 6) {
-                ForEach(InspirationFeatured.samples.indices, id: \.self) { index in
-                    Circle()
-                        .fill(AppTheme.sageDark.opacity(index == featuredIndex ? 1 : 0.25))
-                        .frame(width: 6, height: 6)
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .onReceive(featuredTimer) { _ in
-            withAnimation(.easeInOut(duration: 0.6)) {
-                featuredIndex = (featuredIndex + 1) % InspirationFeatured.samples.count
-            }
-        }
-    }
-
-    // MARK: - Popular
-
-    private var popularSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            sectionHeader("Inspirasi Populer")
-
-            if filteredPopularItems.isEmpty {
-                emptyStateCard
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(filteredPopularItems) { item in
-                            InspirationPopularCard(
-                                item: item,
-                                isSaved: savedItemIDs.contains(item.id)
-                            ) {
-                                toggleSaved(item.id)
-                            }
-                        }
-                    }
-                    .padding(.vertical, 2)
-                }
-            }
-        }
-    }
-
-    // MARK: - Category Grid
-
-    private var categoryGridSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            sectionHeader("Berdasarkan Kategori")
-
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                ForEach(filteredCategoryGroups) { group in
-                    InspirationCategoryCard(group: group)
-                }
-            }
-        }
-    }
-
-    private func sectionHeader(_ title: String) -> some View {
-        HStack {
-            Text(title)
-                .font(AppFont.semibold(18))
+            Text(showSavedOnly ? "Belum ada inspirasi tersimpan" : "Inspirasi tidak ditemukan")
+                .font(AppFont.medium(15))
                 .foregroundStyle(AppTheme.sageDark)
 
-            Spacer()
-
-            Button {} label: {
-                Label("Lihat Semua", systemImage: "chevron.right")
-                    .font(AppFont.regular(12))
-                    .labelStyle(.titleAndIcon)
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private var emptyStateCard: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 28, weight: .light))
-                .foregroundStyle(AppTheme.ink.opacity(0.25))
-            Text("Inspirasi tidak ditemukan")
-                .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
-            Text("Coba kata kunci lain atau ubah filter.")
+            Text(showSavedOnly
+                ? "Simpan ide favorit Anda dengan mengetuk ikon bookmark pada kartu inspirasi."
+                : "Coba kata kunci lain atau ubah filter.")
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.4))
+                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
+        .padding(.vertical, 36)
+        .padding(.horizontal, 20)
         .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        }
     }
 
-    private func toggleSaved(_ id: Int) {
-        if savedItemIDs.contains(id) {
-            savedItemIDs.remove(id)
-        } else {
-            savedItemIDs.insert(id)
+    private func load() async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let envelope: Envelope<[InspirationItem]> = try await APIClient.shared.request("inspirations")
+            items = envelope.data
+            savedStore.sync(with: envelope.data)
+            likedStore.sync(with: envelope.data)
+        } catch {
+            errorMessage = error.userFacingMessage
         }
+    }
+}
+
+// MARK: - Grid Card
+
+private struct InspirationGridCard: View {
+    let item: InspirationItem
+    let isSaved: Bool
+    let isLiked: Bool
+    let likes: Int
+    let onToggleSave: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ZStack(alignment: .topTrailing) {
+                inspirationImage(
+                    imageUrl: item.imageUrl,
+                    symbol: item.thumbnailSymbol,
+                    tint: item.thumbnailTint
+                )
+                .frame(height: 130)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+                Button(action: onToggleSave) {
+                    Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(isSaved ? AppTheme.sageDark : AppTheme.ink.opacity(0.55))
+                        .frame(width: 28, height: 28)
+                        .background(.white.opacity(0.92), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .padding(8)
+
+                VStack {
+                    Spacer()
+                    HStack {
+                        Text(item.category.label)
+                            .font(AppFont.medium(10))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(.black.opacity(0.28), in: Capsule())
+                        Spacer()
+                    }
+                    .padding(8)
+                }
+                .frame(height: 130)
+            }
+
+            Text(item.title)
+                .font(AppFont.semibold(13))
+                .foregroundStyle(AppTheme.ink)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let description = item.description, !description.isEmpty {
+                Text(description)
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            HStack(spacing: 12) {
+                HStack(spacing: 4) {
+                    Image(systemName: isLiked ? "heart.fill" : "heart")
+                        .font(.system(size: 10))
+                        .foregroundStyle(isLiked ? AppTheme.peachDark : AppTheme.ink.opacity(0.35))
+                    Text(formattedCount(likes))
+                        .font(AppFont.regular(11))
+                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                }
+
+                HStack(spacing: 4) {
+                    Image(systemName: "eye.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(AppTheme.sageDark.opacity(0.6))
+                    Text(formattedCount(item.views))
+                        .font(AppFont.regular(11))
+                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                }
+            }
+        }
+        .padding(10)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        }
+    }
+
+    private func formattedCount(_ value: Int) -> String {
+        if value >= 1000 {
+            return String(format: "%.1fK", Double(value) / 1000)
+        }
+        return "\(value)"
     }
 }
 
@@ -507,6 +571,8 @@ private struct InspirationFilterSheet: View {
                                 .font(.system(size: 12, weight: .medium))
                             Text(category.label)
                                 .font(AppFont.medium(12))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
                         .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
                         .frame(maxWidth: .infinity)
@@ -583,241 +649,374 @@ private struct InspirationFilterSheet: View {
     }
 }
 
-// MARK: - Category Chip
+// MARK: - Detail View
 
-private struct InspirationCategoryChip: View {
-    let category: InspirationCategory
-    let isSelected: Bool
-    let action: () -> Void
+struct InspirationDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var savedStore = SavedInspirationStore.shared
+    @ObservedObject private var likedStore = LikedInspirationStore.shared
+
+    let item: InspirationItem
+
+    private var isSaved: Bool {
+        savedStore.contains(item.id)
+    }
+
+    private var isLiked: Bool {
+        likedStore.contains(item.id)
+    }
+
+    private var displayLikes: Int {
+        likedStore.likesCount(for: item.id, fallback: item.likes)
+    }
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: category.iconName)
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(isSelected ? AppTheme.sageDark : AppTheme.ink.opacity(0.55))
-                    .frame(width: 54, height: 54)
-                    .background(isSelected ? AppTheme.mist : AppTheme.surface, in: Circle())
-                    .overlay {
-                        Circle()
-                            .stroke(AppTheme.sage.opacity(isSelected ? 0 : 0.10), lineWidth: 1)
-                    }
+        ZStack(alignment: .bottom) {
+            LuxuryWeddingBackground()
 
-                Text(category.label)
-                    .font(AppFont.regular(11))
-                    .foregroundStyle(isSelected ? AppTheme.sageDark : AppTheme.ink.opacity(0.55))
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    heroImage
+
+                    VStack(alignment: .leading, spacing: 18) {
+                        categoryTag
+
+                        Text(item.title)
+                            .font(AppFont.semibold(22))
+                            .foregroundStyle(AppTheme.sageDark)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        statsRow
+
+                        if let description = item.description, !description.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(L10n.Common.description)
+                                    .font(AppFont.medium(15))
+                                    .foregroundStyle(AppTheme.ink)
+                                Text(description)
+                                    .font(AppFont.regular(13))
+                                    .foregroundStyle(AppTheme.ink.opacity(0.6))
+                                    .lineSpacing(4)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(16)
+                            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 18)
+                    .padding(.bottom, 24)
+                }
+                .padding(.bottom, 90)
             }
-            .frame(width: 64)
+
+            saveBar
+        }
+        .ignoresSafeArea(edges: .top)
+        .statusBarBlur()
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var heroImage: some View {
+        ZStack(alignment: .topLeading) {
+            inspirationImage(
+                imageUrl: item.imageUrl,
+                symbol: item.thumbnailSymbol,
+                tint: item.thumbnailTint
+            )
+            .frame(height: 320)
+            .frame(maxWidth: .infinity)
+            .clipped()
+
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppTheme.ink.opacity(0.75))
+                    .frame(width: 42, height: 42)
+                    .background(.white.opacity(0.9), in: Circle())
+                    .shadow(color: AppTheme.sageDark.opacity(0.12), radius: 10, y: 4)
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 20)
+            .padding(.top, 60)
+        }
+    }
+
+    private var categoryTag: some View {
+        HStack(spacing: 6) {
+            Image(systemName: item.category.iconName)
+                .font(.system(size: 11, weight: .medium))
+            Text(item.category.label)
+                .font(AppFont.medium(12))
+        }
+        .foregroundStyle(AppTheme.sageDark)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(AppTheme.lightSage, in: Capsule())
+    }
+
+    private var statsRow: some View {
+        HStack(spacing: 20) {
+            Button {
+                likedStore.toggle(item.id, currentLikes: displayLikes)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: isLiked ? "heart.fill" : "heart")
+                        .font(.system(size: 13))
+                        .foregroundStyle(isLiked ? AppTheme.peachDark : AppTheme.ink.opacity(0.35))
+                    Text(L10n.Inspiration.likes(formattedCount(displayLikes)))
+                        .font(AppFont.regular(13))
+                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                }
+            }
+            .buttonStyle(.plain)
+
+            HStack(spacing: 6) {
+                Image(systemName: "eye.fill")
+                    .font(.system(size: 13))
+                    .foregroundStyle(AppTheme.sageDark.opacity(0.6))
+                Text(L10n.Inspiration.views(formattedCount(item.views)))
+                    .font(AppFont.regular(13))
+                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+            }
+        }
+    }
+
+    private var saveBar: some View {
+        Button {
+            savedStore.toggle(item.id)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                    .font(.system(size: 16, weight: .semibold))
+                Text(isSaved ? L10n.Inspiration.savedLabel : L10n.Inspiration.saveInspiration)
+                    .font(AppFont.medium(16))
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(isSaved ? AppTheme.sage : AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 12)
+        .background(.ultraThinMaterial)
+    }
+
+    private func formattedCount(_ value: Int) -> String {
+        if value >= 1000 {
+            return String(format: "%.1fK", Double(value) / 1000)
+        }
+        return "\(value)"
+    }
+}
+
+// MARK: - All Categories
+
+struct InspirationCategoriesView: View {
+    let items: [InspirationItem]
+
+    var body: some View {
+        ZStack {
+            LuxuryWeddingBackground()
+
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 16) {
+                    MoreSubpageNavigationHeader(
+                        title: L10n.Inspiration.allCategories,
+                        subtitle: L10n.Inspiration.allCategoriesSub
+                    )
+
+                    VStack(spacing: 10) {
+                        categoryRow(
+                            category: .all,
+                            count: items.count,
+                            subtitle: "Lihat seluruh inspirasi"
+                        )
+
+                        ForEach(InspirationCategory.filterableCases) { category in
+                            let count = items.filter { $0.category == category }.count
+                            if count > 0 {
+                                categoryRow(
+                                    category: category,
+                                    count: count,
+                                    subtitle: "\(count) inspirasi tersedia"
+                                )
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
+            }
+        }
+        .statusBarBlur()
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private func categoryRow(category: InspirationCategory, count: Int, subtitle: String) -> some View {
+        NavigationLink {
+            InspirationCategoryItemsView(category: category, items: items)
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: category.iconName)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(AppTheme.sageDark)
+                    .frame(width: 48, height: 48)
+                    .background(AppTheme.lightSage, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(category.label)
+                        .font(AppFont.medium(15))
+                        .foregroundStyle(AppTheme.ink)
+                    Text(subtitle)
+                        .font(AppFont.regular(12))
+                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                }
+
+                Spacer(minLength: 8)
+
+                Text("\(count)")
+                    .font(AppFont.semibold(13))
+                    .foregroundStyle(AppTheme.sageDark)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(AppTheme.lightSage, in: Capsule())
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(AppTheme.ink.opacity(0.28))
+            }
+            .padding(14)
+            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+            }
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Featured Card
+// MARK: - Category Items
 
-private struct InspirationFeaturedCard: View {
-    let featured: InspirationFeatured
+struct InspirationCategoryItemsView: View {
+    let category: InspirationCategory
+    let items: [InspirationItem]
+
+    @ObservedObject private var savedStore = SavedInspirationStore.shared
+    @ObservedObject private var likedStore = LikedInspirationStore.shared
+
+    private var filteredItems: [InspirationItem] {
+        let categoryItems = category == .all
+            ? items
+            : items.filter { $0.category == category }
+
+        return categoryItems.sorted { $0.likes > $1.likes }
+    }
+
+    private var pageTitle: String {
+        category == .all ? "Semua Inspirasi" : category.label
+    }
+
+    private var pageSubtitle: String {
+        "\(filteredItems.count) inspirasi ditemukan"
+    }
 
     var body: some View {
-        HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(featured.eyebrow)
-                    .font(.system(size: 11, weight: .regular, design: .serif))
-                    .italic()
-                    .foregroundStyle(AppTheme.gold)
+        ZStack {
+            LuxuryWeddingBackground()
 
-                HStack(spacing: 6) {
-                    Text(featured.title)
-                        .font(AppFont.semibold(20))
-                        .foregroundStyle(AppTheme.sageDark)
-                    Image(systemName: "leaf.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(AppTheme.sage)
-                }
-
-                Text(featured.subtitle)
-                    .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.55))
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Button {} label: {
-                    HStack(spacing: 4) {
-                        Text(featured.buttonTitle)
-                            .font(AppFont.medium(12))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(AppTheme.sageDark, in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 2)
-            }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                LinearGradient(colors: featured.gradient, startPoint: .topLeading, endPoint: .bottomTrailing)
-            )
-
-            ZStack {
-                if let imageName = featured.imageName {
-                    Image(imageName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } else {
-                    LinearGradient(
-                        colors: [AppTheme.sage.opacity(0.35), AppTheme.lightSage],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 16) {
+                    MoreSubpageNavigationHeader(
+                        title: pageTitle,
+                        subtitle: pageSubtitle
                     )
-                    Image(systemName: "leaf.fill")
-                        .font(.system(size: 36, weight: .light))
-                        .foregroundStyle(AppTheme.sageDark.opacity(0.35))
-                }
-            }
-            .frame(width: 148)
-            .clipped()
-        }
-        .frame(height: 168)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 16, y: 8)
-    }
-}
 
-// MARK: - Popular Card
-
-private struct InspirationPopularCard: View {
-    let item: InspirationItem
-    let isSaved: Bool
-    let onToggleSave: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ZStack(alignment: .topTrailing) {
-                inspirationImage(
-                    imageName: item.imageName,
-                    symbol: item.thumbnailSymbol,
-                    tint: item.thumbnailTint
-                )
-                .frame(width: 156, height: 196)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-
-                Button(action: onToggleSave) {
-                    Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(isSaved ? AppTheme.sageDark : AppTheme.ink.opacity(0.55))
-                        .frame(width: 28, height: 28)
-                        .background(.white.opacity(0.92), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .padding(10)
-
-                VStack {
-                    Spacer()
-                    HStack {
-                        Text(item.category.label)
-                            .font(AppFont.medium(10))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(.black.opacity(0.28), in: Capsule())
-                        Spacer()
+                    if filteredItems.isEmpty {
+                        MoreEmptyState(
+                            icon: "sparkles",
+                            title: "Belum ada inspirasi",
+                            message: "Inspirasi untuk kategori ini akan segera ditambahkan."
+                        )
+                    } else {
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.flexible(), spacing: 12),
+                                GridItem(.flexible(), spacing: 12),
+                            ],
+                            spacing: 16
+                        ) {
+                            ForEach(filteredItems) { item in
+                                NavigationLink {
+                                    InspirationDetailView(item: item)
+                                } label: {
+                                    InspirationGridCard(
+                                        item: item,
+                                        isSaved: savedStore.contains(item.id),
+                                        isLiked: likedStore.contains(item.id),
+                                        likes: likedStore.likesCount(for: item.id, fallback: item.likes)
+                                    ) {
+                                        savedStore.toggle(item.id)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
-                    .padding(10)
                 }
-                .frame(width: 156, height: 196)
-            }
-
-            Text(item.title)
-                .font(AppFont.semibold(14))
-                .foregroundStyle(AppTheme.ink)
-                .lineLimit(1)
-
-            HStack(spacing: 4) {
-                Image(systemName: "heart.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(AppTheme.peachDark)
-                Text(formattedLikes(item.likes))
-                    .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
             }
         }
-        .frame(width: 156)
-    }
-
-    private func formattedLikes(_ value: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
-    }
-}
-
-// MARK: - Category Card
-
-private struct InspirationCategoryCard: View {
-    let group: InspirationCategoryGroup
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: group.id.iconName)
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(AppTheme.sageDark)
-                .frame(width: 42, height: 42)
-                .background(AppTheme.lightSage, in: Circle())
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(group.id.label)
-                    .font(AppFont.semibold(14))
-                    .foregroundStyle(AppTheme.ink)
-                HStack(spacing: 4) {
-                    Text("\(group.count) Ide")
-                        .font(AppFont.regular(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(AppTheme.ink.opacity(0.35))
-                }
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(12)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 12, y: 6)
+        .statusBarBlur()
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
 // MARK: - Shared Image
 
-private func inspirationImage(imageName: String?, symbol: String, tint: Color) -> some View {
-    Group {
-        if let imageName {
-            Image(imageName)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        } else {
-            ZStack {
-                LinearGradient(
-                    colors: [tint.opacity(0.35), tint.opacity(0.12)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Image(systemName: symbol)
-                    .font(.system(size: 24, weight: .light))
-                    .foregroundStyle(tint.opacity(0.75))
+@ViewBuilder
+private func inspirationImage(imageUrl: String?, symbol: String, tint: Color) -> some View {
+    if let imageUrl, let url = URL(string: imageUrl) {
+        AsyncImage(url: url) { phase in
+            switch phase {
+            case let .success(image):
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            case .failure:
+                inspirationPlaceholder(symbol: symbol, tint: tint)
+            default:
+                inspirationPlaceholder(symbol: symbol, tint: tint)
+                    .overlay { ProgressView() }
             }
         }
+    } else {
+        inspirationPlaceholder(symbol: symbol, tint: tint)
+    }
+}
+
+private func inspirationPlaceholder(symbol: String, tint: Color) -> some View {
+    ZStack {
+        LinearGradient(
+            colors: [tint.opacity(0.35), tint.opacity(0.12)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        Image(systemName: symbol)
+            .font(.system(size: 28, weight: .light))
+            .foregroundStyle(tint.opacity(0.75))
     }
 }

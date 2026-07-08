@@ -24,6 +24,13 @@ class CustomerPaymentMethod extends Model
         'is_primary' => 'boolean',
     ];
 
+    public static array $typeOptions = [
+        'bank' => 'Bank',
+        'e-wallet' => 'E-Wallet',
+        'cash' => 'Tunai',
+        'other' => 'Lainnya',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

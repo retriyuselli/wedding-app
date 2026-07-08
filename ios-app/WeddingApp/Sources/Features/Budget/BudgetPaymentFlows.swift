@@ -1,6 +1,6 @@
 import SwiftUI
 
-private struct EditableScheduleRoute: Identifiable, Hashable {
+struct EditableScheduleRoute: Identifiable, Hashable {
     let id: Int
 }
 
@@ -17,7 +17,14 @@ struct PaymentScheduleListView: View {
 
     private var sortedSchedules: [PaymentSchedule] {
         schedules.sorted { lhs, rhs in
-            (lhs.dueDate ?? "") < (rhs.dueDate ?? "")
+            let lhsOrder = lhs.sortOrder ?? Int.max
+            let rhsOrder = rhs.sortOrder ?? Int.max
+
+            if lhsOrder != rhsOrder {
+                return lhsOrder < rhsOrder
+            }
+
+            return (lhs.dueDate ?? "") < (rhs.dueDate ?? "")
         }
     }
 
@@ -130,25 +137,44 @@ struct PaymentScheduleListView: View {
 }
 
 struct BudgetCategoryDetailView: View {
+    @StateObject private var categoriesStore = BudgetCategoriesStore.shared
+
     let categoryId: String
     let schedules: [PaymentSchedule]
     let totalBudget: Double
     let onReload: () async -> Void
+    var categoryOptions: [BudgetPaymentCategory] = []
+    var allocations: [BudgetCategoryAllocation] = []
+
+    private var budgetDefaults: BudgetDefaults {
+        categoriesStore.defaults
+    }
 
     private var category: BudgetCategory {
-        BudgetCategory.build(from: schedules).first { $0.id == categoryId }
+        BudgetCategory.build(
+            from: schedules,
+            options: categoryOptions,
+            allocations: allocations,
+            defaults: budgetDefaults
+        ).first { $0.id == categoryId }
             ?? BudgetCategory(
                 id: categoryId,
-                name: BudgetCategory.label(for: categoryId),
-                iconName: BudgetCategory.icon(for: categoryId),
-                allocated: 0,
+                name: BudgetCategory.label(for: categoryId, options: categoryOptions),
+                iconName: BudgetCategory.icon(
+                    for: categoryId,
+                    options: categoryOptions,
+                    defaultIcon: budgetDefaults.categoryIcon
+                ),
+                plannedAllocation: BudgetCategory.allocationsMap(from: allocations)[categoryId]?.allocatedAmount ?? 0,
                 spent: 0,
                 commitment: 0
             )
     }
 
     private var filteredSchedules: [PaymentSchedule] {
-        schedules.filter { ($0.category ?? "other") == categoryId }
+        schedules.filter {
+            $0.resolvedCategoryKey(default: budgetDefaults.expenseCategory) == categoryId
+        }
     }
 
     var body: some View {
@@ -163,17 +189,35 @@ struct BudgetCategoryDetailView: View {
 }
 
 struct BudgetSummaryDetailView: View {
+    @StateObject private var categoriesStore = BudgetCategoriesStore.shared
+
     let totalBudget: Double
     let schedules: [PaymentSchedule]
     let onReload: () async -> Void
+    var categoryOptions: [BudgetPaymentCategory] = []
+    var allocations: [BudgetCategoryAllocation] = []
+
+    private var budgetDefaults: BudgetDefaults {
+        categoriesStore.defaults
+    }
 
     private var categories: [BudgetCategory] {
-        BudgetCategory.build(from: schedules)
+        BudgetCategory.build(
+            from: schedules,
+            options: categoryOptions,
+            allocations: allocations,
+            defaults: budgetDefaults
+        )
     }
 
     private var metrics: BudgetSummaryMetrics {
         BudgetSummaryMetrics.make(
-            budget: WeddingBudget(id: nil, totalBudget: totalBudget, currency: "IDR", notes: nil),
+            budget: WeddingBudget(
+                id: nil,
+                totalBudget: totalBudget,
+                currency: budgetDefaults.currency,
+                notes: nil
+            ),
             categories: categories
         )
     }
@@ -203,7 +247,9 @@ struct BudgetSummaryDetailView: View {
                                     categoryId: category.id,
                                     schedules: schedules,
                                     totalBudget: totalBudget,
-                                    onReload: onReload
+                                    onReload: onReload,
+                                    categoryOptions: categoryOptions,
+                                    allocations: allocations
                                 )
                             } label: {
                                 BudgetCategoryRow(category: category, total: totalBudget)
@@ -265,43 +311,146 @@ struct BudgetSummaryDetailView: View {
 }
 
 struct BudgetCategoriesView: View {
+    @StateObject private var categoriesStore = BudgetCategoriesStore.shared
+
+    private let horizontalPadding: CGFloat = 20
+
     let categories: [BudgetCategory]
+    let allocations: [BudgetCategoryAllocation]
     let totalBudget: Double
     let schedules: [PaymentSchedule]
     let onReload: () async -> Void
+    var categoryOptions: [BudgetPaymentCategory] = []
+
+    private var budgetDefaults: BudgetDefaults {
+        categoriesStore.defaults
+    }
+
+    @State private var editingCategory: BudgetCategory?
+
+    private var allocationMap: [String: BudgetCategoryAllocation] {
+        BudgetCategory.allocationsMap(from: allocations)
+    }
+
+    private var totalPlannedAllocation: Double {
+        categories.reduce(0) { $0 + $1.plannedAllocation }
+    }
 
     var body: some View {
-        List {
-            if categories.isEmpty {
-                ContentUnavailableView(
-                    "Belum ada kategori",
-                    systemImage: "square.grid.2x2",
-                    description: Text("Tambahkan pengeluaran untuk melihat ringkasan per kategori.")
-                )
-            } else {
-                ForEach(categories) { category in
-                    NavigationLink {
-                        BudgetCategoryDetailView(
-                            categoryId: category.id,
-                            schedules: schedules,
-                            totalBudget: totalBudget,
-                            onReload: onReload
-                        )
-                    } label: {
-                        BudgetCategoryRow(category: category, total: totalBudget)
-                            .listRowInsets(EdgeInsets())
+        ZStack {
+            LuxuryWeddingBackground()
+
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 16) {
+                    if !categories.isEmpty {
+                        allocationSummary
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
+
+                    if categories.isEmpty {
+                        ContentUnavailableView(
+                            "Belum ada kategori",
+                            systemImage: "square.grid.2x2",
+                            description: Text("Gagal memuat daftar kategori budget.")
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 32)
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(categories) { category in
+                                categoryCard(for: category)
+                            }
+                        }
+                    }
                 }
+                .padding(.horizontal, horizontalPadding)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
             }
         }
-        .listStyle(.plain)
         .navigationTitle("Kategori Budget")
+        .navigationBarTitleDisplayMode(.large)
+        .refreshable { await onReload() }
+        .navigationDestination(item: $editingCategory) { category in
+            EditCategoryAllocationView(
+                category: category,
+                allocation: allocationMap[category.id]
+            ) {
+                await onReload()
+            }
+        }
+    }
+
+    private func categoryCard(for category: BudgetCategory) -> some View {
+        HStack(spacing: 10) {
+            NavigationLink {
+                BudgetCategoryDetailView(
+                    categoryId: category.id,
+                    schedules: schedules,
+                    totalBudget: totalBudget,
+                    onReload: onReload,
+                    categoryOptions: categoryOptions,
+                    allocations: allocations
+                )
+            } label: {
+                BudgetCategoryRow(category: category, total: totalBudget)
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                editingCategory = category
+            } label: {
+                Image(systemName: category.hasPlannedAllocation ? "pencil.circle.fill" : "plus.circle.fill")
+                    .font(.system(size: 26))
+                    .foregroundStyle(AppTheme.sageDark)
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(category.hasPlannedAllocation ? "Edit alokasi \(category.name)" : "Atur alokasi \(category.name)")
+        }
+    }
+
+    private var allocationSummary: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Total Alokasi Kategori")
+                .font(AppFont.regular(12))
+                .foregroundStyle(AppTheme.ink.opacity(0.5))
+
+            HStack(alignment: .firstTextBaseline) {
+                Text(CurrencyFormatter.rupiah(totalPlannedAllocation))
+                    .font(AppFont.medium(20))
+                    .foregroundStyle(AppTheme.sageDark)
+
+                if totalBudget > 0 {
+                    Text("dari \(CurrencyFormatter.rupiah(totalBudget))")
+                        .font(AppFont.regular(12))
+                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                }
+            }
+
+            if totalBudget > 0 {
+                BudgetBar(
+                    progress: min(totalPlannedAllocation / totalBudget, 1),
+                    color: AppTheme.gold
+                )
+                .frame(height: 6)
+            }
+
+            Text("Ketuk + untuk atur alokasi per kategori.")
+                .font(AppFont.regular(11))
+                .foregroundStyle(AppTheme.ink.opacity(0.45))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        }
     }
 }
 
-private struct PaymentScheduleRow: View {
+struct PaymentScheduleRow: View {
     let schedule: PaymentSchedule
 
     var body: some View {
@@ -360,8 +509,9 @@ private struct PaymentScheduleRow: View {
     }
 }
 
-struct EditTotalBudgetSheet: View {
+struct EditTotalBudgetView: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var categoriesStore = BudgetCategoriesStore.shared
 
     let budget: WeddingBudget
     let onSaved: (WeddingBudget) -> Void
@@ -372,44 +522,218 @@ struct EditTotalBudgetSheet: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        NavigationStack {
-            Form {
-                if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
-                }
+        ZStack(alignment: .bottom) {
+            LuxuryWeddingBackground()
 
-                Section("Total Anggaran") {
-                    TextField("Nominal", text: $totalBudgetText)
-                        .keyboardType(.numberPad)
-                    TextField("Catatan", text: $notes, axis: .vertical)
-                        .lineLimit(2...4)
-                }
-            }
-            .navigationTitle("Atur Budget")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Simpan") {
-                        Task { await save() }
+            ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        header
+
+                        if let errorMessage {
+                            Text(errorMessage)
+                                .font(AppFont.regular(13))
+                                .foregroundStyle(.red)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        budgetInfoCard
+
+                        formSection(title: "Total Anggaran") {
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 12) {
+                                    fieldIcon("banknote")
+
+                                    TextField("Masukkan nominal", text: $totalBudgetText)
+                                        .font(AppFont.regular(14))
+                                        .foregroundStyle(AppTheme.ink)
+                                        .keyboardType(.numberPad)
+                                        .onChange(of: totalBudgetText) { _, newValue in
+                                            totalBudgetText = Self.formatAmountInput(newValue)
+                                        }
+
+                                    Text(amountPreview)
+                                        .font(AppFont.medium(13))
+                                        .foregroundStyle(AppTheme.sageDark)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.7)
+                                }
+
+                                Text("Ini adalah plafon rencana pengeluaran pernikahan Anda.")
+                                    .font(AppFont.regular(11))
+                                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                            }
+                        }
+
+                        formSection(title: "Catatan") {
+                            HStack(alignment: .top, spacing: 12) {
+                                fieldIcon("note.text")
+
+                                TextField("Opsional — misalnya sumber dana atau catatan rencana", text: $notes, axis: .vertical)
+                                    .font(AppFont.regular(14))
+                                    .foregroundStyle(AppTheme.ink)
+                                    .lineLimit(3...5)
+                            }
+                        }
                     }
-                    .disabled(isLoading || parsedAmount == nil)
-                }
-            }
-            .onAppear {
-                if budget.totalBudget > 0 {
-                    totalBudgetText = String(Int(budget.totalBudget))
-                }
-                notes = budget.notes ?? ""
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 120)
             }
         }
+        .statusBarBlur()
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .bottom) { saveButton }
+        .task {
+            await categoriesStore.loadIfNeeded()
+            populateIfNeeded()
+        }
+    }
+
+    private var header: some View {
+        HStack(alignment: .top) {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppTheme.ink.opacity(0.72))
+                    .frame(width: 42, height: 42)
+                    .background(.white.opacity(0.86), in: Circle())
+                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            VStack(spacing: 4) {
+                Text("Atur Budget")
+                    .font(AppFont.medium(18))
+                    .foregroundStyle(AppTheme.sageDark)
+                Text("Tetapkan total rencana anggaran")
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .multilineTextAlignment(.center)
+            }
+
+            Spacer()
+
+            Color.clear.frame(width: 42, height: 42)
+        }
+        .padding(.bottom, 4)
+    }
+
+    private var budgetInfoCard: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "wallet.pass.fill")
+                .font(.system(size: 18))
+                .foregroundStyle(AppTheme.sageDark)
+                .frame(width: 44, height: 44)
+                .background(AppTheme.sage.opacity(0.12), in: Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Rencana Pengeluaran")
+                    .font(AppFont.medium(15))
+                    .foregroundStyle(AppTheme.sageDark)
+                Text("Total anggaran dipakai untuk menghitung sisa budget, persentase terpakai, dan komitmen.")
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        }
+    }
+
+    private func formSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(AppFont.medium(14))
+                .foregroundStyle(AppTheme.sageDark)
+
+            VStack(spacing: 10) {
+                content()
+            }
+            .padding(14)
+            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+            }
+        }
+    }
+
+    private func fieldIcon(_ name: String) -> some View {
+        Image(systemName: name)
+            .font(.system(size: 16, weight: .regular))
+            .foregroundStyle(AppTheme.ink.opacity(0.45))
+            .frame(width: 36, height: 36)
+            .background(AppTheme.mist.opacity(0.65), in: Circle())
+    }
+
+    private var saveButton: some View {
+        Button {
+            Task { await save() }
+        } label: {
+            HStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: "square.and.arrow.down")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                Text("Simpan Budget")
+                    .font(AppFont.medium(16))
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(canSave ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!canSave || isLoading)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 12)
+        .background(.ultraThinMaterial)
+    }
+
+    private var amountPreview: String {
+        guard let amount = parsedAmount else { return "Rp 0" }
+        return CurrencyFormatter.rupiah(amount)
+    }
+
+    private var canSave: Bool {
+        parsedAmount != nil
     }
 
     private var parsedAmount: Double? {
         let digits = totalBudgetText.filter(\.isNumber)
         guard !digits.isEmpty, let value = Double(digits) else { return nil }
         return value
+    }
+
+    private func populateIfNeeded() {
+        if budget.totalBudget > 0 {
+            totalBudgetText = Self.formatAmountInput(String(Int(budget.totalBudget.rounded())))
+        }
+        notes = budget.notes ?? ""
+    }
+
+    private static func formatAmountInput(_ value: String) -> String {
+        let digits = value.filter(\.isNumber)
+        guard !digits.isEmpty, let number = Int(digits) else { return "" }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "id_ID")
+        formatter.groupingSeparator = "."
+        return formatter.string(from: NSNumber(value: number)) ?? digits
     }
 
     private func save() async {
@@ -421,11 +745,12 @@ struct EditTotalBudgetSheet: View {
 
         var payload: [String: Any] = [
             "total_budget": amount,
-            "currency": budget.currency ?? "IDR",
+            "currency": budget.currency ?? categoriesStore.defaults.currency,
         ]
 
-        if !notes.isEmpty {
-            payload["notes"] = notes
+        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedNotes.isEmpty {
+            payload["notes"] = trimmedNotes
         }
 
         do {

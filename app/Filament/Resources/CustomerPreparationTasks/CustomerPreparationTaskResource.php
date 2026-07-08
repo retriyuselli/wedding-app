@@ -5,9 +5,7 @@ namespace App\Filament\Resources\CustomerPreparationTasks;
 use App\Filament\Resources\CustomerPreparationTasks\Pages\CreateCustomerPreparationTask;
 use App\Filament\Resources\CustomerPreparationTasks\Pages\EditCustomerPreparationTask;
 use App\Filament\Resources\CustomerPreparationTasks\Pages\ListCustomerPreparationTasks;
-use App\Filament\Resources\CustomerPreparationTasks\Pages\ViewCustomerPreparationTask;
 use App\Filament\Resources\CustomerPreparationTasks\Schemas\CustomerPreparationTaskForm;
-use App\Filament\Resources\CustomerPreparationTasks\Schemas\CustomerPreparationTaskInfolist;
 use App\Filament\Resources\CustomerPreparationTasks\Tables\CustomerPreparationTasksTable;
 use App\Models\CustomerPreparationTask;
 use BackedEnum;
@@ -27,14 +25,13 @@ class CustomerPreparationTaskResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    protected static ?string $modelLabel = 'Tugas Checklist';
+
+    protected static ?string $pluralModelLabel = 'Tugas Checklist';
+
     public static function form(Schema $schema): Schema
     {
         return CustomerPreparationTaskForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return CustomerPreparationTaskInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class CustomerPreparationTaskResource extends Resource
         return [
             'index' => ListCustomerPreparationTasks::route('/'),
             'create' => CreateCustomerPreparationTask::route('/create'),
-            'view' => ViewCustomerPreparationTask::route('/{record}'),
             'edit' => EditCustomerPreparationTask::route('/{record}/edit'),
         ];
     }

@@ -5,9 +5,7 @@ namespace App\Filament\Resources\WeddingIncomingPayments;
 use App\Filament\Resources\WeddingIncomingPayments\Pages\CreateWeddingIncomingPayment;
 use App\Filament\Resources\WeddingIncomingPayments\Pages\EditWeddingIncomingPayment;
 use App\Filament\Resources\WeddingIncomingPayments\Pages\ListWeddingIncomingPayments;
-use App\Filament\Resources\WeddingIncomingPayments\Pages\ViewWeddingIncomingPayment;
 use App\Filament\Resources\WeddingIncomingPayments\Schemas\WeddingIncomingPaymentForm;
-use App\Filament\Resources\WeddingIncomingPayments\Schemas\WeddingIncomingPaymentInfolist;
 use App\Filament\Resources\WeddingIncomingPayments\Tables\WeddingIncomingPaymentsTable;
 use App\Models\WeddingIncomingPayment;
 use BackedEnum;
@@ -27,14 +25,13 @@ class WeddingIncomingPaymentResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'sender_name';
 
+    protected static ?string $modelLabel = 'Uang Masuk';
+
+    protected static ?string $pluralModelLabel = 'Uang Masuk';
+
     public static function form(Schema $schema): Schema
     {
         return WeddingIncomingPaymentForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return WeddingIncomingPaymentInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class WeddingIncomingPaymentResource extends Resource
         return [
             'index' => ListWeddingIncomingPayments::route('/'),
             'create' => CreateWeddingIncomingPayment::route('/create'),
-            'view' => ViewWeddingIncomingPayment::route('/{record}'),
             'edit' => EditWeddingIncomingPayment::route('/{record}/edit'),
         ];
     }

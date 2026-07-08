@@ -4,12 +4,17 @@ struct BudgetCategoryRow: View {
     let category: BudgetCategory
     let total: Double
 
-    private var recordedPercent: Int {
-        total == 0 ? 0 : Int((category.totalRecorded / total * 100).rounded())
+    private var planPercentOfTotal: Int {
+        guard category.hasPlannedAllocation, total > 0 else { return 0 }
+        return Int((category.plannedAllocation / total * 100).rounded())
     }
 
-    private var spentPercent: Int {
-        Int((category.spentRatio * 100).rounded())
+    private var usagePercent: Int {
+        if category.hasPlannedAllocation {
+            return Int((category.usageAgainstPlanRatio * 100).rounded())
+        }
+
+        return Int((category.spentRatio * 100).rounded())
     }
 
     var body: some View {
@@ -26,16 +31,22 @@ struct BudgetCategoryRow: View {
                     .foregroundStyle(AppTheme.ink)
                     .lineLimit(1)
 
-                HStack(spacing: 6) {
-                    Text(CurrencyFormatter.rupiah(category.totalRecorded))
-                    Text("|")
-                        .foregroundStyle(AppTheme.ink.opacity(0.25))
-                    Text("\(recordedPercent)%")
+                if category.hasPlannedAllocation {
+                    HStack(spacing: 6) {
+                        Text("Alokasi \(CurrencyFormatter.rupiah(category.plannedAllocation))")
+                        Text("|")
+                            .foregroundStyle(AppTheme.ink.opacity(0.25))
+                        Text("\(planPercentOfTotal)%")
+                    }
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                } else {
+                    Text("Belum diatur · \(CurrencyFormatter.rupiah(category.totalRecorded)) tercatat")
+                        .font(AppFont.regular(11))
+                        .foregroundStyle(AppTheme.ink.opacity(0.45))
                 }
-                .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
 
-                BudgetBar(progress: category.spentRatio, color: AppTheme.sage)
+                BudgetBar(progress: category.usageAgainstPlanRatio, color: AppTheme.sage)
                     .frame(height: 5)
                     .frame(maxWidth: 110)
             }
@@ -57,7 +68,7 @@ struct BudgetCategoryRow: View {
                         .minimumScaleFactor(0.7)
                 }
 
-                Text("\(spentPercent)% terpakai")
+                Text(category.hasPlannedAllocation ? "\(usagePercent)% terpakai" : "\(usagePercent)% dibayar")
                     .font(AppFont.regular(10))
                     .foregroundStyle(AppTheme.ink.opacity(0.4))
             }
@@ -85,8 +96,16 @@ struct BudgetCategorySummaryCard: View {
         totalBudget == 0 ? 0 : Int((category.spent / totalBudget * 100).rounded())
     }
 
-    private var spentPercent: Int {
-        Int((category.spentRatio * 100).rounded())
+    private var paidPercentOfRecorded: Int {
+        Int((category.paidRecordedRatio * 100).rounded())
+    }
+
+    private var spentPercentOfPlan: Int {
+        guard category.hasPlannedAllocation else {
+            return paidPercentOfRecorded
+        }
+
+        return Int((category.usageAgainstPlanRatio * 100).rounded())
     }
 
     var body: some View {
@@ -106,7 +125,19 @@ struct BudgetCategorySummaryCard: View {
 
                 Spacer()
 
-                if category.commitment > 0 {
+                if category.hasPlannedAllocation {
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Alokasi")
+                            .font(AppFont.regular(12))
+                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                        Text(CurrencyFormatter.rupiah(category.plannedAllocation))
+                            .font(AppFont.medium(16))
+                            .foregroundStyle(AppTheme.sageDark)
+                        Text("Rencana kategori")
+                            .font(AppFont.regular(11))
+                            .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    }
+                } else if category.commitment > 0 {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Komitmen")
                             .font(AppFont.regular(12))
@@ -114,17 +145,21 @@ struct BudgetCategorySummaryCard: View {
                         Text(CurrencyFormatter.rupiah(category.commitment))
                             .font(AppFont.medium(16))
                             .foregroundStyle(AppTheme.gold)
-                        Text("Belum lunas")
+                        Text("Menunggu bayar")
                             .font(AppFont.regular(11))
                             .foregroundStyle(AppTheme.ink.opacity(0.45))
                     }
                 }
             }
 
-            BudgetBar(progress: category.spentRatio, color: AppTheme.sageDark)
+            BudgetBar(progress: category.usageAgainstPlanRatio, color: AppTheme.sageDark)
                 .frame(height: 6)
 
-            Text("\(spentPercent)% lunas dari \(CurrencyFormatter.rupiah(category.totalRecorded)) tercatat")
+            Text(
+                category.hasPlannedAllocation
+                    ? "\(spentPercentOfPlan)% terpakai dari alokasi \(CurrencyFormatter.rupiah(category.plannedAllocation))"
+                    : footerRecordedPaymentText
+            )
                 .font(AppFont.regular(11))
                 .foregroundStyle(AppTheme.ink.opacity(0.45))
         }
@@ -134,6 +169,21 @@ struct BudgetCategorySummaryCard: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
         }
+    }
+
+    private var footerRecordedPaymentText: String {
+        let recorded = CurrencyFormatter.rupiah(category.totalRecorded)
+        let paid = CurrencyFormatter.rupiah(category.spent)
+
+        if category.totalRecorded == 0 {
+            return "Belum ada expense tercatat"
+        }
+
+        if category.commitment > 0, category.spent == 0 {
+            return "\(paid) sudah dibayar dari \(recorded) tercatat · sisanya menunggu bayar"
+        }
+
+        return "\(paidPercentOfRecorded)% sudah dibayar dari \(recorded) tercatat"
     }
 }
 
@@ -232,10 +282,54 @@ struct BudgetSummaryMetrics {
         if budget.totalBudget > 0 {
             totalBudget = budget.totalBudget
         } else {
-            totalBudget = categories.reduce(0) { $0 + $1.allocated }
+            let plannedTotal = categories.reduce(0) { $0 + $1.plannedAllocation }
+            totalBudget = plannedTotal > 0
+                ? plannedTotal
+                : categories.reduce(0) { $0 + $1.totalRecorded }
         }
 
         return BudgetSummaryMetrics(totalBudget: totalBudget, spent: spent, commitment: commitment)
+    }
+
+    static func from(summary: WeddingBudgetSummary) -> BudgetSummaryMetrics {
+        BudgetSummaryMetrics(
+            totalBudget: summary.totalBudget,
+            spent: summary.spent,
+            commitment: summary.commitment
+        )
+    }
+
+    /// Prioritises user-configured `wedding-budget` total; uses summary for spent/commitment.
+    static func resolve(
+        budget: WeddingBudget,
+        summary: WeddingBudgetSummary?,
+        categories: [BudgetCategory]
+    ) -> BudgetSummaryMetrics {
+        let spent: Double
+        let commitment: Double
+
+        if let summary {
+            spent = summary.spent
+            commitment = summary.commitment
+        } else {
+            spent = categories.reduce(0) { $0 + $1.spent }
+            commitment = categories.reduce(0) { $0 + $1.commitment }
+        }
+
+        let totalBudget: Double
+        if budget.totalBudget > 0 {
+            totalBudget = budget.totalBudget
+        } else if let summary, summary.totalBudget > 0 {
+            totalBudget = summary.totalBudget
+        } else {
+            return make(budget: budget, categories: categories)
+        }
+
+        return BudgetSummaryMetrics(
+            totalBudget: totalBudget,
+            spent: spent,
+            commitment: commitment
+        )
     }
 
     func reportText(categories: [BudgetCategory], incomingTotal: Double) -> String {
@@ -254,6 +348,9 @@ struct BudgetSummaryMetrics {
 
         for category in categories {
             lines.append("- \(category.name): \(CurrencyFormatter.rupiah(category.spent)) terpakai / \(CurrencyFormatter.rupiah(category.totalRecorded)) tercatat")
+            if category.hasPlannedAllocation {
+                lines.append("  Alokasi: \(CurrencyFormatter.rupiah(category.plannedAllocation))")
+            }
             if category.commitment > 0 {
                 lines.append("  Komitmen: \(CurrencyFormatter.rupiah(category.commitment))")
             }

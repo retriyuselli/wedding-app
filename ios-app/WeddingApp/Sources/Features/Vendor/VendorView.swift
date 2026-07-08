@@ -13,8 +13,9 @@ struct VendorView: View {
     @State private var draftFilter = VendorFilter()
     @State private var showFilterSheet = false
     @State private var sortOption: VendorSortOption = .popular
+    @State private var filterTask: Task<Void, Never>?
     @State private var promoIndex = 0
-    @State private var savedVendorIDs: Set<Int> = []
+    @ObservedObject private var savedStore = SavedVendorsStore.shared
     @State private var selectedVendorRoute: VendorRoute?
     @FocusState private var isSearchFocused: Bool
 
@@ -41,7 +42,7 @@ struct VendorView: View {
                     || vendor.tags.contains { $0.localizedCaseInsensitiveContains(query) }
                 let matchRating = filter.minimumRating == nil
                     || (vendor.rating.map { $0 >= (filter.minimumRating ?? 0) } ?? true)
-                let matchSaved = !filter.savedOnly || savedVendorIDs.contains(vendor.id)
+                let matchSaved = !filter.savedOnly || savedStore.contains(vendor.id)
                 return matchCategory && matchSearch && matchRating && matchSaved
             }
             .sorted { lhs, rhs in
@@ -128,7 +129,8 @@ struct VendorView: View {
             await loadVendors()
         }
         .onChange(of: filter) { _, _ in
-            Task { await loadVendors() }
+            filterTask?.cancel()
+            filterTask = Task { await loadVendors() }
         }
         .sheet(isPresented: $showFilterSheet) {
             VendorFilterSheet(
@@ -161,7 +163,7 @@ struct VendorView: View {
     private func loadCatalog() async {
         do {
             let envelope: Envelope<[Vendor]> = try await APIClient.shared.request("vendors")
-            catalogVendors = envelope.data.map { VendorItem(api: $0, isSaved: savedVendorIDs.contains($0.id)) }
+            catalogVendors = envelope.data.map { VendorItem(api: $0, isSaved: savedStore.contains($0.id)) }
         } catch {
             if catalogVendors.isEmpty {
                 errorMessage = error.userFacingMessage
@@ -179,7 +181,7 @@ struct VendorView: View {
                 "vendors",
                 queryItems: vendorQueryItems()
             )
-            vendors = envelope.data.map { VendorItem(api: $0, isSaved: savedVendorIDs.contains($0.id)) }
+            vendors = envelope.data.map { VendorItem(api: $0, isSaved: savedStore.contains($0.id)) }
         } catch {
             errorMessage = error.userFacingMessage
             vendors = []
@@ -291,11 +293,11 @@ struct VendorView: View {
                 .buttonStyle(.plain)
             }
 
-            Text("Vendor")
+            Text(L10n.Vendor.title)
                 .font(.system(size: 32, weight: .bold, design: .serif))
                 .foregroundStyle(AppTheme.sageDark)
 
-            Text("Temukan vendor terbaik untuk hari\nbahagiamu.")
+            Text(L10n.Vendor.subtitle)
                 .font(.system(size: 12, weight: .regular, design: .serif))
                 .foregroundStyle(AppTheme.gold)
                 .lineSpacing(2)
@@ -318,7 +320,7 @@ struct VendorView: View {
 
     private var searchResultsHeader: some View {
         HStack {
-            Text("\(filteredVendors.count) vendor ditemukan")
+            Text(L10n.Vendor.found(filteredVendors.count))
                 .font(AppFont.medium(13))
                 .foregroundStyle(AppTheme.sageDark)
 
@@ -345,7 +347,7 @@ struct VendorView: View {
                 }
                 .buttonStyle(.plain)
 
-                TextField("Cari vendor, kategori, atau paket", text: $searchText)
+                TextField(L10n.Vendor.searchPlaceholder, text: $searchText)
                     .font(AppFont.regular(13))
                     .foregroundStyle(AppTheme.ink)
                     .focused($isSearchFocused)
@@ -380,7 +382,7 @@ struct VendorView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 13, weight: .medium))
-                    Text("Filter")
+                    Text(L10n.Common.filter)
                         .font(AppFont.medium(12))
                 }
                 .foregroundStyle(filter.isActive ? AppTheme.sageDark : AppTheme.ink.opacity(0.7))
@@ -529,7 +531,7 @@ struct VendorView: View {
                 }
             }
 
-            VStack(spacing: 12) {
+            LazyVStack(spacing: 12) {
                 if let errorMessage, vendors.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "wifi.exclamationmark")
@@ -555,10 +557,10 @@ struct VendorView: View {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 28, weight: .light))
                             .foregroundStyle(AppTheme.ink.opacity(0.25))
-                        Text("Vendor tidak ditemukan")
+                        Text(L10n.Vendor.notFound)
                             .font(AppFont.medium(14))
                             .foregroundStyle(AppTheme.ink.opacity(0.55))
-                        Text("Coba kata kunci lain atau ubah kategori.")
+                        Text(L10n.Vendor.notFoundSub)
                             .font(AppFont.regular(12))
                             .foregroundStyle(AppTheme.ink.opacity(0.4))
                             .multilineTextAlignment(.center)
@@ -573,9 +575,9 @@ struct VendorView: View {
                         } label: {
                             VendorCard(
                                 vendor: vendor,
-                                isSaved: savedVendorIDs.contains(vendor.id)
+                                isSaved: savedStore.contains(vendor.id)
                             ) {
-                                toggleSaved(vendor.id)
+                                savedStore.toggle(vendor.id)
                             }
                         }
                         .buttonStyle(.plain)
@@ -626,14 +628,6 @@ struct VendorView: View {
                 .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
         }
         .shadow(color: AppTheme.sageDark.opacity(0.07), radius: 14, y: 7)
-    }
-
-    private func toggleSaved(_ id: Int) {
-        if savedVendorIDs.contains(id) {
-            savedVendorIDs.remove(id)
-        } else {
-            savedVendorIDs.insert(id)
-        }
     }
 }
 

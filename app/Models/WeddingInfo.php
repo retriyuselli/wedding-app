@@ -31,7 +31,7 @@ class WeddingInfo extends Model
 
     public function events(): HasMany
     {
-        return $this->hasMany(WeddingEvent::class, 'user_id', 'user_id')->orderBy('tgl_acara');
+        return $this->hasMany(WeddingEvent::class, 'user_id', 'user_id')->orderBy('sort_order')->orderBy('tgl_acara');
     }
 
     public function familyMembers(): HasMany
@@ -42,5 +42,14 @@ class WeddingInfo extends Model
     public function budget(): HasOne
     {
         return $this->hasOne(WeddingBudget::class, 'user_id', 'user_id');
+    }
+
+    public function getCoupleNamesAttribute(): string
+    {
+        $names = collect([$this->groom_name, $this->bride_name])
+            ->filter()
+            ->implode(' & ');
+
+        return $names !== '' ? $names : 'Belum diisi';
     }
 }

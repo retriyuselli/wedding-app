@@ -21,14 +21,14 @@ class CustomerPreparationSubTask extends Model
     ];
 
     protected $casts = [
-        'due_date'     => 'date',
+        'due_date' => 'date',
         'completed_at' => 'date',
     ];
 
     public static array $statusOptions = [
-        'pending'     => 'Belum',
+        'pending' => 'Belum',
         'in_progress' => 'Sedang Dikerjakan',
-        'done'        => 'Selesai',
+        'done' => 'Selesai',
     ];
 
     public function user(): BelongsTo
@@ -49,16 +49,26 @@ class CustomerPreparationSubTask extends Model
                     ->whereKey($subTask->preparation_task_id)
                     ->value('user_id');
             }
+
+            if ($subTask->sort_order !== null || $subTask->preparation_task_id === null) {
+                return;
+            }
+
+            $maxOrder = static::query()
+                ->where('preparation_task_id', $subTask->preparation_task_id)
+                ->max('sort_order');
+
+            $subTask->sort_order = ((int) $maxOrder) + 1;
         });
     }
 
     public function cycleStatus(): void
     {
         $this->status = match ($this->status) {
-            'pending'     => 'in_progress',
+            'pending' => 'in_progress',
             'in_progress' => 'done',
-            'done'        => 'pending',
-            default       => 'pending',
+            'done' => 'pending',
+            default => 'pending',
         };
 
         $this->completed_at = $this->status === 'done' ? now()->toDateString() : null;

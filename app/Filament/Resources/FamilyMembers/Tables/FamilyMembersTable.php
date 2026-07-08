@@ -6,7 +6,6 @@ use App\Models\FamilyMember;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -16,20 +15,33 @@ class FamilyMembersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('no')
+            ->striped()
             ->columns([
-                TextColumn::make('user.name')
-                    ->label('Customer')
-                    ->searchable(),
                 TextColumn::make('no')
                     ->label('No')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->placeholder('-')
+                    ->alignCenter(),
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->label('Nama')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('medium')
+                    ->description(fn (FamilyMember $record): ?string => $record->role),
+                TextColumn::make('user.name')
+                    ->label('Pengantin')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('role')
-                    ->searchable(),
-                TextColumn::make('phone')
-                    ->searchable(),
+                    ->label('Peran')
+                    ->badge()
+                    ->color('info')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-')
+                    ->toggleable(),
                 TextColumn::make('rsvp_status')
                     ->label('RSVP')
                     ->formatStateUsing(fn (string $state): string => FamilyMember::$rsvpOptions[$state] ?? $state)
@@ -38,38 +50,48 @@ class FamilyMembersTable
                         'hadir' => 'success',
                         'tidak_hadir' => 'danger',
                         default => 'warning',
-                    }),
-                TextColumn::make('rsvp_updated_by_name')
-                    ->label('Diperbarui Oleh')
+                    })
+                    ->sortable(),
+                TextColumn::make('phone')
+                    ->label('Telepon')
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->placeholder('-')
+                    ->toggleable(),
                 TextColumn::make('rsvp_updated_at')
-                    ->label('RSVP Diperbarui Pada')
-                    ->dateTime()
+                    ->label('RSVP Diperbarui')
+                    ->dateTime('d M Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Dibuat')
+                    ->dateTime('d M Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Diperbarui')
+                    ->dateTime('d M Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('user_id')
+                    ->label('Pengantin')
+                    ->relationship('user', 'name')
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('rsvp_status')
                     ->label('RSVP')
                     ->options(FamilyMember::$rsvpOptions),
             ])
             ->recordActions([
-                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada anggota keluarga')
+            ->emptyStateDescription('Tambahkan anggota keluarga inti untuk daftar tamu pengantin.');
     }
 }

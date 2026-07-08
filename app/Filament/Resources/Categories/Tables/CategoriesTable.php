@@ -14,6 +14,8 @@ class CategoriesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('sort_order')
+            ->description('Urutan kategori diatur otomatis. Gunakan tombol "Atur urutan" untuk drag & drop.')
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
@@ -22,8 +24,10 @@ class CategoriesTable
                 TextColumn::make('icon')
                     ->searchable(),
                 TextColumn::make('sort_order')
+                    ->label('Urutan')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_active')
                     ->boolean(),
                 TextColumn::make('created_at')

@@ -7,6 +7,8 @@ struct GuestView: View {
     @State private var showAddSheet = false
     @State private var selectedFilter: RsvpKind? = nil
     @State private var searchText = ""
+    @State private var showComingSoon = false
+    @State private var comingSoonTitle = ""
 
     private var rows: [GuestRowItem] {
         let source = guests.isEmpty ? GuestRowItem.samples : guests.map(GuestRowItem.init(guest:))
@@ -45,7 +47,7 @@ struct GuestView: View {
                         filterChips
                         searchRow
                         listHeader
-                        VStack(spacing: 10) {
+                        LazyVStack(spacing: 10) {
                             ForEach(rows) { row in
                                 GuestRow(item: row)
                             }
@@ -67,49 +69,39 @@ struct GuestView: View {
             .sheet(isPresented: $showAddSheet) {
                 AddGuestSheet { await load() }
             }
+            .alert(L10n.Common.comingSoon, isPresented: $showComingSoon) {
+                Button(L10n.Common.ok, role: .cancel) {}
+            } message: {
+                Text(L10n.Common.comingSoonMessage)
+            }
         }
     }
 
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Guest")
+                Text(L10n.Guest.title)
                     .font(.system(size: 32, weight: .bold, design: .serif))
                     .foregroundStyle(AppTheme.sageDark)
 
-                Text("Kelola daftar tamu dan konfirmasi\nkehadiran dengan mudah.")
+                Text(L10n.Guest.subtitle)
                     .font(.system(size: 12, weight: .regular, design: .serif))
                     .foregroundStyle(AppTheme.gold)
                     .lineSpacing(2)
             }
 
             Spacer(minLength: 8)
-
-            HStack(spacing: 10) {
-                circleButton("magnifyingglass")
-                circleButton("slider.horizontal.3")
-            }
-            .padding(.top, 4)
         }
         .frame(height: 96, alignment: .top)
         .padding(.top, 8)
     }
 
-    private func circleButton(_ icon: String) -> some View {
-        Image(systemName: icon)
-            .font(.system(size: 17, weight: .regular))
-            .foregroundStyle(AppTheme.ink.opacity(0.72))
-            .frame(width: 42, height: 42)
-            .background(.white.opacity(0.86), in: Circle())
-            .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
-    }
-
     private var statsCard: some View {
         HStack(spacing: 0) {
-            statItem(icon: "person.2", tint: AppTheme.sageDark, label: "Total Tamu", value: totalGuests, sub: "Orang", subTint: AppTheme.ink.opacity(0.4))
-            statItem(icon: "checkmark.circle", tint: AppTheme.sageDark, label: "Konfirmasi", value: confirmedGuests, sub: "\(percent(confirmedGuests))%", subTint: AppTheme.ink.opacity(0.4))
-            statItem(icon: "hourglass", tint: AppTheme.gold, label: "Pending", value: pendingGuests, sub: "\(percent(pendingGuests))%", subTint: AppTheme.gold)
-            statItem(icon: "xmark.circle", tint: AppTheme.ink.opacity(0.45), label: "Tidak Hadir", value: absentGuests, sub: "\(percent(absentGuests))%", subTint: AppTheme.ink.opacity(0.4))
+            statItem(icon: "person.2", tint: AppTheme.sageDark, label: L10n.Guest.totalGuests, value: totalGuests, sub: L10n.Guest.people, subTint: AppTheme.ink.opacity(0.4))
+            statItem(icon: "checkmark.circle", tint: AppTheme.sageDark, label: L10n.Common.confirmed, value: confirmedGuests, sub: "\(percent(confirmedGuests))%", subTint: AppTheme.ink.opacity(0.4))
+            statItem(icon: "hourglass", tint: AppTheme.gold, label: L10n.Common.pending, value: pendingGuests, sub: "\(percent(pendingGuests))%", subTint: AppTheme.gold)
+            statItem(icon: "xmark.circle", tint: AppTheme.ink.opacity(0.45), label: L10n.Common.notAttending, value: absentGuests, sub: "\(percent(absentGuests))%", subTint: AppTheme.ink.opacity(0.4))
         }
         .padding(.vertical, 16)
         .padding(.horizontal, 6)
@@ -149,11 +141,11 @@ struct GuestView: View {
     private var rsvpOverviewCard: some View {
         VStack(spacing: 16) {
             HStack {
-                Text("RSVP Overview")
+                Text(L10n.Guest.rsvpOverview)
                     .font(AppFont.medium(16))
                     .foregroundStyle(AppTheme.sageDark)
                 Spacer()
-                Label("Lihat detail", systemImage: "chevron.right")
+                Label(L10n.Common.seeDetail, systemImage: "chevron.right")
                     .font(AppFont.regular(12))
                     .labelStyle(.titleAndIcon)
                     .foregroundStyle(.secondary)
@@ -170,9 +162,9 @@ struct GuestView: View {
                 .frame(width: 92, height: 92)
 
                 VStack(spacing: 12) {
-                    legendRow(color: AppTheme.sageDark, title: "Konfirmasi", value: confirmedGuests, percent: percent(confirmedGuests))
-                    legendRow(color: AppTheme.gold, title: "Pending", value: pendingGuests, percent: percent(pendingGuests))
-                    legendRow(color: AppTheme.mist, title: "Tidak Hadir", value: absentGuests, percent: percent(absentGuests))
+                    legendRow(color: AppTheme.sageDark, title: L10n.Common.confirmed, value: confirmedGuests, percent: percent(confirmedGuests))
+                    legendRow(color: AppTheme.gold, title: L10n.Common.pending, value: pendingGuests, percent: percent(pendingGuests))
+                    legendRow(color: AppTheme.mist, title: L10n.Common.notAttending, value: absentGuests, percent: percent(absentGuests))
                 }
             }
         }
@@ -205,10 +197,10 @@ struct GuestView: View {
     private var filterChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                chip(title: "Semua", kind: nil)
-                chip(title: "Konfirmasi", kind: .confirmed)
-                chip(title: "Pending", kind: .pending)
-                chip(title: "Tidak Hadir", kind: .absent)
+                chip(title: L10n.Common.all, kind: nil)
+                chip(title: L10n.Common.confirmed, kind: .confirmed)
+                chip(title: L10n.Common.pending, kind: .pending)
+                chip(title: L10n.Common.notAttending, kind: .absent)
             }
             .padding(.horizontal, 2)
         }
@@ -238,7 +230,7 @@ struct GuestView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.ink.opacity(0.4))
-                TextField("Cari nama, grup atau kontak...", text: $searchText)
+                TextField(L10n.Guest.searchPlaceholder, text: $searchText)
                     .font(AppFont.regular(13))
             }
             .padding(.horizontal, 14)
@@ -249,7 +241,7 @@ struct GuestView: View {
             Button {
                 showAddSheet = true
             } label: {
-                Label("Tambah Tamu", systemImage: "plus")
+                Label(L10n.Guest.addGuest, systemImage: "plus")
                     .font(AppFont.medium(13))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 14)
@@ -262,11 +254,11 @@ struct GuestView: View {
 
     private var listHeader: some View {
         HStack {
-            Text("Semua Tamu (\(rows.reduce(0) { $0 + $1.count }))")
+            Text("guest.all_guests".localized(rows.reduce(0) { $0 + $1.count }))
                 .font(AppFont.medium(14))
                 .foregroundStyle(AppTheme.sageDark)
             Spacer()
-            Label("Urutkan: Nama A-Z", systemImage: "chevron.down")
+            Label(L10n.Guest.sortName, systemImage: "chevron.down")
                 .font(AppFont.regular(12))
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(AppTheme.gold)
@@ -294,22 +286,28 @@ struct GuestView: View {
     }
 
     private func actionItem(icon: String, title: String, sub: String) -> some View {
-        VStack(spacing: 5) {
-            Image(systemName: icon)
-                .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(AppTheme.sageDark)
-            Text(title)
-                .font(AppFont.medium(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.75))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text(sub)
-                .font(AppFont.regular(9))
-                .foregroundStyle(AppTheme.ink.opacity(0.4))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+        Button {
+            comingSoonTitle = title
+            showComingSoon = true
+        } label: {
+            VStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .regular))
+                    .foregroundStyle(AppTheme.sageDark)
+                Text(title)
+                    .font(AppFont.medium(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.75))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(sub)
+                    .font(AppFont.regular(9))
+                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity)
+        .buttonStyle(.plain)
     }
 
     private func load() async {
@@ -333,9 +331,9 @@ enum RsvpKind {
 
     var label: String {
         switch self {
-        case .confirmed: return "Konfirmasi"
-        case .pending: return "Pending"
-        case .absent: return "Tidak Hadir"
+        case .confirmed: return L10n.Common.confirmed
+        case .pending: return L10n.Common.pending
+        case .absent: return L10n.Common.notAttending
         }
     }
 
@@ -540,20 +538,20 @@ private struct AddGuestSheet: View {
                 if let errorMessage {
                     Text(errorMessage).foregroundStyle(.red)
                 }
-                TextField("Nama", text: $name)
-                TextField("No. HP", text: $phone)
+                TextField(L10n.Guest.name, text: $name)
+                TextField(L10n.Guest.phone, text: $phone)
                     .keyboardType(.phonePad)
-                TextField("Email", text: $email)
+                TextField(L10n.Guest.email, text: $email)
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
             }
-            .navigationTitle("Tambah Tamu")
+            .navigationTitle(L10n.Guest.addGuest)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") { dismiss() }
+                    Button(L10n.Common.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Simpan") { Task { await save() } }
+                    Button(L10n.Common.save) { Task { await save() } }
                         .disabled(isLoading || name.isEmpty)
                 }
             }

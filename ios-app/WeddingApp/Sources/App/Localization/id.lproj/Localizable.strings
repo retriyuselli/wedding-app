@@ -1,0 +1,373 @@
+/* Common */
+"common.cancel" = "Batal";
+"common.save" = "Simpan";
+"common.ok" = "OK";
+"common.close" = "Tutup";
+"common.done" = "Selesai";
+"common.reset" = "Reset";
+"common.apply" = "Terapkan";
+"common.delete" = "Hapus";
+"common.edit" = "Edit";
+"common.filter" = "Filter";
+"common.search" = "Cari";
+"common.see_all" = "Lihat Semua";
+"common.see_detail" = "Lihat detail";
+"common.share" = "Bagikan";
+"common.logout" = "Keluar";
+"common.coming_soon" = "Segera Hadir";
+"common.coming_soon_message" = "Fitur ini akan segera tersedia.";
+"common.try_again" = "Coba Lagi";
+"common.sort" = "Urutkan";
+"common.notes" = "Catatan";
+"common.location" = "Lokasi";
+"common.date" = "Tanggal";
+"common.time" = "Waktu";
+"common.all" = "Semua";
+"common.confirmed" = "Konfirmasi";
+"common.pending" = "Pending";
+"common.not_attending" = "Tidak Hadir";
+"common.description" = "Deskripsi";
+"common.category" = "Kategori";
+"common.not_available" = "Tidak Tersedia";
+"common.success" = "Berhasil";
+"common.warning" = "Peringatan";
+"common.soon" = "Segera";
+
+/* Tabs */
+"tab.home" = "Beranda";
+"tab.checklist" = "Checklist";
+"tab.guest" = "Tamu";
+"tab.budget" = "Budget";
+"tab.more" = "Lainnya";
+
+/* Auth */
+"auth.app_name" = "Wedding App";
+"auth.tagline" = "Teman terbaik dalam merencanakan hari bahagia Anda.";
+"auth.email_or_phone" = "Email atau Nomor Telepon";
+"auth.email_placeholder" = "Masukkan email atau nomor telepon";
+"auth.password" = "Kata Sandi";
+"auth.password_placeholder" = "Masukkan kata sandi";
+"auth.confirm_password" = "Ulangi kata sandi";
+"auth.full_name" = "Nama Lengkap";
+"auth.full_name_placeholder" = "Masukkan nama lengkap";
+"auth.invalid_email" = "Format email tidak valid.";
+"auth.password_mismatch" = "Konfirmasi kata sandi tidak cocok.";
+"auth.forgot_password" = "Lupa kata sandi?";
+"auth.login" = "Masuk";
+"auth.register" = "Daftar";
+"auth.register_now" = "Daftar sekarang";
+"auth.have_account" = "Sudah punya akun?";
+"auth.no_account" = "Belum punya akun?";
+"auth.or_login_with" = "atau masuk dengan";
+"auth.or_register_with" = "atau daftar dengan";
+
+/* More */
+"more.title" = "Lainnya";
+"more.subtitle" = "Pengaturan, informasi, dan lainnya\nuntuk pengalaman terbaik Anda.";
+"more.planning_section" = "Perencanaan Saya";
+"more.account_section" = "Akun & Pengaturan";
+"more.wedding_detail" = "Detail Pernikahan";
+"more.wedding_detail_sub" = "Tanggal, lokasi, dan informasi penting";
+"more.couple" = "Pasangan";
+"more.couple_sub" = "Informasi mempelai";
+"more.saved_vendors" = "Vendor Tersimpan";
+"more.saved_vendors_sub" = "Daftar vendor pilihan Anda";
+"more.inspiration" = "Inspirasi & Ide";
+"more.inspiration_sub" = "Simpan inspirasi dan referensi";
+"more.documents" = "Dokumen";
+"more.documents_sub" = "Simpan dokumen penting pernikahan";
+"more.settings" = "Pengaturan";
+"more.settings_sub" = "Notifikasi, tampilan, dan preferensi";
+"more.privacy" = "Privasi & Keamanan";
+"more.privacy_sub" = "Kelola privasi dan keamanan akun";
+"more.reminders" = "Pengingat";
+"more.reminders_sub" = "Atur pengingat dan notifikasi";
+"more.language" = "Bahasa";
+
+/* Reminders */
+"reminders.title" = "Pengingat";
+"reminders.subtitle" = "Kelola notifikasi dan pengingat pernikahan";
+"reminders.status_on" = "Notifikasi aktif";
+"reminders.status_on_sub" = "Anda akan menerima pengingat dan pemberitahuan penting.";
+"reminders.status_off" = "Notifikasi nonaktif";
+"reminders.status_off_sub" = "Aktifkan lewat Pengaturan iOS agar pengingat dapat dikirim.";
+"reminders.status_not_set" = "Izin belum diatur";
+"reminders.status_not_set_sub" = "Izinkan notifikasi agar Anda tidak melewatkan pengingat penting.";
+"reminders.push_toggle" = "Notifikasi push";
+"reminders.push_toggle_sub" = "Aktifkan atau nonaktifkan notifikasi aplikasi";
+"reminders.open_settings" = "Buka Pengaturan iOS";
+"reminders.info" = "Pengaturan notifikasi dikelola lewat iOS. Setelah mengubah izin di Pengaturan, status di halaman ini akan otomatis diperbarui.";
+"more.help" = "Bantuan & FAQ";
+"more.help_sub" = "Pusat bantuan dan pertanyaan umum";
+"more.about" = "Tentang Wedding App";
+"more.about_sub" = "Versi 1.0.0";
+"more.share_app" = "Bagikan Wedding App";
+"more.share_app_sub" = "Bantu teman Anda yang sedang\nmerencanakan pernikahan.";
+"more.share_message" = "Coba Wedding App untuk merencanakan pernikahanmu dengan lebih mudah dan terorganisir! https://www.weddingapp.co.id";
+"more.edit_profile" = "Edit Profil";
+"more.logout_title" = "Keluar dari Akun";
+"more.logout_message" = "Apakah Anda yakin ingin keluar dari akun?";
+"more.date_not_set" = "Tanggal belum diatur";
+"more.location_not_set" = "Lokasi belum diatur";
+
+/* Language */
+"language.title" = "Bahasa";
+"language.subtitle" = "Pilih bahasa tampilan aplikasi";
+"language.indonesian" = "Bahasa Indonesia";
+"language.english" = "English";
+"language.info" = "Pilih bahasa yang Anda inginkan. Perubahan akan diterapkan langsung di seluruh aplikasi.";
+
+/* Dashboard */
+"dashboard.welcome" = "Selamat datang di";
+"dashboard.plan_together" = "Rencanakan dengan indah. Bersama.";
+"dashboard.days_to_go" = "hari lagi";
+"dashboard.wedding_progress" = "Progres Pernikahan";
+"dashboard.next_up" = "Selanjutnya";
+"dashboard.completed" = "Selesai";
+"dashboard.in_progress" = "Berjalan";
+"dashboard.todo" = "Belum Mulai";
+"dashboard.notifications" = "Notifikasi";
+"dashboard.no_notifications" = "Belum Ada Notifikasi";
+"dashboard.no_notifications_sub" = "Notifikasi pernikahan Anda\nakan muncul di sini.";
+"dashboard.tasks" = "Tugas";
+"dashboard.vendors" = "Vendor";
+"dashboard.inspiration" = "Inspirasi";
+"dashboard.messages" = "Pesan";
+
+/* Guest */
+"guest.title" = "Tamu";
+"guest.subtitle" = "Kelola daftar tamu dan konfirmasi\nkehadiran dengan mudah.";
+"guest.rsvp_overview" = "Ringkasan RSVP";
+"guest.total_guests" = "Total Tamu";
+"guest.people" = "Orang";
+"guest.all_guests" = "Semua Tamu (%d)";
+"guest.search_placeholder" = "Cari nama, grup atau kontak...";
+"guest.add_guest" = "Tambah Tamu";
+"guest.sort_name" = "Urutkan: Nama A-Z";
+"guest.name" = "Nama";
+"guest.phone" = "No. HP";
+"guest.email" = "Email";
+
+/* Checklist */
+"checklist.title" = "Checklist";
+"checklist.subtitle" = "Rencanakan setiap momen,\nwujudkan pernikahan impian.";
+"checklist.search_placeholder" = "Cari tugas...";
+"checklist.tasks" = "Tugas";
+"checklist.done" = "Selesai";
+"checklist.running" = "Berjalan";
+"checklist.not_started" = "Belum Mulai";
+"checklist.total_progress" = "Total Progress";
+"checklist.tasks_completed" = "%d dari %d tugas selesai";
+
+/* Budget */
+"budget.title" = "Budget";
+"budget.subtitle" = "Kelola anggaran pernikahan\ndengan bijak dan terencana.";
+"budget.total_budget" = "Total Anggaran";
+"budget.spent" = "Terpakai";
+"budget.commitment" = "Komitmen";
+"budget.remaining" = "Sisa Anggaran";
+"budget.expenses" = "Pengeluaran";
+"budget.categories" = "Kategori";
+"budget.incoming" = "Uang Masuk";
+"budget.add_expense" = "Tambah Expense";
+"budget.add_expense_sub" = "Catat pengeluaran baru";
+"budget.no_expenses" = "Belum ada pengeluaran";
+"budget.no_expenses_sub" = "Tambahkan expense pertama untuk melihat ringkasan per kategori.";
+
+/* Vendor */
+"vendor.title" = "Vendor";
+"vendor.subtitle" = "Temukan vendor terbaik untuk hari\nbahagiamu.";
+"vendor.search_placeholder" = "Cari vendor, kategori, atau paket";
+"vendor.found" = "%d vendor ditemukan";
+"vendor.not_found" = "Vendor tidak ditemukan";
+"vendor.not_found_sub" = "Coba kata kunci lain atau ubah kategori.";
+
+/* Inspiration */
+"inspiration.title" = "Inspirasi & Ide";
+"inspiration.subtitle" = "Temukan inspirasi untuk hari bahagia Anda";
+"inspiration.search_placeholder" = "Cari inspirasi";
+"inspiration.latest" = "Inspirasi Terbaru";
+"inspiration.saved" = "Inspirasi Tersimpan";
+"inspiration.save_idea" = "Simpan Ide";
+"inspiration.all_categories" = "Semua Kategori";
+"inspiration.all_categories_sub" = "Pilih kategori inspirasi pernikahan";
+"inspiration.likes" = "%@ suka";
+"inspiration.views" = "%@ dilihat";
+"inspiration.save_inspiration" = "Simpan Inspirasi";
+"inspiration.saved_label" = "Tersimpan";
+
+/* Documents */
+"documents.title" = "Dokumen";
+"documents.subtitle" = "Simpan dokumen penting pernikahan Anda";
+"documents.search_placeholder" = "Cari dokumen";
+"documents.storage" = "Penyimpanan";
+"documents.storage_used" = "%@ dari %d MB digunakan";
+"documents.upload" = "Upload Dokumen";
+"documents.upload_hint" = "Ketuk untuk memilih atau tarik file ke sini";
+"documents.upload_limit" = "PDF, JPG, PNG maksimal 10MB";
+"documents.new_folder" = "Buat\nFolder Baru";
+"documents.recent" = "Dokumen Terbaru";
+"documents.security_note" = "Dokumen Anda aman dan hanya dapat diakses oleh Anda.";
+"documents.empty" = "Belum ada dokumen";
+"documents.empty_sub" = "Lampiran dari checklist persiapan akan muncul di sini secara otomatis.";
+
+/* Messages */
+"messages.title" = "Pesan";
+"messages.subtitle" = "Kelola percakapan dengan vendor,\npanitia, dan tim support.";
+"messages.search_placeholder" = "Cari percakapan atau pesan...";
+"messages.write_placeholder" = "Tulis pesan...";
+"messages.not_found" = "Percakapan tidak ditemukan";
+"messages.not_found_sub" = "Coba kata kunci lain atau ubah filter.";
+"messages.total_chat" = "Total Chat";
+"messages.unread" = "Belum Dibaca";
+
+/* Privacy */
+"privacy.title" = "Privasi & Keamanan";
+"privacy.subtitle" = "Kendalikan privasi dan keamanan akun Anda";
+"privacy.account_safe" = "Akun Anda aman";
+"privacy.account_safe_sub" = "Kami menjaga data dan informasi Anda dengan standar keamanan tinggi.";
+"privacy.privacy_settings" = "Pengaturan Privasi";
+"privacy.account_security" = "Keamanan Akun";
+"privacy.change_password" = "Ubah Kata Sandi";
+"privacy.delete_account" = "Hapus Akun";
+"privacy.active_sessions" = "Sesi Aktif";
+"privacy.active_sessions_sub" = "Lihat dan kelola sesi login aktif Anda";
+"privacy.privacy_policy" = "Lihat Kebijakan Privasi";
+"privacy.help_center" = "Pusat Bantuan";
+"privacy.social_login_password" = "Akun Anda masuk melalui Google atau Apple. Ubah kata sandi tidak tersedia untuk metode login ini.";
+"privacy.login_via_social" = "Masuk melalui Google atau Apple";
+"privacy.password_last_changed" = "Terakhir diubah %@";
+"privacy.password_update_hint" = "Perbarui kata sandi akun Anda";
+"privacy.data_visibility" = "Siapa yang dapat melihat data Anda";
+"privacy.data_visibility_sub" = "Atur visibilitas data dan informasi pribadi";
+"privacy.notifications" = "Notifikasi";
+"privacy.notifications_sub" = "Kelola notifikasi dan preferensi komunikasi";
+"privacy.permissions" = "Izin Akses";
+"privacy.permissions_sub" = "Kelola izin aplikasi dan data yang diakses";
+"privacy.download_data" = "Unduh Data Saya";
+"privacy.download_data_sub" = "Ekspor salinan data pribadi Anda";
+"privacy.delete_account_sub" = "Hapus akun dan semua data secara permanen";
+"privacy.trusted_devices" = "Perangkat Terpercaya";
+"privacy.trusted_devices_sub" = "Kelola perangkat yang masuk ke akun Anda";
+"privacy.two_factor" = "Verifikasi 2 Langkah";
+"privacy.two_factor_sub" = "Tingkatkan keamanan akun Anda";
+"privacy.two_factor_active" = "Aktif";
+"privacy.two_factor_inactive" = "Nonaktif";
+"privacy.commitment" = "Kami berkomitmen untuk melindungi privasi Anda. Baca Kebijakan Privasi kami untuk informasi lebih lanjut.";
+"privacy.help_center_sub" = "Pelajari lebih lanjut tentang privasi & keamanan";
+
+/* Change Password */
+"change_password.title" = "Ubah Kata Sandi";
+"change_password.subtitle" = "Gunakan kata sandi yang kuat dan unik";
+"change_password.section" = "Kata Sandi";
+"change_password.current" = "Kata sandi saat ini";
+"change_password.new" = "Kata sandi baru (min. 8 karakter)";
+"change_password.confirm" = "Konfirmasi kata sandi baru";
+"change_password.mismatch" = "Konfirmasi kata sandi tidak cocok.";
+"change_password.info" = "Setelah mengubah kata sandi, Anda tetap masuk di perangkat ini. Sesi login di perangkat lain akan diakhiri otomatis.";
+"change_password.save" = "Simpan Kata Sandi";
+"change_password.success_message" = "Kata sandi Anda berhasil diubah. Sesi login di perangkat lain telah diakhiri.";
+
+/* Delete Account */
+"delete_account.title" = "Hapus Akun";
+"delete_account.subtitle" = "Tindakan ini bersifat permanen";
+"delete_account.warning_title" = "Peringatan";
+"delete_account.warning_message" = "Penghapusan akun bersifat permanen. Semua data Anda akan hilang dan tidak dapat dipulihkan.";
+"delete_account.confirm_section" = "Konfirmasi Penghapusan";
+"delete_account.password_placeholder" = "Masukkan kata sandi Anda";
+"delete_account.social_note" = "Akun Anda masuk melalui Google atau Apple. Konfirmasi dengan mengetik HAPUS di bawah.";
+"delete_account.confirm_placeholder" = "Ketik HAPUS untuk konfirmasi";
+"delete_account.data_title" = "Data yang akan dihapus:";
+"delete_account.data_profile" = "Profil dan informasi akun";
+"delete_account.data_wedding" = "Detail pernikahan dan acara";
+"delete_account.data_guests" = "Daftar tamu dan VIP";
+"delete_account.data_budget" = "Budget dan pembayaran";
+"delete_account.data_checklist" = "Checklist persiapan dan dokumen";
+"delete_account.button" = "Hapus Akun Saya";
+"delete_account.alert_title" = "Hapus Akun Permanen?";
+"delete_account.alert_message" = "Semua data pernikahan, tamu, budget, dan dokumen Anda akan dihapus dan tidak dapat dipulihkan.";
+
+/* Active Sessions */
+"sessions.title" = "Sesi Aktif";
+"sessions.subtitle" = "Lihat dan kelola sesi login aktif Anda";
+"sessions.info" = "Jika Anda melihat perangkat yang tidak dikenal, akhiri sesinya segera dan ubah kata sandi Anda.";
+"sessions.empty_title" = "Tidak ada sesi aktif";
+"sessions.empty_message" = "Belum ada perangkat yang masuk ke akun Anda.";
+"sessions.this_device" = "Perangkat ini";
+"sessions.logout" = "Keluar";
+"sessions.end" = "Akhiri";
+"sessions.end_all" = "Akhiri Semua Sesi Lain";
+"sessions.alert_end_title" = "Akhiri Sesi?";
+"sessions.alert_end_action" = "Akhiri Sesi";
+"sessions.alert_end_current" = "Anda akan logout dari perangkat ini.";
+"sessions.alert_end_device" = "%@ akan logout dari akun Anda.";
+"sessions.alert_end_all_title" = "Akhiri Semua Sesi Lain?";
+"sessions.alert_end_all_action" = "Akhiri Semua";
+"sessions.alert_end_all_message" = "Perangkat lain akan logout otomatis. Sesi di perangkat ini tetap aktif.";
+"sessions.last_active" = "Terakhir aktif %@";
+"sessions.login_since" = "Login sejak %@";
+"sessions.active" = "Sesi aktif";
+
+/* Edit Profile */
+"profile.title" = "Edit Profil";
+"profile.subtitle" = "Perbarui informasi akun Anda";
+"profile.account_section" = "Informasi Akun";
+"profile.contact_section" = "Kontak";
+"profile.name_placeholder" = "Nama lengkap";
+"profile.email_unavailable" = "Email belum tersedia";
+"profile.email_locked" = "Email tidak dapat diubah dari aplikasi.";
+"profile.whatsapp_placeholder" = "Nomor WhatsApp (opsional)";
+"profile.name_empty" = "Nama belum diisi";
+"profile.photo_note" = "Foto profil diambil dari akun Google saat login.";
+"profile.info" = "Untuk mengubah detail pernikahan seperti tanggal, lokasi, dan nama mempelai, buka menu Detail Pernikahan.";
+"profile.save" = "Simpan Profil";
+
+/* Couple */
+"couple.title" = "Pasangan";
+"couple.subtitle" = "Informasi mempelai";
+"couple.name_empty" = "Nama pasangan belum diisi";
+"couple.culture_empty" = "Budaya/konsep belum diatur";
+"couple.bride_section" = "Mempelai Wanita";
+"couple.groom_section" = "Mempelai Pria";
+"couple.culture_section" = "Budaya / Konsep";
+"couple.bride_placeholder" = "Nama lengkap mempelai wanita";
+"couple.groom_placeholder" = "Nama lengkap mempelai pria";
+"couple.culture_placeholder" = "Contoh: Adat Jawa, Garden Romantic";
+"couple.save" = "Simpan Pasangan";
+
+/* Wedding Detail */
+"wedding_detail.title" = "Detail Pernikahan";
+"wedding_detail.subtitle" = "Informasi lengkap rencana\npernikahan Anda.";
+"wedding_detail.tab_summary" = "Ringkasan";
+"wedding_detail.tab_schedule" = "Jadwal Acara";
+"wedding_detail.tab_guests" = "Tamu";
+"wedding_detail.event_info" = "Informasi Acara";
+"wedding_detail.event_series" = "Rangkaian Acara";
+"wedding_detail.notes" = "Catatan";
+"wedding_detail.concept" = "Konsep Pernikahan";
+"wedding_detail.time_until_done" = "10.00 WIB\ns/d Selesai";
+"wedding_detail.default_note" = "Mohon konfirmasi ke semua vendor 1 minggu sebelum acara.";
+"wedding_detail.no_guests" = "Belum ada data tamu";
+"wedding_detail.no_guests_sub" = "Kelola tamu dari tab Guest.";
+"wedding_detail.no_events" = "Belum ada rangkaian acara";
+"wedding_detail.no_events_sub" = "Tambahkan acara pernikahan dari halaman edit.";
+"wedding_detail.attending" = "Hadir";
+"wedding_detail.time_not_set" = "Waktu belum diatur";
+"wedding_detail.default_location" = "Lake Maceyhaven, Indonesia";
+"wedding_detail.default_couple" = "Eliane & Jaeden";
+"wedding_detail.default_date" = "23 Juni 2027";
+"wedding_detail.default_date_weekday" = "23 Juni 2027 (Rabu)";
+
+/* Auth extras */
+"auth.tagline_quote" = "Every love story is beautiful";
+"auth.continue_apple" = "Lanjutkan dengan Apple";
+"auth.continue_google" = "Lanjutkan dengan Google";
+"auth.continue_phone" = "Lanjutkan dengan Nomor Telepon";
+"auth.or" = "atau";
+
+/* Inspiration categories */
+"inspiration_category.decoration" = "Dekorasi";
+"inspiration_category.dress" = "Gaun Pengantin";
+"inspiration_category.makeup" = "Makeup";
+"inspiration_category.catering" = "Katering";
+"inspiration_category.venue" = "Wedding Venue";

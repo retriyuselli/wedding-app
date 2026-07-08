@@ -1,0 +1,373 @@
+/* Common */
+"common.cancel" = "Cancel";
+"common.save" = "Save";
+"common.ok" = "OK";
+"common.close" = "Close";
+"common.done" = "Done";
+"common.reset" = "Reset";
+"common.apply" = "Apply";
+"common.delete" = "Delete";
+"common.edit" = "Edit";
+"common.filter" = "Filter";
+"common.search" = "Search";
+"common.see_all" = "See All";
+"common.see_detail" = "View detail";
+"common.share" = "Share";
+"common.logout" = "Log Out";
+"common.coming_soon" = "Coming Soon";
+"common.coming_soon_message" = "This feature will be available soon.";
+"common.try_again" = "Try Again";
+"common.sort" = "Sort";
+"common.notes" = "Notes";
+"common.location" = "Location";
+"common.date" = "Date";
+"common.time" = "Time";
+"common.all" = "All";
+"common.confirmed" = "Confirmed";
+"common.pending" = "Pending";
+"common.not_attending" = "Not Attending";
+"common.description" = "Description";
+"common.category" = "Category";
+"common.not_available" = "Not Available";
+"common.success" = "Success";
+"common.warning" = "Warning";
+"common.soon" = "Soon";
+
+/* Tabs */
+"tab.home" = "Home";
+"tab.checklist" = "Checklist";
+"tab.guest" = "Guest";
+"tab.budget" = "Budget";
+"tab.more" = "More";
+
+/* Auth */
+"auth.app_name" = "Wedding App";
+"auth.tagline" = "Your best friend in planning your special day.";
+"auth.email_or_phone" = "Email or Phone Number";
+"auth.email_placeholder" = "Enter email or phone number";
+"auth.password" = "Password";
+"auth.password_placeholder" = "Enter password";
+"auth.confirm_password" = "Confirm password";
+"auth.full_name" = "Full Name";
+"auth.full_name_placeholder" = "Enter full name";
+"auth.invalid_email" = "Invalid email format.";
+"auth.password_mismatch" = "Password confirmation does not match.";
+"auth.forgot_password" = "Forgot password?";
+"auth.login" = "Log In";
+"auth.register" = "Sign Up";
+"auth.register_now" = "Sign up now";
+"auth.have_account" = "Already have an account?";
+"auth.no_account" = "Don't have an account?";
+"auth.or_login_with" = "or log in with";
+"auth.or_register_with" = "or sign up with";
+
+/* More */
+"more.title" = "More";
+"more.subtitle" = "Settings, information, and more\nfor your best experience.";
+"more.planning_section" = "My Planning";
+"more.account_section" = "Account & Settings";
+"more.wedding_detail" = "Wedding Details";
+"more.wedding_detail_sub" = "Date, location, and key information";
+"more.couple" = "Couple";
+"more.couple_sub" = "Bride and groom information";
+"more.saved_vendors" = "Saved Vendors";
+"more.saved_vendors_sub" = "Your favorite vendor list";
+"more.inspiration" = "Inspiration & Ideas";
+"more.inspiration_sub" = "Save inspiration and references";
+"more.documents" = "Documents";
+"more.documents_sub" = "Store important wedding documents";
+"more.settings" = "Settings";
+"more.settings_sub" = "Notifications, appearance, and preferences";
+"more.privacy" = "Privacy & Security";
+"more.privacy_sub" = "Manage privacy and account security";
+"more.reminders" = "Reminders";
+"more.reminders_sub" = "Set reminders and notifications";
+"more.language" = "Language";
+
+/* Reminders */
+"reminders.title" = "Reminders";
+"reminders.subtitle" = "Manage wedding notifications and reminders";
+"reminders.status_on" = "Notifications on";
+"reminders.status_on_sub" = "You'll receive reminders and important alerts.";
+"reminders.status_off" = "Notifications off";
+"reminders.status_off_sub" = "Enable them in iOS Settings so reminders can be sent.";
+"reminders.status_not_set" = "Permission not set";
+"reminders.status_not_set_sub" = "Allow notifications so you don't miss important reminders.";
+"reminders.push_toggle" = "Push notifications";
+"reminders.push_toggle_sub" = "Turn app notifications on or off";
+"reminders.open_settings" = "Open iOS Settings";
+"reminders.info" = "Notification permissions are managed by iOS. After changing permission in Settings, the status on this page updates automatically.";
+"more.help" = "Help & FAQ";
+"more.help_sub" = "Help center and common questions";
+"more.about" = "About Wedding App";
+"more.about_sub" = "Version 1.0.0";
+"more.share_app" = "Share Wedding App";
+"more.share_app_sub" = "Help friends who are\nplanning their wedding.";
+"more.share_message" = "Try Wedding App to plan your wedding more easily and stay organized! https://www.weddingapp.co.id";
+"more.edit_profile" = "Edit Profile";
+"more.logout_title" = "Log Out";
+"more.logout_message" = "Are you sure you want to log out?";
+"more.date_not_set" = "Date not set";
+"more.location_not_set" = "Location not set";
+
+/* Language */
+"language.title" = "Language";
+"language.subtitle" = "Choose app display language";
+"language.indonesian" = "Bahasa Indonesia";
+"language.english" = "English";
+"language.info" = "Choose your preferred language. Changes apply immediately across the app.";
+
+/* Dashboard */
+"dashboard.welcome" = "Welcome to";
+"dashboard.plan_together" = "Plan beautifully. Together.";
+"dashboard.days_to_go" = "days to go";
+"dashboard.wedding_progress" = "Wedding Progress";
+"dashboard.next_up" = "Next Up";
+"dashboard.completed" = "Completed";
+"dashboard.in_progress" = "In Progress";
+"dashboard.todo" = "To Do";
+"dashboard.notifications" = "Notifications";
+"dashboard.no_notifications" = "No Notifications Yet";
+"dashboard.no_notifications_sub" = "Your wedding notifications\nwill appear here.";
+"dashboard.tasks" = "Tasks";
+"dashboard.vendors" = "Vendors";
+"dashboard.inspiration" = "Inspiration";
+"dashboard.messages" = "Messages";
+
+/* Guest */
+"guest.title" = "Guests";
+"guest.subtitle" = "Manage your guest list and\nRSVPs with ease.";
+"guest.rsvp_overview" = "RSVP Overview";
+"guest.total_guests" = "Total Guests";
+"guest.people" = "People";
+"guest.all_guests" = "All Guests (%d)";
+"guest.search_placeholder" = "Search name, group or contact...";
+"guest.add_guest" = "Add Guest";
+"guest.sort_name" = "Sort: Name A-Z";
+"guest.name" = "Name";
+"guest.phone" = "Phone";
+"guest.email" = "Email";
+
+/* Checklist */
+"checklist.title" = "Checklist";
+"checklist.subtitle" = "Plan every moment,\nmake your dream wedding happen.";
+"checklist.search_placeholder" = "Search tasks...";
+"checklist.tasks" = "Tasks";
+"checklist.done" = "Done";
+"checklist.running" = "In Progress";
+"checklist.not_started" = "Not Started";
+"checklist.total_progress" = "Total Progress";
+"checklist.tasks_completed" = "%d of %d tasks completed";
+
+/* Budget */
+"budget.title" = "Budget";
+"budget.subtitle" = "Manage your wedding budget\nwisely and with a plan.";
+"budget.total_budget" = "Total Budget";
+"budget.spent" = "Spent";
+"budget.commitment" = "Committed";
+"budget.remaining" = "Remaining";
+"budget.expenses" = "Expenses";
+"budget.categories" = "Categories";
+"budget.incoming" = "Incoming";
+"budget.add_expense" = "Add Expense";
+"budget.add_expense_sub" = "Record a new expense";
+"budget.no_expenses" = "No expenses yet";
+"budget.no_expenses_sub" = "Add your first expense to see category summary.";
+
+/* Vendor */
+"vendor.title" = "Vendors";
+"vendor.subtitle" = "Find the best vendors for\nyour special day.";
+"vendor.search_placeholder" = "Search vendor, category, or package";
+"vendor.found" = "%d vendors found";
+"vendor.not_found" = "No vendors found";
+"vendor.not_found_sub" = "Try another keyword or change category.";
+
+/* Inspiration */
+"inspiration.title" = "Inspiration & Ideas";
+"inspiration.subtitle" = "Find inspiration for your special day";
+"inspiration.search_placeholder" = "Search inspiration";
+"inspiration.latest" = "Latest Inspiration";
+"inspiration.saved" = "Saved Inspiration";
+"inspiration.save_idea" = "Save Idea";
+"inspiration.all_categories" = "All Categories";
+"inspiration.all_categories_sub" = "Choose a wedding inspiration category";
+"inspiration.likes" = "%@ likes";
+"inspiration.views" = "%@ views";
+"inspiration.save_inspiration" = "Save Inspiration";
+"inspiration.saved_label" = "Saved";
+
+/* Documents */
+"documents.title" = "Documents";
+"documents.subtitle" = "Store your important wedding documents";
+"documents.search_placeholder" = "Search documents";
+"documents.storage" = "Storage";
+"documents.storage_used" = "%@ of %d MB used";
+"documents.upload" = "Upload Document";
+"documents.upload_hint" = "Tap to select or drag file here";
+"documents.upload_limit" = "PDF, JPG, PNG max 10MB";
+"documents.new_folder" = "Create\nNew Folder";
+"documents.recent" = "Recent Documents";
+"documents.security_note" = "Your documents are secure and only accessible by you.";
+"documents.empty" = "No documents yet";
+"documents.empty_sub" = "Attachments from preparation checklist will appear here automatically.";
+
+/* Messages */
+"messages.title" = "Messages";
+"messages.subtitle" = "Manage conversations with vendors,\nplanners, and support team.";
+"messages.search_placeholder" = "Search conversations or messages...";
+"messages.write_placeholder" = "Write a message...";
+"messages.not_found" = "No conversations found";
+"messages.not_found_sub" = "Try another keyword or change filter.";
+"messages.total_chat" = "Total Chats";
+"messages.unread" = "Unread";
+
+/* Privacy */
+"privacy.title" = "Privacy & Security";
+"privacy.subtitle" = "Control your privacy and account security";
+"privacy.account_safe" = "Your account is secure";
+"privacy.account_safe_sub" = "We protect your data with high security standards.";
+"privacy.privacy_settings" = "Privacy Settings";
+"privacy.account_security" = "Account Security";
+"privacy.change_password" = "Change Password";
+"privacy.delete_account" = "Delete Account";
+"privacy.active_sessions" = "Active Sessions";
+"privacy.active_sessions_sub" = "View and manage your active login sessions";
+"privacy.privacy_policy" = "View Privacy Policy";
+"privacy.help_center" = "Help Center";
+"privacy.social_login_password" = "You signed in with Google or Apple. Password change is not available for this login method.";
+"privacy.login_via_social" = "Signed in with Google or Apple";
+"privacy.password_last_changed" = "Last changed %@";
+"privacy.password_update_hint" = "Update your account password";
+"privacy.data_visibility" = "Who can see your data";
+"privacy.data_visibility_sub" = "Manage visibility of your personal information";
+"privacy.notifications" = "Notifications";
+"privacy.notifications_sub" = "Manage notifications and communication preferences";
+"privacy.permissions" = "App Permissions";
+"privacy.permissions_sub" = "Manage app permissions and accessed data";
+"privacy.download_data" = "Download My Data";
+"privacy.download_data_sub" = "Export a copy of your personal data";
+"privacy.delete_account_sub" = "Permanently delete your account and all data";
+"privacy.trusted_devices" = "Trusted Devices";
+"privacy.trusted_devices_sub" = "Manage devices signed in to your account";
+"privacy.two_factor" = "Two-Step Verification";
+"privacy.two_factor_sub" = "Increase your account security";
+"privacy.two_factor_active" = "Active";
+"privacy.two_factor_inactive" = "Inactive";
+"privacy.commitment" = "We are committed to protecting your privacy. Read our Privacy Policy for more information.";
+"privacy.help_center_sub" = "Learn more about privacy & security";
+
+/* Change Password */
+"change_password.title" = "Change Password";
+"change_password.subtitle" = "Use a strong and unique password";
+"change_password.section" = "Password";
+"change_password.current" = "Current password";
+"change_password.new" = "New password (min. 8 characters)";
+"change_password.confirm" = "Confirm new password";
+"change_password.mismatch" = "Password confirmation does not match.";
+"change_password.info" = "After changing your password, you will stay signed in on this device. Other sessions will be ended automatically.";
+"change_password.save" = "Save Password";
+"change_password.success_message" = "Your password has been changed. Sessions on other devices have been ended.";
+
+/* Delete Account */
+"delete_account.title" = "Delete Account";
+"delete_account.subtitle" = "This action is permanent";
+"delete_account.warning_title" = "Warning";
+"delete_account.warning_message" = "Account deletion is permanent. All your data will be lost and cannot be recovered.";
+"delete_account.confirm_section" = "Deletion Confirmation";
+"delete_account.password_placeholder" = "Enter your password";
+"delete_account.social_note" = "You signed in with Google or Apple. Confirm by typing HAPUS below.";
+"delete_account.confirm_placeholder" = "Type HAPUS to confirm";
+"delete_account.data_title" = "Data that will be deleted:";
+"delete_account.data_profile" = "Profile and account information";
+"delete_account.data_wedding" = "Wedding details and events";
+"delete_account.data_guests" = "Guest and VIP lists";
+"delete_account.data_budget" = "Budget and payments";
+"delete_account.data_checklist" = "Preparation checklist and documents";
+"delete_account.button" = "Delete My Account";
+"delete_account.alert_title" = "Permanently Delete Account?";
+"delete_account.alert_message" = "All wedding data, guests, budget, and documents will be deleted and cannot be recovered.";
+
+/* Active Sessions */
+"sessions.title" = "Active Sessions";
+"sessions.subtitle" = "View and manage your active login sessions";
+"sessions.info" = "If you see an unfamiliar device, end its session immediately and change your password.";
+"sessions.empty_title" = "No active sessions";
+"sessions.empty_message" = "No devices are currently signed in to your account.";
+"sessions.this_device" = "This device";
+"sessions.logout" = "Sign Out";
+"sessions.end" = "End";
+"sessions.end_all" = "End All Other Sessions";
+"sessions.alert_end_title" = "End Session?";
+"sessions.alert_end_action" = "End Session";
+"sessions.alert_end_current" = "You will be signed out from this device.";
+"sessions.alert_end_device" = "%@ will be signed out from your account.";
+"sessions.alert_end_all_title" = "End All Other Sessions?";
+"sessions.alert_end_all_action" = "End All";
+"sessions.alert_end_all_message" = "Other devices will be signed out automatically. This session will remain active.";
+"sessions.last_active" = "Last active %@";
+"sessions.login_since" = "Signed in since %@";
+"sessions.active" = "Active session";
+
+/* Edit Profile */
+"profile.title" = "Edit Profile";
+"profile.subtitle" = "Update your account information";
+"profile.account_section" = "Account Information";
+"profile.contact_section" = "Contact";
+"profile.name_placeholder" = "Full name";
+"profile.email_unavailable" = "Email not available";
+"profile.email_locked" = "Email cannot be changed from the app.";
+"profile.whatsapp_placeholder" = "WhatsApp number (optional)";
+"profile.name_empty" = "Name not set";
+"profile.photo_note" = "Profile photo is taken from your Google account at sign-in.";
+"profile.info" = "To change wedding details such as date, location, and couple names, open Wedding Details.";
+"profile.save" = "Save Profile";
+
+/* Couple */
+"couple.title" = "Couple";
+"couple.subtitle" = "Couple information";
+"couple.name_empty" = "Couple name not set";
+"couple.culture_empty" = "Culture/concept not set";
+"couple.bride_section" = "Bride";
+"couple.groom_section" = "Groom";
+"couple.culture_section" = "Culture / Concept";
+"couple.bride_placeholder" = "Bride's full name";
+"couple.groom_placeholder" = "Groom's full name";
+"couple.culture_placeholder" = "e.g. Javanese tradition, Garden Romantic";
+"couple.save" = "Save Couple";
+
+/* Wedding Detail */
+"wedding_detail.title" = "Wedding Details";
+"wedding_detail.subtitle" = "Complete information about your\nwedding plan.";
+"wedding_detail.tab_summary" = "Summary";
+"wedding_detail.tab_schedule" = "Event Schedule";
+"wedding_detail.tab_guests" = "Guests";
+"wedding_detail.event_info" = "Event Information";
+"wedding_detail.event_series" = "Event Series";
+"wedding_detail.notes" = "Notes";
+"wedding_detail.concept" = "Wedding Concept";
+"wedding_detail.time_until_done" = "10:00 AM\nuntil finished";
+"wedding_detail.default_note" = "Please confirm with all vendors 1 week before the event.";
+"wedding_detail.no_guests" = "No guest data yet";
+"wedding_detail.no_guests_sub" = "Manage guests from the Guest tab.";
+"wedding_detail.no_events" = "No events scheduled yet";
+"wedding_detail.no_events_sub" = "Add your wedding events from the edit page.";
+"wedding_detail.attending" = "Attending";
+"wedding_detail.time_not_set" = "Time not set";
+"wedding_detail.default_location" = "Lake Maceyhaven, Indonesia";
+"wedding_detail.default_couple" = "Eliane & Jaeden";
+"wedding_detail.default_date" = "23 June 2027";
+"wedding_detail.default_date_weekday" = "23 June 2027 (Wednesday)";
+
+/* Auth extras */
+"auth.tagline_quote" = "Every love story is beautiful";
+"auth.continue_apple" = "Continue with Apple";
+"auth.continue_google" = "Continue with Google";
+"auth.continue_phone" = "Continue with Phone Number";
+"auth.or" = "or";
+
+/* Inspiration categories */
+"inspiration_category.decoration" = "Decoration";
+"inspiration_category.dress" = "Wedding Dress";
+"inspiration_category.makeup" = "Makeup";
+"inspiration_category.catering" = "Catering";
+"inspiration_category.venue" = "Wedding Venue";

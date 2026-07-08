@@ -32,11 +32,11 @@ class WeddingPaymentScheduleProofTest extends TestCase
 
         $response = $this->actingAs($user, 'sanctum')
             ->post('/api/v1/wedding-payment-schedules', [
-                'title'                      => 'DP Venue',
-                'amount'                     => 5_000_000,
-                'category'                   => 'venue',
+                'title' => 'DP Venue',
+                'amount' => 5_000_000,
+                'category' => 'venue',
                 'customer_payment_method_id' => (string) $paymentMethodId,
-                'proof'                      => UploadedFile::fake()->image('bukti.jpg')->size(500),
+                'proof' => UploadedFile::fake()->image('bukti.jpg')->size(500),
             ]);
 
         $response
@@ -67,10 +67,25 @@ class WeddingPaymentScheduleProofTest extends TestCase
 
         $response = $this->actingAs($user, 'sanctum')
             ->post('/api/v1/wedding-payment-schedules', [
-                'title'    => 'DP Venue',
-                'amount'   => 5_000_000,
+                'title' => 'DP Venue',
+                'amount' => 5_000_000,
                 'category' => 'venue',
-                'proof'    => UploadedFile::fake()->image('bukti.jpg')->size(1025),
+                'proof' => UploadedFile::fake()->image('bukti.jpg')->size(1025),
+            ]);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_store_rejects_notes_longer_than_two_hundred_characters(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/wedding-payment-schedules', [
+                'title' => 'DP Venue',
+                'amount' => 5_000_000,
+                'category' => 'venue',
+                'notes' => str_repeat('a', 201),
             ]);
 
         $response->assertUnprocessable();
@@ -82,10 +97,10 @@ class WeddingPaymentScheduleProofTest extends TestCase
 
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/wedding-payment-schedules', [
-                'title'    => 'DP Band',
-                'amount'   => 5_000_000,
+                'title' => 'DP Band',
+                'amount' => 5_000_000,
                 'category' => 'entertainment',
-                'status'   => 'paid',
+                'status' => 'paid',
             ]);
 
         $response
@@ -94,8 +109,8 @@ class WeddingPaymentScheduleProofTest extends TestCase
 
         $this->assertDatabaseHas('wedding_payment_schedules', [
             'user_id' => $user->id,
-            'title'   => 'DP Band',
-            'status'  => 'paid',
+            'title' => 'DP Band',
+            'status' => 'paid',
         ]);
 
         $this->assertNotNull(

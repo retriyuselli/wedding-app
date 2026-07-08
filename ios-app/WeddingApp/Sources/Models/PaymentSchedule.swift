@@ -11,6 +11,7 @@ struct PaymentSchedule: Decodable, Identifiable, Hashable {
     var amount: Double
     var dueDate: String?
     var status: String
+    var statusLabel: String?
     var paidAt: String?
     var notes: String?
     var proofUrl: String?
@@ -27,6 +28,7 @@ struct PaymentSchedule: Decodable, Identifiable, Hashable {
         case amount
         case dueDate
         case status
+        case statusLabel
         case paidAt
         case notes
         case proofUrl
@@ -45,7 +47,8 @@ struct PaymentSchedule: Decodable, Identifiable, Hashable {
         categoryLabel = try container.decodeIfPresent(String.self, forKey: .categoryLabel)
         amount = Self.decodeFlexibleDouble(from: container, forKey: .amount)
         dueDate = try container.decodeIfPresent(String.self, forKey: .dueDate)
-        status = Self.decodeStatus(from: container)
+        status = try container.decode(String.self, forKey: .status)
+        statusLabel = try container.decodeIfPresent(String.self, forKey: .statusLabel)
         paidAt = try container.decodeIfPresent(String.self, forKey: .paidAt)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
         proofUrl = try container.decodeIfPresent(String.self, forKey: .proofUrl)
@@ -74,11 +77,20 @@ struct PaymentSchedule: Decodable, Identifiable, Hashable {
     }
 
     var isPaid: Bool {
-        normalizedStatus == "paid" || paidAt != nil
+        normalizedStatus == "paid"
     }
 
     var isOverdue: Bool {
         normalizedStatus == "overdue"
+    }
+
+    func resolvedCategoryKey(default defaultKey: String) -> String {
+        guard let category else {
+            return defaultKey
+        }
+
+        let trimmed = category.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? defaultKey : trimmed
     }
 
     var displayStatusLabel: String {
@@ -87,7 +99,15 @@ struct PaymentSchedule: Decodable, Identifiable, Hashable {
         }
 
         if isOverdue {
-            return "Overdue"
+            if let statusLabel, !statusLabel.isEmpty {
+                return statusLabel
+            }
+
+            return "Terlambat"
+        }
+
+        if let statusLabel, !statusLabel.isEmpty {
+            return statusLabel
         }
 
         return "Belum Bayar"
@@ -120,20 +140,37 @@ struct PaymentSchedule: Decodable, Identifiable, Hashable {
         return String(paidAt.prefix(10))
     }
 
+    func matchesSearch(_ query: String) -> Bool {
+        Self.matchesSearch(query, in: [
+            title,
+            vendorName,
+            category,
+            categoryLabel,
+            notes,
+            dueDate,
+            displayStatusLabel,
+            String(Int(amount)),
+            CurrencyFormatter.rupiah(amount),
+        ])
+    }
+
+    private static func matchesSearch(_ query: String, in values: [String?]) -> Bool {
+        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalizedQuery.isEmpty else {
+            return true
+        }
+
+        return values.contains { value in
+            value?.localizedCaseInsensitiveContains(normalizedQuery) == true
+        }
+    }
+
     private static let paidAtDisplayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "id_ID")
         formatter.dateFormat = "d MMMM yyyy"
         return formatter
     }()
-
-    private static func decodeStatus(from container: KeyedDecodingContainer<CodingKeys>) -> String {
-        if let value = try? container.decode(String.self, forKey: .status) {
-            return value
-        }
-
-        return "pending"
-    }
 
     private static func decodeFlexibleInt(
         from container: KeyedDecodingContainer<CodingKeys>,

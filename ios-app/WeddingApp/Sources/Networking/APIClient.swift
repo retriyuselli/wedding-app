@@ -167,6 +167,7 @@ final class APIClient {
     private func errorFromResponse(statusCode: Int, data: Data) -> APIError {
         if statusCode == 401 {
             KeychainStore.deleteToken()
+            NotificationCenter.default.post(name: .sessionExpired, object: nil)
             return .unauthorized
         }
 

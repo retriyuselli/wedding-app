@@ -13,17 +13,22 @@ struct PaymentScheduleFormView: View {
 
 struct AddExpenseView: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var categoriesStore = BudgetCategoriesStore.shared
 
     let schedule: PaymentSchedule?
     let onSaved: () async -> Void
 
     @State private var title = ""
+    @State private var vendorName = ""
     @State private var category = ""
     @State private var amountText = ""
     @State private var dueDate = Date()
+    @State private var selectedWeddingEventId: Int?
     @State private var selectedPaymentMethodId: Int?
     @State private var notes = ""
+    @State private var isMarkedPaid = false
     @State private var paymentMethods: [CustomerPaymentMethod] = []
+    @State private var weddingEvents: [WeddingEvent] = []
     @State private var selectedProofItem: PhotosPickerItem?
     @State private var proofPreview: UIImage?
     @State private var proofFileData: Data?
@@ -36,6 +41,7 @@ struct AddExpenseView: View {
 
     @State private var showCategoryPicker = false
     @State private var showDatePicker = false
+    @State private var showEventPicker = false
     @State private var showPaymentMethodPicker = false
     @State private var showProofViewer = false
     @State private var showProofPicker = false
@@ -49,7 +55,7 @@ struct AddExpenseView: View {
     private var isEditing: Bool { schedule != nil }
 
     private var selectedCategoryLabel: String {
-        category.isEmpty ? "Pilih kategori expense" : BudgetCategory.label(for: category)
+        category.isEmpty ? "Pilih kategori expense" : categoriesStore.label(for: category)
     }
 
     private var selectedPaymentMethodLabel: String {
@@ -60,8 +66,17 @@ struct AddExpenseView: View {
         return method.displayLabel
     }
 
+    private var selectedEventLabel: String {
+        guard let selectedWeddingEventId,
+              let event = weddingEvents.first(where: { $0.id == selectedWeddingEventId }) else {
+            return "Tidak terkait acara (opsional)"
+        }
+
+        return event.jenisLabel ?? event.jenisAcara.capitalized
+    }
+
     private var formattedDueDate: String {
-        DateFormatter.expenseDisplay.string(from: dueDate)
+        DateFormatter.displayLocaleDate(dueDate)
     }
 
     private var amountPreview: String {
@@ -113,6 +128,12 @@ struct AddExpenseView: View {
                             .foregroundStyle(AppTheme.ink)
                     }
 
+                    inputRow(icon: "building.2") {
+                        TextField("Nama vendor (opsional)", text: $vendorName)
+                            .font(AppFont.regular(14))
+                            .foregroundStyle(AppTheme.ink)
+                    }
+
                     inputRow(icon: "banknote") {
                         TextField("Masukkan jumlah", text: $amountText)
                             .font(AppFont.regular(14))
@@ -131,12 +152,35 @@ struct AddExpenseView: View {
                         showDatePicker = true
                     }
 
+                    if !weddingEvents.isEmpty {
+                        pickerRow(
+                            icon: "calendar.badge.clock",
+                            title: selectedEventLabel,
+                            isPlaceholder: selectedWeddingEventId == nil
+                        ) {
+                            showEventPicker = true
+                        }
+                    }
+
                     pickerRow(icon: "wallet.pass", title: selectedPaymentMethodLabel, isPlaceholder: selectedPaymentMethodId == nil) {
                         showPaymentMethodPicker = true
                     }
 
                     notesSection
+                    paymentStatusSection
                     proofSection
+
+                    if isEditing {
+                        Button(role: .destructive) {
+                            Task { await deleteExpense() }
+                        } label: {
+                            Label("Hapus Expense", systemImage: "trash")
+                                .font(AppFont.medium(14))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -147,7 +191,9 @@ struct AddExpenseView: View {
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom) { saveButton }
         .task {
+            await categoriesStore.loadIfNeeded()
             await loadPaymentMethods()
+            await loadWeddingEvents()
             populateIfNeeded()
         }
         .onChange(of: schedule?.id) { _, _ in
@@ -161,6 +207,12 @@ struct AddExpenseView: View {
         }
         .navigationDestination(isPresented: $showDatePicker) {
             ExpenseDatePickerView(selection: $dueDate)
+        }
+        .navigationDestination(isPresented: $showEventPicker) {
+            ExpenseWeddingEventPickerView(
+                events: weddingEvents,
+                selection: $selectedWeddingEventId
+            )
         }
         .navigationDestination(isPresented: $showPaymentMethodPicker) {
             ExpensePaymentMethodPickerView(
@@ -242,6 +294,52 @@ struct AddExpenseView: View {
             .padding(.vertical, 14)
             .background(fieldBackground)
         }
+    }
+
+    private var paymentStatusSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                fieldIcon("checkmark.circle")
+
+                Text("Status Pembayaran")
+                    .font(AppFont.medium(14))
+                    .foregroundStyle(AppTheme.ink)
+
+                Spacer()
+            }
+
+            Picker("Status Pembayaran", selection: $isMarkedPaid) {
+                Text("Belum Bayar").tag(false)
+                Text("Sudah Bayar").tag(true)
+            }
+            .pickerStyle(.segmented)
+
+            if isMarkedPaid {
+                Text("Dicatat sebagai sudah dibayar. Upload bukti pembayaran tetap opsional.")
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+            } else if isOverdueUnpaid {
+                Text("Jatuh tempo sudah lewat — ditandai terlambat di anggaran.")
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(Color.orange.opacity(0.85))
+            } else {
+                Text("Masuk ke komitmen anggaran sampai ditandai lunas.")
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .background(fieldBackground)
+    }
+
+    private var isOverdueUnpaid: Bool {
+        guard !isMarkedPaid else {
+            return false
+        }
+
+        let startOfToday = Calendar.current.startOfDay(for: Date())
+        return dueDate < startOfToday
     }
 
     private var proofSection: some View {
@@ -480,10 +578,13 @@ struct AddExpenseView: View {
     private func populateIfNeeded() {
         guard let schedule else { return }
         title = schedule.title
+        vendorName = schedule.vendorName ?? ""
         category = schedule.category ?? ""
         amountText = Self.formatAmountInput(String(Int(schedule.amount.rounded())))
+        selectedWeddingEventId = schedule.weddingEventId
         selectedPaymentMethodId = schedule.customerPaymentMethodId
         notes = schedule.notes ?? ""
+        isMarkedPaid = schedule.isPaid
         if let dueDateString = schedule.dueDate, !dueDateString.isEmpty,
            let date = DateFormatter.apiDate.date(from: dueDateString) {
             dueDate = date
@@ -503,6 +604,15 @@ struct AddExpenseView: View {
                     proofPreview = image
                 }
             }
+        }
+    }
+
+    private func loadWeddingEvents() async {
+        do {
+            let envelope: Envelope<[WeddingEvent]> = try await APIClient.shared.request("wedding-events")
+            weddingEvents = envelope.data
+        } catch {
+            weddingEvents = []
         }
     }
 
@@ -560,6 +670,7 @@ struct AddExpenseView: View {
         proofFileName = pickedFile.fileName
         proofMimeType = pickedFile.mimeType
         proofRemoteUrl = nil
+        isMarkedPaid = true
 
         if pickedFile.mimeType.hasPrefix("image/"), let image = UIImage(data: data) {
             proofPreview = image
@@ -595,16 +706,27 @@ struct AddExpenseView: View {
     }
 
     private func buildFields(amount: Double) -> [String: String] {
+        let status = isMarkedPaid ? "paid" : (isOverdueUnpaid ? "overdue" : "pending")
+
         var fields: [String: String] = [
             "title": title.trimmingCharacters(in: .whitespacesAndNewlines),
             "category": category,
             "amount": String(amount),
             "due_date": DateFormatter.apiDate.string(from: dueDate),
-            "status": "paid",
+            "status": status,
         ]
 
         if let selectedPaymentMethodId {
             fields["customer_payment_method_id"] = String(selectedPaymentMethodId)
+        }
+
+        if let selectedWeddingEventId {
+            fields["wedding_event_id"] = String(selectedWeddingEventId)
+        }
+
+        let trimmedVendor = vendorName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedVendor.isEmpty {
+            fields["vendor_name"] = trimmedVendor
         }
 
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -681,6 +803,22 @@ struct AddExpenseView: View {
                 )
             }
 
+            await onSaved()
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func deleteExpense() async {
+        guard let schedule else { return }
+
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            try await APIClient.shared.requestNoContent("wedding-payment-schedules/\(schedule.id)")
             await onSaved()
             dismiss()
         } catch {
@@ -778,6 +916,7 @@ private struct ExpenseProofViewer: View {
 
 struct ExpenseCategoryPickerView: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var categoriesStore = BudgetCategoriesStore.shared
     @Binding var selection: String
 
     var body: some View {
@@ -785,16 +924,23 @@ struct ExpenseCategoryPickerView: View {
             LuxuryWeddingBackground()
 
             List {
-                ForEach(BudgetCategory.paymentCategoryOptions, id: \.key) { option in
+                ForEach(categoriesStore.categories) { option in
                     Button {
                         selection = option.key
                         dismiss()
                     } label: {
-                        HStack {
+                        HStack(spacing: 12) {
+                            Image(systemName: option.icon)
+                                .font(.system(size: 16))
+                                .foregroundStyle(AppTheme.sageDark)
+                                .frame(width: 28)
+
                             Text(option.label)
                                 .font(AppFont.regular(15))
                                 .foregroundStyle(AppTheme.ink)
+
                             Spacer()
+
                             if selection == option.key {
                                 Image(systemName: "checkmark")
                                     .foregroundStyle(AppTheme.sageDark)
@@ -809,6 +955,9 @@ struct ExpenseCategoryPickerView: View {
         .statusBarBlur()
         .navigationTitle("Pilih Kategori")
         .navigationBarTitleDisplayMode(.large)
+        .task {
+            await categoriesStore.loadIfNeeded()
+        }
     }
 }
 
@@ -839,6 +988,70 @@ struct ExpenseDatePickerView: View {
         }
         .statusBarBlur()
         .navigationTitle("Pilih Tanggal")
+        .navigationBarTitleDisplayMode(.large)
+    }
+}
+
+struct ExpenseWeddingEventPickerView: View {
+    @Environment(\.dismiss) private var dismiss
+    let events: [WeddingEvent]
+    @Binding var selection: Int?
+
+    var body: some View {
+        ZStack {
+            LuxuryWeddingBackground()
+
+            List {
+                Button {
+                    selection = nil
+                    dismiss()
+                } label: {
+                    HStack {
+                        Text("Tidak terkait acara")
+                            .font(AppFont.regular(15))
+                            .foregroundStyle(AppTheme.ink)
+                        Spacer()
+                        if selection == nil {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(AppTheme.sageDark)
+                        }
+                    }
+                }
+                .listRowBackground(AppTheme.surface)
+
+                ForEach(events) { event in
+                    Button {
+                        selection = event.id
+                        dismiss()
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(event.jenisLabel ?? event.jenisAcara.capitalized)
+                                    .font(AppFont.regular(15))
+                                    .foregroundStyle(AppTheme.ink)
+
+                                if let date = event.tglAcara, !date.isEmpty {
+                                    Text(date)
+                                        .font(AppFont.regular(12))
+                                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                                }
+                            }
+
+                            Spacer()
+
+                            if selection == event.id {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(AppTheme.sageDark)
+                            }
+                        }
+                    }
+                    .listRowBackground(AppTheme.surface)
+                }
+            }
+            .scrollContentBackground(.hidden)
+        }
+        .statusBarBlur()
+        .navigationTitle("Pilih Acara")
         .navigationBarTitleDisplayMode(.large)
     }
 }
@@ -938,13 +1151,6 @@ private struct PickedProofFile: Transferable {
 }
 
 private extension DateFormatter {
-    static let expenseDisplay: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "id_ID")
-        formatter.dateFormat = "d MMMM yyyy"
-        return formatter
-    }()
-
     static let apiDate: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")

@@ -5,9 +5,7 @@ namespace App\Filament\Resources\CustomerPreparationSections;
 use App\Filament\Resources\CustomerPreparationSections\Pages\CreateCustomerPreparationSection;
 use App\Filament\Resources\CustomerPreparationSections\Pages\EditCustomerPreparationSection;
 use App\Filament\Resources\CustomerPreparationSections\Pages\ListCustomerPreparationSections;
-use App\Filament\Resources\CustomerPreparationSections\Pages\ViewCustomerPreparationSection;
 use App\Filament\Resources\CustomerPreparationSections\Schemas\CustomerPreparationSectionForm;
-use App\Filament\Resources\CustomerPreparationSections\Schemas\CustomerPreparationSectionInfolist;
 use App\Filament\Resources\CustomerPreparationSections\Tables\CustomerPreparationSectionsTable;
 use App\Models\CustomerPreparationSection;
 use BackedEnum;
@@ -27,14 +25,13 @@ class CustomerPreparationSectionResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    protected static ?string $modelLabel = 'Bagian Checklist';
+
+    protected static ?string $pluralModelLabel = 'Bagian Checklist';
+
     public static function form(Schema $schema): Schema
     {
         return CustomerPreparationSectionForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return CustomerPreparationSectionInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class CustomerPreparationSectionResource extends Resource
         return [
             'index' => ListCustomerPreparationSections::route('/'),
             'create' => CreateCustomerPreparationSection::route('/create'),
-            'view' => ViewCustomerPreparationSection::route('/{record}'),
             'edit' => EditCustomerPreparationSection::route('/{record}/edit'),
         ];
     }

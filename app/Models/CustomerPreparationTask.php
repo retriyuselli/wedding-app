@@ -30,15 +30,15 @@ class CustomerPreparationTask extends Model
     ];
 
     public static array $statusOptions = [
-        'pending'     => 'Belum',
+        'pending' => 'Belum',
         'in_progress' => 'Sedang Dikerjakan',
-        'done'        => 'Selesai',
+        'done' => 'Selesai',
     ];
 
     public static array $priorityOptions = [
-        'high'   => 'Tinggi',
+        'high' => 'Tinggi',
         'medium' => 'Sedang',
-        'low'    => 'Rendah',
+        'low' => 'Rendah',
     ];
 
     public function user(): BelongsTo
@@ -92,5 +92,24 @@ class CustomerPreparationTask extends Model
         }
 
         $this->status = 'in_progress';
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (CustomerPreparationTask $task): void {
+            if ($task->sort_order !== null) {
+                return;
+            }
+
+            $query = static::query()->where('user_id', $task->user_id);
+
+            if ($task->section_id !== null) {
+                $query->where('section_id', $task->section_id);
+            } else {
+                $query->whereNull('section_id');
+            }
+
+            $task->sort_order = ((int) $query->max('sort_order')) + 1;
+        });
     }
 }

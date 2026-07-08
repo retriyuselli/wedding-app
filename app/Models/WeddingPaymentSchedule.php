@@ -28,34 +28,56 @@ class WeddingPaymentSchedule extends Model
     ];
 
     protected $casts = [
-        'amount'                     => 'decimal:2',
-        'due_date'                   => 'date',
-        'paid_at'                    => 'datetime',
-        'wedding_event_id'           => 'integer',
+        'amount' => 'decimal:2',
+        'due_date' => 'date',
+        'paid_at' => 'datetime',
+        'wedding_event_id' => 'integer',
         'customer_payment_method_id' => 'integer',
-        'sort_order'                 => 'integer',
+        'sort_order' => 'integer',
     ];
 
     public static array $categoryOptions = [
-        'venue'         => 'Venue',
-        'catering'      => 'Catering',
-        'decoration'    => 'Dekorasi',
-        'photo_video'   => 'Foto & Video',
+        'venue' => 'Venue',
+        'catering' => 'Catering',
+        'decoration' => 'Dekorasi',
+        'photo_video' => 'Foto & Video',
         'entertainment' => 'Entertainment',
-        'makeup'        => 'Makeup & Busana',
-        'transport'     => 'Transportasi',
-        'wo'            => 'Wedding Organizer',
-        'other'         => 'Lainnya',
+        'makeup' => 'Makeup & Busana',
+        'transport' => 'Transportasi',
+        'wo' => 'Wedding Organizer',
+        'other' => 'Lainnya',
+    ];
+
+    public static array $categoryIcons = [
+        'venue' => 'building.columns',
+        'catering' => 'fork.knife',
+        'decoration' => 'leaf',
+        'photo_video' => 'camera',
+        'entertainment' => 'music.note',
+        'makeup' => 'figure.dress.line.vertical.figure',
+        'transport' => 'car',
+        'wo' => 'person.badge.shield.checkmark',
+        'other' => 'ellipsis',
     ];
 
     public static array $statusOptions = [
         'pending' => 'Belum Bayar',
-        'paid'    => 'Sudah Bayar',
-        'overdue' => 'Overdue',
+        'paid' => 'Sudah Bayar',
+        'overdue' => 'Terlambat',
     ];
 
     protected static function booted(): void
     {
+        static::creating(function (self $schedule): void {
+            if ($schedule->sort_order === null && $schedule->user_id !== null) {
+                $maxOrder = static::query()
+                    ->where('user_id', $schedule->user_id)
+                    ->max('sort_order');
+
+                $schedule->sort_order = ((int) $maxOrder) + 1;
+            }
+        });
+
         static::retrieved(function (self $schedule): void {
             if ($schedule->status === 'pending' && $schedule->due_date?->isPast()) {
                 $schedule->updateQuietly(['status' => 'overdue']);
@@ -81,6 +103,40 @@ class WeddingPaymentSchedule extends Model
     public function getCategoryLabelAttribute(): string
     {
         return self::$categoryOptions[$this->category] ?? 'Lainnya';
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::$statusOptions[$this->status] ?? $this->status;
+    }
+
+    /**
+     * @return list<array{key: string, label: string, icon: string}>
+     */
+    public static function paymentCategoriesForApi(): array
+    {
+        return collect(self::$categoryOptions)
+            ->map(fn (string $label, string $key): array => [
+                'key' => $key,
+                'label' => $label,
+                'icon' => self::$categoryIcons[$key] ?? config('wedding.default_category_icon', 'ellipsis'),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function budgetDefaultsForApi(): array
+    {
+        return [
+            'default_currency' => WeddingBudget::defaultCurrency(),
+            'default_expense_category' => config('wedding.default_expense_category', 'other'),
+            'default_category_icon' => config('wedding.default_category_icon', 'ellipsis'),
+            'default_expense_status' => config('wedding.default_expense_status', 'pending'),
+            'default_incoming_payment_status' => config('wedding.default_incoming_payment_status', 'menunggu'),
+        ];
     }
 
     public function proofUrl(): ?string

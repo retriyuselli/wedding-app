@@ -18,8 +18,8 @@ class WeddingInfoController extends Controller
         $data = $request->validate([
             'groom_name' => ['nullable', 'string', 'max:255'],
             'bride_name' => ['nullable', 'string', 'max:255'],
-            'budaya'     => ['nullable', 'string', 'max:100'],
-            'songlist'   => ['nullable', 'array'],
+            'budaya' => ['nullable', 'string', 'max:100'],
+            'songlist' => ['nullable', 'array'],
             'songlist.*' => ['string', 'max:255'],
         ]);
 

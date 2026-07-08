@@ -5,9 +5,7 @@ namespace App\Filament\Resources\Guests;
 use App\Filament\Resources\Guests\Pages\CreateGuest;
 use App\Filament\Resources\Guests\Pages\EditGuest;
 use App\Filament\Resources\Guests\Pages\ListGuests;
-use App\Filament\Resources\Guests\Pages\ViewGuest;
 use App\Filament\Resources\Guests\Schemas\GuestForm;
-use App\Filament\Resources\Guests\Schemas\GuestInfolist;
 use App\Filament\Resources\Guests\Tables\GuestsTable;
 use App\Models\Guest;
 use BackedEnum;
@@ -32,11 +30,6 @@ class GuestResource extends Resource
         return GuestForm::configure($schema);
     }
 
-    public static function infolist(Schema $schema): Schema
-    {
-        return GuestInfolist::configure($schema);
-    }
-
     public static function table(Table $table): Table
     {
         return GuestsTable::configure($table);
@@ -54,7 +47,6 @@ class GuestResource extends Resource
         return [
             'index' => ListGuests::route('/'),
             'create' => CreateGuest::route('/create'),
-            'view' => ViewGuest::route('/{record}'),
             'edit' => EditGuest::route('/{record}/edit'),
         ];
     }

@@ -6,6 +6,8 @@ struct User: Codable, Identifiable {
     let email: String
     let avatarUrl: String?
     let whatsapp: String?
+    let hasSocialLogin: Bool?
+    let updatedAt: String?
 }
 
 struct AuthResponse: Codable {
@@ -15,4 +17,8 @@ struct AuthResponse: Codable {
 
 struct UserResponse: Codable {
     let user: User
+}
+
+struct MessageResponse: Codable {
+    let message: String
 }

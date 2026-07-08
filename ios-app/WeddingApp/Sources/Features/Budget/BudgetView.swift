@@ -1,9 +1,12 @@
 import SwiftUI
 
 struct BudgetView: View {
-    @State private var budget = WeddingBudget(id: nil, totalBudget: 0, currency: "IDR", notes: "")
+    @ObservedObject private var categoriesStore = BudgetCategoriesStore.shared
+    @State private var budget = WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
+    @State private var summary: WeddingBudgetSummary?
     @State private var schedules: [PaymentSchedule] = []
     @State private var incomingPayments: [IncomingPayment] = []
+    @State private var categoryAllocations: [BudgetCategoryAllocation] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
 
@@ -12,18 +15,96 @@ struct BudgetView: View {
     @State private var showCategories = false
     @State private var showReport = false
     @State private var showSummaryDetail = false
+    @State private var showIncomingPayments = false
     @State private var selectedCategory: BudgetCategory?
+    @State private var searchText = ""
+    @State private var isSearching = false
+    @State private var editingScheduleRoute: EditableScheduleRoute?
+    @State private var editingIncomingPayment: IncomingPayment?
+
+    @FocusState private var isSearchFocused: Bool
+
+    private var trimmedSearchQuery: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var filteredSchedules: [PaymentSchedule] {
+        guard !trimmedSearchQuery.isEmpty else { return [] }
+        return schedules.filter { $0.matchesSearch(trimmedSearchQuery) }
+    }
+
+    private var filteredCategories: [BudgetCategory] {
+        guard !trimmedSearchQuery.isEmpty else { return [] }
+        return allCategories.filter { $0.name.localizedCaseInsensitiveContains(trimmedSearchQuery) }
+    }
+
+    private var filteredIncomingPayments: [IncomingPayment] {
+        guard !trimmedSearchQuery.isEmpty else { return [] }
+        return incomingPayments.filter { $0.matchesSearch(trimmedSearchQuery) }
+    }
+
+    private var hasSearchResults: Bool {
+        !filteredSchedules.isEmpty || !filteredCategories.isEmpty || !filteredIncomingPayments.isEmpty
+    }
 
     private var categories: [BudgetCategory] {
-        BudgetCategory.build(from: schedules)
+        BudgetCategory.build(
+            from: schedules,
+            options: categoriesStore.categories,
+            allocations: categoryAllocations,
+            defaults: categoriesStore.defaults
+        )
+    }
+
+    private var allCategories: [BudgetCategory] {
+        BudgetCategory.buildAll(
+            from: schedules,
+            options: categoriesStore.categories,
+            allocations: categoryAllocations,
+            defaults: categoriesStore.defaults
+        )
     }
 
     private var metrics: BudgetSummaryMetrics {
-        BudgetSummaryMetrics.make(budget: budget, categories: categories)
+        BudgetSummaryMetrics.resolve(
+            budget: budget,
+            summary: summary,
+            categories: categories
+        )
+    }
+
+    private var incomingMetrics: IncomingPaymentMetrics {
+        IncomingPaymentMetrics.resolve(
+            payments: incomingPayments,
+            summary: summary,
+            pendingStatus: categoriesStore.defaultIncomingPaymentStatus
+        )
+    }
+
+    private var totalBudgetCaption: String {
+        if budget.totalBudget <= 0 {
+            return "Ketuk untuk atur total budget"
+        }
+
+        if let planPercent = summary?.planCoveragePercent {
+            return "Alokasi \(planPercent)% dari rencana"
+        }
+
+        let plannedTotal = categoryAllocations.reduce(0) { $0 + $1.allocatedAmount }
+        if plannedTotal > 0 {
+            let percent = Int(min(100, round(plannedTotal / budget.totalBudget * 100)))
+            return "Alokasi \(percent)% dari rencana"
+        }
+
+        return "Total rencana pernikahan"
+    }
+
+    private var recentIncomingPayments: [IncomingPayment] {
+        Array(incomingPayments.prefix(2))
     }
 
     private var incomingTotal: Double {
-        incomingPayments.reduce(0) { $0 + $1.amount }
+        incomingMetrics.totalAll
     }
 
     var body: some View {
@@ -34,17 +115,25 @@ struct BudgetView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 16) {
                         header
+                        if isSearching {
+                            searchBar
+                        }
                         if let errorMessage {
                             Text(errorMessage)
                                 .font(AppFont.regular(13))
                                 .foregroundStyle(.red)
                                 .padding(.horizontal, 4)
                         }
-                        totalCard
-                        statsRow
-                        summaryHeader
-                        summarySection
-                        actionBar
+                        if isSearching {
+                            searchResultsSection
+                        } else {
+                            totalCard
+                            statsRow
+                            incomingPaymentsCard
+                            summaryHeader
+                            summarySection
+                            actionBar
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -63,9 +152,10 @@ struct BudgetView: View {
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
                 Task { await load() }
             }
-            .sheet(isPresented: $showEditBudget) {
-                EditTotalBudgetSheet(budget: budget) { updated in
+            .navigationDestination(isPresented: $showEditBudget) {
+                EditTotalBudgetView(budget: budget) { updated in
                     budget = updated
+                    Task { await load() }
                 }
             }
             .navigationDestination(isPresented: $showAddExpense) {
@@ -73,31 +163,33 @@ struct BudgetView: View {
                     await load()
                 }
             }
-            .sheet(isPresented: $showCategories) {
-                NavigationStack {
-                    BudgetCategoriesView(
-                        categories: categories,
-                        totalBudget: metrics.totalBudget,
-                        schedules: schedules,
-                        onReload: { await load() }
-                    )
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Tutup") { showCategories = false }
-                        }
-                    }
-                }
+            .navigationDestination(isPresented: $showCategories) {
+                BudgetCategoriesView(
+                    categories: allCategories,
+                    allocations: categoryAllocations,
+                    totalBudget: metrics.totalBudget,
+                    schedules: schedules,
+                    onReload: { await load() },
+                    categoryOptions: categoriesStore.categories
+                )
             }
             .sheet(isPresented: $showReport) {
                 BudgetReportShareView(
                     reportText: metrics.reportText(categories: categories, incomingTotal: incomingTotal)
                 )
             }
+            .navigationDestination(isPresented: $showIncomingPayments) {
+                IncomingPaymentsView {
+                    await load()
+                }
+            }
             .navigationDestination(isPresented: $showSummaryDetail) {
                 BudgetSummaryDetailView(
                     totalBudget: metrics.totalBudget,
                     schedules: schedules,
-                    onReload: { await load() }
+                    onReload: { await load() },
+                    categoryOptions: categoriesStore.categories,
+                    allocations: categoryAllocations
                 )
             }
             .navigationDestination(item: $selectedCategory) { category in
@@ -105,8 +197,23 @@ struct BudgetView: View {
                     categoryId: category.id,
                     schedules: schedules,
                     totalBudget: metrics.totalBudget,
-                    onReload: { await load() }
+                    onReload: { await load() },
+                    categoryOptions: categoriesStore.categories,
+                    allocations: categoryAllocations
                 )
+            }
+            .navigationDestination(item: $editingScheduleRoute) { route in
+                AddExpenseView(
+                    schedule: schedules.first(where: { $0.id == route.id })
+                ) {
+                    await load()
+                    editingScheduleRoute = nil
+                }
+            }
+            .navigationDestination(item: $editingIncomingPayment) { payment in
+                AddIncomingPaymentView(payment: payment) {
+                    await load()
+                }
             }
         }
     }
@@ -114,11 +221,11 @@ struct BudgetView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Budget")
+                Text(L10n.Budget.title)
                     .font(.system(size: 32, weight: .bold, design: .serif))
                     .foregroundStyle(AppTheme.sageDark)
 
-                Text("Kelola anggaran pernikahan\ndengan bijak dan terencana.")
+                Text(L10n.Budget.subtitle)
                     .font(.system(size: 12, weight: .regular, design: .serif))
                     .foregroundStyle(AppTheme.gold)
                     .lineSpacing(2)
@@ -127,7 +234,16 @@ struct BudgetView: View {
             Spacer(minLength: 8)
 
             HStack(spacing: 10) {
-                circleButton("magnifyingglass")
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isSearching = true
+                        isSearchFocused = true
+                    }
+                } label: {
+                    circleButton("magnifyingglass", isActive: isSearching)
+                }
+                .buttonStyle(.plain)
+
                 circleButton("slider.horizontal.3") {
                     showEditBudget = true
                 }
@@ -138,19 +254,191 @@ struct BudgetView: View {
         .padding(.top, 8)
     }
 
-    private func circleButton(_ icon: String, action: (() -> Void)? = nil) -> some View {
+    private func circleButton(_ icon: String, isActive: Bool = false, action: (() -> Void)? = nil) -> some View {
         Button {
             action?()
         } label: {
             Image(systemName: icon)
                 .font(.system(size: 17, weight: .regular))
-                .foregroundStyle(AppTheme.ink.opacity(0.72))
+                .foregroundStyle(isActive ? AppTheme.sageDark : AppTheme.ink.opacity(0.72))
                 .frame(width: 42, height: 42)
-                .background(.white.opacity(0.86), in: Circle())
+                .background((isActive ? AppTheme.lightSage : .white).opacity(0.86), in: Circle())
+                .overlay {
+                    Circle()
+                        .stroke(isActive ? AppTheme.sageDark.opacity(0.25) : .clear, lineWidth: 1)
+                }
                 .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
         }
         .buttonStyle(.plain)
         .disabled(action == nil)
+    }
+
+    private var searchBar: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 15))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+
+                TextField("Cari expense, vendor, kategori...", text: $searchText)
+                    .font(AppFont.regular(15))
+                    .foregroundStyle(AppTheme.ink)
+                    .autocorrectionDisabled()
+                    .focused($isSearchFocused)
+                    .submitLabel(.search)
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(AppTheme.ink.opacity(0.35))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(isSearchFocused ? AppTheme.sageDark.opacity(0.35) : AppTheme.sage.opacity(0.18), lineWidth: isSearchFocused ? 1.5 : 1)
+            }
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isSearching = false
+                    searchText = ""
+                    isSearchFocused = false
+                }
+            } label: {
+                Text("Batal")
+                    .font(AppFont.medium(14))
+                    .foregroundStyle(AppTheme.sageDark)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private var searchResultsSection: some View {
+        if trimmedSearchQuery.isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 28))
+                    .foregroundStyle(AppTheme.sage.opacity(0.5))
+                Text("Cari di budget")
+                    .font(AppFont.medium(14))
+                    .foregroundStyle(AppTheme.sageDark)
+                Text("Ketik nama expense, vendor, kategori, atau pengirim uang masuk.")
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 28)
+            .padding(.horizontal, 16)
+            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        } else if !hasSearchResults {
+            ContentUnavailableView(
+                "Tidak ditemukan",
+                systemImage: "magnifyingglass",
+                description: Text("Tidak ada hasil untuk \"\(trimmedSearchQuery)\".")
+            )
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 24)
+        } else {
+            VStack(alignment: .leading, spacing: 16) {
+                if !filteredSchedules.isEmpty {
+                    searchSectionHeader(
+                        title: "Pengeluaran",
+                        count: filteredSchedules.count
+                    )
+
+                    VStack(spacing: 10) {
+                        ForEach(filteredSchedules) { schedule in
+                            Button {
+                                editingScheduleRoute = EditableScheduleRoute(id: schedule.id)
+                            } label: {
+                                searchExpenseCard(schedule)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                if !filteredCategories.isEmpty {
+                    searchSectionHeader(
+                        title: "Kategori",
+                        count: filteredCategories.count
+                    )
+
+                    VStack(spacing: 10) {
+                        ForEach(filteredCategories) { category in
+                            Button {
+                                selectedCategory = category
+                            } label: {
+                                BudgetCategoryRow(category: category, total: metrics.totalBudget)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                if !filteredIncomingPayments.isEmpty {
+                    searchSectionHeader(
+                        title: "Uang Masuk",
+                        count: filteredIncomingPayments.count
+                    )
+
+                    VStack(spacing: 10) {
+                        ForEach(filteredIncomingPayments) { payment in
+                            Button {
+                                editingIncomingPayment = payment
+                            } label: {
+                                IncomingPaymentRow(payment: payment)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func searchSectionHeader(title: String, count: Int) -> some View {
+        HStack {
+            Text(title)
+                .font(AppFont.medium(16))
+                .foregroundStyle(AppTheme.sageDark)
+            Spacer()
+            Text("\(count)")
+                .font(AppFont.regular(12))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func searchExpenseCard(_ schedule: PaymentSchedule) -> some View {
+        PaymentScheduleRow(schedule: schedule)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+            }
+            .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 5)
+    }
+
+    private var adaptiveTotalBudgetFontSize: CGFloat {
+        switch CurrencyFormatter.rupiah(metrics.totalBudget).count {
+        case 17...:
+            return 16
+        case 15...:
+            return 18
+        default:
+            return 20
+        }
     }
 
     private var totalCard: some View {
@@ -160,23 +448,22 @@ struct BudgetView: View {
             VStack(spacing: 18) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Total Anggaran")
+                        Text(L10n.Budget.totalBudget)
                             .font(AppFont.regular(13))
                             .foregroundStyle(AppTheme.ink.opacity(0.5))
                         Text(CurrencyFormatter.rupiah(metrics.totalBudget))
-                            .font(AppFont.medium(26))
+                            .font(AppFont.medium(adaptiveTotalBudgetFontSize))
                             .foregroundStyle(AppTheme.sageDark)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                        Text(budget.totalBudget > 0 ? "100% dari rencana" : "Ketuk untuk atur total budget")
+                            .minimumScaleFactor(0.5)
+                        Text(totalBudgetCaption)
                             .font(AppFont.regular(11))
                             .foregroundStyle(AppTheme.ink.opacity(0.4))
                     }
-
-                    Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                     VStack(alignment: .leading, spacing: 5) {
-                        Text("Pengeluaran Terpakai")
+                        Text(L10n.Budget.spent)
                             .font(AppFont.regular(11))
                             .foregroundStyle(AppTheme.ink.opacity(0.5))
                         Text("\(metrics.percent(metrics.spent))%")
@@ -205,9 +492,9 @@ struct BudgetView: View {
                     .frame(width: 96, height: 96)
 
                     VStack(alignment: .leading, spacing: 10) {
-                        donutLegend(color: AppTheme.sageDark, title: "Terpakai", amount: metrics.spent, percent: metrics.percent(metrics.spent))
-                        donutLegend(color: AppTheme.gold, title: "Sisa Anggaran", amount: metrics.remaining, percent: metrics.percent(metrics.remaining))
-                        donutLegend(color: AppTheme.mist, title: "Komitmen", amount: metrics.commitment, percent: metrics.percent(metrics.commitment))
+                        donutLegend(color: AppTheme.sageDark, title: L10n.Budget.spent, amount: metrics.spent, percent: metrics.percent(metrics.spent))
+                        donutLegend(color: AppTheme.gold, title: L10n.Budget.remaining, amount: metrics.remaining, percent: metrics.percent(metrics.remaining))
+                        donutLegend(color: AppTheme.mist, title: L10n.Budget.commitment, amount: metrics.commitment, percent: metrics.percent(metrics.commitment))
                     }
 
                     Spacer(minLength: 0)
@@ -216,7 +503,7 @@ struct BudgetView: View {
                         Image(systemName: "wallet.pass")
                             .font(.system(size: 20))
                             .foregroundStyle(AppTheme.sageDark)
-                        Text("Sisa Anggaran")
+                        Text(L10n.Budget.remaining)
                             .font(AppFont.regular(10))
                             .foregroundStyle(AppTheme.ink.opacity(0.5))
                         Text(CurrencyFormatter.rupiah(metrics.remaining))
@@ -257,10 +544,10 @@ struct BudgetView: View {
 
     private var statsRow: some View {
         HStack(spacing: 10) {
-            statCard(icon: "list.bullet.rectangle", tint: AppTheme.sageDark, label: "Total Anggaran", amount: metrics.totalBudget, sub: nil)
-            statCard(icon: "checkmark.circle.fill", tint: AppTheme.sageDark, label: "Terpakai", amount: metrics.spent, sub: "\(metrics.percent(metrics.spent))%")
-            statCard(icon: "hourglass", tint: AppTheme.gold, label: "Komitmen", amount: metrics.commitment, sub: "\(metrics.percent(metrics.commitment))%")
-            statCard(icon: "wallet.pass", tint: AppTheme.ink.opacity(0.45), label: "Sisa Anggaran", amount: metrics.remaining, sub: "\(metrics.percent(metrics.remaining))%")
+            statCard(icon: "list.bullet.rectangle", tint: AppTheme.sageDark, label: L10n.Budget.totalBudget, amount: metrics.totalBudget, sub: nil)
+            statCard(icon: "checkmark.circle.fill", tint: AppTheme.sageDark, label: L10n.Budget.spent, amount: metrics.spent, sub: "\(metrics.percent(metrics.spent))%")
+            statCard(icon: "hourglass", tint: AppTheme.gold, label: L10n.Budget.commitment, amount: metrics.commitment, sub: "\(metrics.percent(metrics.commitment))%")
+            statCard(icon: "wallet.pass", tint: AppTheme.ink.opacity(0.45), label: L10n.Budget.remaining, amount: metrics.remaining, sub: "\(metrics.percent(metrics.remaining))%")
         }
     }
 
@@ -297,6 +584,18 @@ struct BudgetView: View {
                 .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
         }
         .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 5)
+    }
+
+    private var incomingPaymentsCard: some View {
+        Button {
+            showIncomingPayments = true
+        } label: {
+            IncomingPaymentsSummaryCard(
+                metrics: incomingMetrics,
+                recentPayments: recentIncomingPayments
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var summaryHeader: some View {
@@ -338,7 +637,7 @@ struct BudgetView: View {
             .padding(.horizontal, 16)
             .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         } else {
-            VStack(spacing: 10) {
+            LazyVStack(spacing: 10) {
                 ForEach(categories) { category in
                     Button {
                         selectedCategory = category
@@ -414,14 +713,41 @@ struct BudgetView: View {
         defer { isLoading = false }
 
         do {
+            await categoriesStore.loadIfNeeded()
+
             async let budgetEnvelope: NullableEnvelope<WeddingBudget> = APIClient.shared.request("wedding-budget")
             async let scheduleEnvelope: Envelope<[PaymentSchedule]> = APIClient.shared.request("wedding-payment-schedules")
 
             let budgetResult = try await budgetEnvelope.data
-            budget = budgetResult ?? WeddingBudget(id: nil, totalBudget: 0, currency: "IDR", notes: "")
+            budget = budgetResult ?? WeddingBudget(
+                id: nil,
+                totalBudget: 0,
+                currency: categoriesStore.defaults.currency,
+                notes: ""
+            )
             schedules = try await scheduleEnvelope.data
         } catch {
-            errorMessage = error.localizedDescription
+            guard !error.isRequestCancelled else {
+                return
+            }
+
+            errorMessage = error.userFacingMessage
+        }
+
+        do {
+            let summaryEnvelope: Envelope<WeddingBudgetSummary> = try await APIClient.shared.request("wedding-budget/summary")
+            summary = summaryEnvelope.data
+        } catch {
+            if !(error.isRequestCancelled) {
+                summary = nil
+            }
+        }
+
+        do {
+            let allocationEnvelope: Envelope<[BudgetCategoryAllocation]> = try await APIClient.shared.request("wedding-budget-category-allocations")
+            categoryAllocations = allocationEnvelope.data
+        } catch {
+            categoryAllocations = []
         }
 
         do {

@@ -5,9 +5,7 @@ namespace App\Filament\Resources\CustomerPaymentMethods;
 use App\Filament\Resources\CustomerPaymentMethods\Pages\CreateCustomerPaymentMethod;
 use App\Filament\Resources\CustomerPaymentMethods\Pages\EditCustomerPaymentMethod;
 use App\Filament\Resources\CustomerPaymentMethods\Pages\ListCustomerPaymentMethods;
-use App\Filament\Resources\CustomerPaymentMethods\Pages\ViewCustomerPaymentMethod;
 use App\Filament\Resources\CustomerPaymentMethods\Schemas\CustomerPaymentMethodForm;
-use App\Filament\Resources\CustomerPaymentMethods\Schemas\CustomerPaymentMethodInfolist;
 use App\Filament\Resources\CustomerPaymentMethods\Tables\CustomerPaymentMethodsTable;
 use App\Models\CustomerPaymentMethod;
 use BackedEnum;
@@ -27,14 +25,13 @@ class CustomerPaymentMethodResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static ?string $modelLabel = 'Metode Pembayaran';
+
+    protected static ?string $pluralModelLabel = 'Metode Pembayaran';
+
     public static function form(Schema $schema): Schema
     {
         return CustomerPaymentMethodForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return CustomerPaymentMethodInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class CustomerPaymentMethodResource extends Resource
         return [
             'index' => ListCustomerPaymentMethods::route('/'),
             'create' => CreateCustomerPaymentMethod::route('/create'),
-            'view' => ViewCustomerPaymentMethod::route('/{record}'),
             'edit' => EditCustomerPaymentMethod::route('/{record}/edit'),
         ];
     }

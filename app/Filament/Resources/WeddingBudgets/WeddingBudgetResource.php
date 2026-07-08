@@ -5,9 +5,7 @@ namespace App\Filament\Resources\WeddingBudgets;
 use App\Filament\Resources\WeddingBudgets\Pages\CreateWeddingBudget;
 use App\Filament\Resources\WeddingBudgets\Pages\EditWeddingBudget;
 use App\Filament\Resources\WeddingBudgets\Pages\ListWeddingBudgets;
-use App\Filament\Resources\WeddingBudgets\Pages\ViewWeddingBudget;
 use App\Filament\Resources\WeddingBudgets\Schemas\WeddingBudgetForm;
-use App\Filament\Resources\WeddingBudgets\Schemas\WeddingBudgetInfolist;
 use App\Filament\Resources\WeddingBudgets\Tables\WeddingBudgetsTable;
 use App\Models\WeddingBudget;
 use BackedEnum;
@@ -25,14 +23,15 @@ class WeddingBudgetResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Data Pernikahan';
 
+    protected static ?string $recordTitleAttribute = 'user.name';
+
+    protected static ?string $modelLabel = 'Anggaran Pernikahan';
+
+    protected static ?string $pluralModelLabel = 'Anggaran Pernikahan';
+
     public static function form(Schema $schema): Schema
     {
         return WeddingBudgetForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return WeddingBudgetInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -52,7 +51,6 @@ class WeddingBudgetResource extends Resource
         return [
             'index' => ListWeddingBudgets::route('/'),
             'create' => CreateWeddingBudget::route('/create'),
-            'view' => ViewWeddingBudget::route('/{record}'),
             'edit' => EditWeddingBudget::route('/{record}/edit'),
         ];
     }

@@ -15,9 +15,9 @@ struct LoginView: View {
 
                     VStack(spacing: 20) {
                         AuthLabeledTextField(
-                            label: "Email atau Nomor Telepon",
+                            label: L10n.Auth.emailOrPhone,
                             icon: "envelope",
-                            placeholder: "Masukkan email atau nomor telepon",
+                            placeholder: L10n.Auth.emailPlaceholder,
                             text: $email,
                             keyboardType: .emailAddress,
                             textContentType: .emailAddress,
@@ -27,10 +27,14 @@ struct LoginView: View {
                             onSubmit: { focusedField = .password }
                         )
 
+                        if isEmailFormatInvalid {
+                            AuthHintBanner(message: L10n.Auth.invalidEmail)
+                        }
+
                         VStack(alignment: .trailing, spacing: 8) {
                             AuthLabeledSecureField(
-                                label: "Kata Sandi",
-                                placeholder: "Masukkan kata sandi",
+                                label: L10n.Auth.password,
+                                placeholder: L10n.Auth.passwordPlaceholder,
                                 text: $password,
                                 submitLabel: .go,
                                 fieldFocus: .password,
@@ -38,7 +42,7 @@ struct LoginView: View {
                                 onSubmit: submitLogin
                             )
 
-                            AuthDottedLink(title: "Lupa kata sandi?") {
+                            AuthDottedLink(title: L10n.Auth.forgotPassword) {
                                 // Forgot password — coming soon
                             }
                         }
@@ -48,22 +52,22 @@ struct LoginView: View {
                         }
 
                         AuthPrimaryButton(
-                            title: "Masuk",
+                            title: L10n.Auth.login,
                             isLoading: session.isLoading,
-                            isDisabled: email.isEmpty || password.isEmpty
+                            isDisabled: email.isEmpty || password.isEmpty || isEmailFormatInvalid
                         ) {
                             submitLogin()
                         }
 
-                        AuthSocialDivider(text: "atau masuk dengan")
+                        AuthSocialDivider(text: L10n.Auth.orLoginWith)
 
                         VStack(spacing: 12) {
                             AuthSocialFullButton(provider: .apple) {
-                                // Sign in with Apple — coming soon
+                                Task { await session.loginWithApple() }
                             }
 
                             AuthSocialFullButton(provider: .google) {
-                                // Sign in with Google — coming soon
+                                Task { await session.loginWithGoogle() }
                             }
 
                             AuthSocialFullButton(provider: .phone) {
@@ -73,8 +77,8 @@ struct LoginView: View {
                     }
 
                     AuthFooterLink(
-                        prompt: "Belum punya akun?",
-                        actionTitle: "Daftar sekarang"
+                        prompt: L10n.Auth.noAccount,
+                        actionTitle: L10n.Auth.registerNow
                     ) {
                         showRegister = true
                     }
@@ -92,8 +96,15 @@ struct LoginView: View {
         }
     }
 
+    private var isEmailFormatInvalid: Bool {
+        guard !email.isEmpty, email.contains("@") else { return false }
+        let parts = email.split(separator: "@")
+        guard parts.count == 2, let domain = parts.last else { return true }
+        return !domain.contains(".")
+    }
+
     private func submitLogin() {
-        guard !email.isEmpty, !password.isEmpty, !session.isLoading else {
+        guard !email.isEmpty, !password.isEmpty, !isEmailFormatInvalid, !session.isLoading else {
             return
         }
 

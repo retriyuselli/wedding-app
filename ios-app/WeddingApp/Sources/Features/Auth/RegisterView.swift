@@ -10,8 +10,15 @@ struct RegisterView: View {
     @State private var passwordConfirmation = ""
     @FocusState private var focusedField: AuthFormField?
 
+    private var isEmailFormatInvalid: Bool {
+        guard !email.isEmpty, email.contains("@") else { return false }
+        let parts = email.split(separator: "@")
+        guard parts.count == 2, let domain = parts.last else { return true }
+        return !domain.contains(".")
+    }
+
     private var isFormValid: Bool {
-        !name.isEmpty && !email.isEmpty && !password.isEmpty && !passwordConfirmation.isEmpty
+        !name.isEmpty && !email.isEmpty && !password.isEmpty && !passwordConfirmation.isEmpty && !isEmailFormatInvalid
     }
 
     private var passwordsMismatch: Bool {
@@ -25,9 +32,9 @@ struct RegisterView: View {
 
                 VStack(spacing: 20) {
                     AuthLabeledTextField(
-                        label: "Nama Lengkap",
+                        label: L10n.Auth.fullName,
                         icon: "person",
-                        placeholder: "Masukkan nama lengkap",
+                        placeholder: L10n.Auth.fullNamePlaceholder,
                         text: $name,
                         textContentType: .name,
                         submitLabel: .next,
@@ -37,9 +44,9 @@ struct RegisterView: View {
                     )
 
                     AuthLabeledTextField(
-                        label: "Email atau Nomor Telepon",
+                        label: L10n.Auth.emailOrPhone,
                         icon: "envelope",
-                        placeholder: "Masukkan email atau nomor telepon",
+                        placeholder: L10n.Auth.emailPlaceholder,
                         text: $email,
                         keyboardType: .emailAddress,
                         textContentType: .emailAddress,
@@ -49,9 +56,13 @@ struct RegisterView: View {
                         onSubmit: { focusedField = .password }
                     )
 
+                    if isEmailFormatInvalid {
+                        AuthHintBanner(message: L10n.Auth.invalidEmail)
+                    }
+
                     AuthLabeledSecureField(
-                        label: "Kata Sandi",
-                        placeholder: "Masukkan kata sandi",
+                        label: L10n.Auth.password,
+                        placeholder: L10n.Auth.passwordPlaceholder,
                         text: $password,
                         submitLabel: .next,
                         fieldFocus: .password,
@@ -60,8 +71,8 @@ struct RegisterView: View {
                     )
 
                     AuthLabeledSecureField(
-                        label: "Konfirmasi Kata Sandi",
-                        placeholder: "Ulangi kata sandi",
+                        label: L10n.Auth.confirmPassword,
+                        placeholder: L10n.Auth.confirmPassword,
                         text: $passwordConfirmation,
                         submitLabel: .go,
                         fieldFocus: .passwordConfirmation,
@@ -70,7 +81,7 @@ struct RegisterView: View {
                     )
 
                     if passwordsMismatch {
-                        AuthHintBanner(message: "Konfirmasi kata sandi tidak cocok.")
+                        AuthHintBanner(message: L10n.Auth.passwordMismatch)
                     }
 
                     if let errorMessage = session.errorMessage {
@@ -78,25 +89,29 @@ struct RegisterView: View {
                     }
 
                     AuthPrimaryButton(
-                        title: "Daftar",
+                        title: L10n.Auth.register,
                         isLoading: session.isLoading,
                         isDisabled: !isFormValid || passwordsMismatch
                     ) {
                         submitRegister()
                     }
 
-                    AuthSocialDivider(text: "atau daftar dengan")
+                    AuthSocialDivider(text: L10n.Auth.orRegisterWith)
 
                     VStack(spacing: 12) {
-                        AuthSocialFullButton(provider: .apple) {}
-                        AuthSocialFullButton(provider: .google) {}
+                        AuthSocialFullButton(provider: .apple) {
+                            Task { await session.loginWithApple() }
+                        }
+                        AuthSocialFullButton(provider: .google) {
+                            Task { await session.loginWithGoogle() }
+                        }
                         AuthSocialFullButton(provider: .phone) {}
                     }
                 }
 
                 AuthFooterLink(
-                    prompt: "Sudah punya akun?",
-                    actionTitle: "Masuk"
+                    prompt: L10n.Auth.haveAccount,
+                    actionTitle: L10n.Auth.login
                 ) {
                     dismiss()
                 }

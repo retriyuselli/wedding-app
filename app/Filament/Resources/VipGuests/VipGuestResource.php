@@ -5,9 +5,7 @@ namespace App\Filament\Resources\VipGuests;
 use App\Filament\Resources\VipGuests\Pages\CreateVipGuest;
 use App\Filament\Resources\VipGuests\Pages\EditVipGuest;
 use App\Filament\Resources\VipGuests\Pages\ListVipGuests;
-use App\Filament\Resources\VipGuests\Pages\ViewVipGuest;
 use App\Filament\Resources\VipGuests\Schemas\VipGuestForm;
-use App\Filament\Resources\VipGuests\Schemas\VipGuestInfolist;
 use App\Filament\Resources\VipGuests\Tables\VipGuestsTable;
 use App\Models\VipGuest;
 use BackedEnum;
@@ -27,14 +25,13 @@ class VipGuestResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static ?string $modelLabel = 'Tamu VIP';
+
+    protected static ?string $pluralModelLabel = 'Tamu VIP';
+
     public static function form(Schema $schema): Schema
     {
         return VipGuestForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return VipGuestInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class VipGuestResource extends Resource
         return [
             'index' => ListVipGuests::route('/'),
             'create' => CreateVipGuest::route('/create'),
-            'view' => ViewVipGuest::route('/{record}'),
             'edit' => EditVipGuest::route('/{record}/edit'),
         ];
     }

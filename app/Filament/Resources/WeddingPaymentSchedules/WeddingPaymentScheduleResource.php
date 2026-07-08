@@ -5,9 +5,7 @@ namespace App\Filament\Resources\WeddingPaymentSchedules;
 use App\Filament\Resources\WeddingPaymentSchedules\Pages\CreateWeddingPaymentSchedule;
 use App\Filament\Resources\WeddingPaymentSchedules\Pages\EditWeddingPaymentSchedule;
 use App\Filament\Resources\WeddingPaymentSchedules\Pages\ListWeddingPaymentSchedules;
-use App\Filament\Resources\WeddingPaymentSchedules\Pages\ViewWeddingPaymentSchedule;
 use App\Filament\Resources\WeddingPaymentSchedules\Schemas\WeddingPaymentScheduleForm;
-use App\Filament\Resources\WeddingPaymentSchedules\Schemas\WeddingPaymentScheduleInfolist;
 use App\Filament\Resources\WeddingPaymentSchedules\Tables\WeddingPaymentSchedulesTable;
 use App\Models\WeddingPaymentSchedule;
 use BackedEnum;
@@ -27,14 +25,13 @@ class WeddingPaymentScheduleResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    protected static ?string $modelLabel = 'Jadwal Pembayaran';
+
+    protected static ?string $pluralModelLabel = 'Jadwal Pembayaran';
+
     public static function form(Schema $schema): Schema
     {
         return WeddingPaymentScheduleForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return WeddingPaymentScheduleInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +51,6 @@ class WeddingPaymentScheduleResource extends Resource
         return [
             'index' => ListWeddingPaymentSchedules::route('/'),
             'create' => CreateWeddingPaymentSchedule::route('/create'),
-            'view' => ViewWeddingPaymentSchedule::route('/{record}'),
             'edit' => EditWeddingPaymentSchedule::route('/{record}/edit'),
         ];
     }

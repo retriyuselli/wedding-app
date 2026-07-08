@@ -5,6 +5,8 @@ struct MoreView: View {
 
     @State private var info = WeddingInfo(id: nil, groomName: "", brideName: "", budaya: "", songlist: [])
     @State private var events: [WeddingEvent] = []
+    @State private var showLogoutConfirmation = false
+    @State private var showComingSoon = false
 
     private var coupleName: String {
         let bride = info.brideName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -16,13 +18,13 @@ struct MoreView: View {
     }
 
     private var weddingDate: Date? {
-        events.compactMap { $0.tglAcara.flatMap { DateFormatter.moreInput.date(from: $0) } }
+        events.compactMap { $0.tglAcara.flatMap { DateFormatter.apiInput.date(from: $0) } }
             .sorted()
             .last
     }
 
     private var primaryLocation: String {
-        events.compactMap(\.lokasiAcara).first { !$0.isEmpty } ?? "Lokasi belum diatur"
+        events.compactMap(\.lokasiAcara).first { !$0.isEmpty } ?? L10n.More.locationNotSet
     }
 
     var body: some View {
@@ -34,8 +36,8 @@ struct MoreView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         header
                         profileCard
-                        sectionGroup(title: "Perencanaan Saya", items: planningItems)
-                        sectionGroup(title: "Akun & Pengaturan", items: accountItems)
+                        sectionGroup(title: L10n.More.planningSection, items: planningItems)
+                        sectionGroup(title: L10n.More.accountSection, items: accountItems)
                         shareCard
                         logoutButton
                     }
@@ -51,16 +53,29 @@ struct MoreView: View {
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
                 Task { await load() }
             }
+            .alert(L10n.More.logoutTitle, isPresented: $showLogoutConfirmation) {
+                Button(L10n.Common.logout, role: .destructive) {
+                    Task { await session.logout() }
+                }
+                Button(L10n.Common.cancel, role: .cancel) {}
+            } message: {
+                Text(L10n.More.logoutMessage)
+            }
+            .alert(L10n.Common.comingSoon, isPresented: $showComingSoon) {
+                Button(L10n.Common.ok, role: .cancel) {}
+            } message: {
+                Text(L10n.Common.comingSoonMessage)
+            }
         }
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("More")
+            Text(L10n.More.title)
                 .font(.system(size: 32, weight: .bold, design: .serif))
                 .foregroundStyle(AppTheme.sageDark)
 
-            Text("Pengaturan, informasi, dan lainnya\nuntuk pengalaman terbaik Anda.")
+            Text(L10n.More.subtitle)
                 .font(.system(size: 12, weight: .regular, design: .serif))
                 .foregroundStyle(AppTheme.gold)
                 .lineSpacing(2)
@@ -73,12 +88,7 @@ struct MoreView: View {
     private var profileCard: some View {
         VStack(spacing: 14) {
             HStack(spacing: 14) {
-                Image("CouplePortrait")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 66, height: 66)
-                    .clipShape(Circle())
-                    .overlay { Circle().stroke(AppTheme.gold.opacity(0.5), lineWidth: 1.5) }
+                UserAvatarCircle(url: session.currentUser?.avatarUrl, size: 66)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(coupleName)
@@ -87,7 +97,7 @@ struct MoreView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
 
-                    Text(weddingDate.map { DateFormatter.moreDisplay.string(from: $0) } ?? "Tanggal belum diatur")
+                    Text(weddingDate.map { DateFormatter.displayLocaleDate($0) } ?? L10n.More.dateNotSet)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.5))
 
@@ -101,10 +111,10 @@ struct MoreView: View {
             }
 
             NavigationLink {
-                InfoTabView()
+                EditProfileView()
             } label: {
                 HStack {
-                    Label("Edit Profil", systemImage: "square.and.pencil")
+                    Label(L10n.More.editProfile, systemImage: "square.and.pencil")
                         .font(AppFont.medium(13))
                         .foregroundStyle(AppTheme.sageDark)
                     Spacer()
@@ -136,7 +146,7 @@ struct MoreView: View {
 
             VStack(spacing: 0) {
                 ForEach(items.indices, id: \.self) { index in
-                    MoreRow(item: items[index])
+                    MoreRow(item: items[index], onComingSoon: { showComingSoon = true })
                     if index < items.count - 1 {
                         Divider()
                             .padding(.leading, 62)
@@ -154,22 +164,27 @@ struct MoreView: View {
 
     private var planningItems: [MoreItem] {
         [
-            MoreItem(icon: "calendar", title: "Detail Pernikahan", subtitle: "Tanggal, lokasi, dan informasi penting", destination: .weddingDetail),
-            MoreItem(icon: "person.2", title: "Pasangan", subtitle: "Informasi mempelai", destination: .weddingInfo),
-            MoreItem(icon: "checklist", title: "Vendor Tersimpan", subtitle: "Daftar vendor pilihan Anda", destination: nil),
-            MoreItem(icon: "heart", title: "Inspirasi & Ide", subtitle: "Simpan inspirasi dan referensi", destination: nil),
-            MoreItem(icon: "folder", title: "Dokumen", subtitle: "Simpan dokumen penting pernikahan", destination: nil),
+            MoreItem(icon: "calendar", title: L10n.More.weddingDetail, subtitle: L10n.More.weddingDetailSub, destination: .weddingDetail),
+            MoreItem(icon: "person.2", title: L10n.More.couple, subtitle: L10n.More.coupleSub, destination: .couple),
+            MoreItem(icon: "checklist", title: L10n.More.savedVendors, subtitle: L10n.More.savedVendorsSub, destination: .savedVendors),
+            MoreItem(icon: "heart", title: L10n.More.inspiration, subtitle: L10n.More.inspirationSub, destination: .savedInspiration),
+            MoreItem(icon: "folder", title: L10n.More.documents, subtitle: L10n.More.documentsSub, destination: .documents),
         ]
     }
 
     private var accountItems: [MoreItem] {
         [
-            MoreItem(icon: "gearshape", title: "Pengaturan", subtitle: "Notifikasi, tampilan, dan preferensi", destination: nil),
-            MoreItem(icon: "lock", title: "Privasi & Keamanan", subtitle: "Kelola privasi dan keamanan akun", destination: nil),
-            MoreItem(icon: "bell", title: "Pengingat", subtitle: "Atur pengingat dan notifikasi", destination: nil),
-            MoreItem(icon: "globe", title: "Bahasa", subtitle: "Indonesia", destination: nil),
-            MoreItem(icon: "questionmark.circle", title: "Bantuan & FAQ", subtitle: "Pusat bantuan dan pertanyaan umum", destination: nil),
-            MoreItem(icon: "info.circle", title: "Tentang Wedding App", subtitle: "Versi 1.0.0", destination: nil),
+            MoreItem(icon: "gearshape", title: L10n.More.settings, subtitle: L10n.More.settingsSub, destination: nil),
+            MoreItem(icon: "lock", title: L10n.More.privacy, subtitle: L10n.More.privacySub, destination: .privacySecurity),
+            MoreItem(icon: "bell", title: L10n.More.reminders, subtitle: L10n.More.remindersSub, destination: .reminders),
+            MoreItem(
+                icon: "globe",
+                title: L10n.More.language,
+                subtitle: LanguageFeature.isSelectionEnabled ? LanguageStore.shared.selected.nativeSubtitle : "Indonesia",
+                destination: LanguageFeature.isSelectionEnabled ? .language : nil
+            ),
+            MoreItem(icon: "questionmark.circle", title: L10n.More.help, subtitle: L10n.More.helpSub, destination: .help),
+            MoreItem(icon: "info.circle", title: L10n.More.about, subtitle: L10n.More.aboutSub, destination: .about),
         ]
     }
 
@@ -180,10 +195,10 @@ struct MoreView: View {
                 .foregroundStyle(AppTheme.sageDark)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Bagikan Wedding App")
+                Text(L10n.More.shareApp)
                     .font(AppFont.medium(15))
                     .foregroundStyle(AppTheme.sageDark)
-                Text("Bantu teman Anda yang sedang\nmerencanakan pernikahan.")
+                Text(L10n.More.shareAppSub)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.5))
                     .lineSpacing(1)
@@ -191,8 +206,12 @@ struct MoreView: View {
 
             Spacer(minLength: 4)
 
-            ShareLink(item: URL(string: "https://paketpernikahan.co.id")!) {
-                Label("Bagikan", systemImage: "square.and.arrow.up")
+            ShareLink(
+                item: AboutContent.shareURL,
+                subject: Text(L10n.More.shareApp),
+                message: Text(L10n.More.shareMessage)
+            ) {
+                Label(L10n.Common.share, systemImage: "square.and.arrow.up")
                     .font(AppFont.medium(12))
                     .foregroundStyle(AppTheme.sageDark)
                     .padding(.horizontal, 14)
@@ -211,9 +230,9 @@ struct MoreView: View {
 
     private var logoutButton: some View {
         Button {
-            Task { await session.logout() }
+            showLogoutConfirmation = true
         } label: {
-            Label("Keluar dari Akun", systemImage: "rectangle.portrait.and.arrow.right")
+            Label(L10n.More.logoutTitle, systemImage: "rectangle.portrait.and.arrow.right")
                 .font(AppFont.medium(15))
                 .foregroundStyle(Color.red.opacity(0.85))
                 .frame(maxWidth: .infinity)
@@ -242,8 +261,16 @@ struct MoreView: View {
 private struct MoreItem: Identifiable {
     enum Destination {
         case weddingDetail
-        case weddingInfo
+        case couple
+        case savedVendors
+        case savedInspiration
+        case documents
         case events
+        case privacySecurity
+        case reminders
+        case language
+        case help
+        case about
     }
 
     let id = UUID()
@@ -255,21 +282,33 @@ private struct MoreItem: Identifiable {
 
 private struct MoreRow: View {
     let item: MoreItem
+    let onComingSoon: () -> Void
 
     var body: some View {
         if let destination = item.destination {
             NavigationLink {
                 switch destination {
                 case .weddingDetail: WeddingDetailView()
-                case .weddingInfo: InfoTabView()
+                case .couple: CoupleView()
+                case .savedVendors: SavedVendorsView()
+                case .savedInspiration: InspirationView()
+                case .documents: WeddingDocumentsView()
                 case .events: EventListView()
+                case .privacySecurity: PrivacySecurityView()
+                case .reminders: RemindersPreferencesView()
+                case .language: LanguageSettingsView()
+                case .help: HelpFAQView()
+                case .about: AboutWeddingAppView()
                 }
             } label: {
                 rowContent
             }
             .buttonStyle(.plain)
         } else {
-            rowContent
+            Button(action: onComingSoon) {
+                rowContent
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -303,18 +342,36 @@ private struct MoreRow: View {
     }
 }
 
-private extension DateFormatter {
-    static let moreInput: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
+private struct UserAvatarCircle: View {
+    let url: String?
+    let size: CGFloat
 
-    static let moreDisplay: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "id_ID")
-        f.dateFormat = "d MMMM yyyy"
-        return f
-    }()
+    var body: some View {
+        Group {
+            if let urlString = url, !urlString.isEmpty, let imageURL = URL(string: urlString) {
+                AsyncImage(url: imageURL) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().aspectRatio(contentMode: .fill)
+                    case .failure, .empty:
+                        fallbackAvatar
+                    @unknown default:
+                        fallbackAvatar
+                    }
+                }
+            } else {
+                fallbackAvatar
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .overlay { Circle().stroke(AppTheme.gold.opacity(0.5), lineWidth: 1.5) }
+    }
+
+    private var fallbackAvatar: some View {
+        Image("CouplePortrait")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+    }
 }
+

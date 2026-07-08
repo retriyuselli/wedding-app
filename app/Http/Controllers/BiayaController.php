@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\WeddingBudget;
 use App\Models\WeddingPaymentSchedule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -128,7 +129,7 @@ class BiayaController extends Controller
             ['user_id' => Auth::id()],
             [
                 'total_budget' => $request->total_budget,
-                'currency' => $request->currency ?? 'IDR',
+                'currency' => $request->currency ?? WeddingBudget::defaultCurrency(),
                 'notes' => $request->notes ?: null,
             ]
         );

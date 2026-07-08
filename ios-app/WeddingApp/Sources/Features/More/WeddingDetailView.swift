@@ -3,6 +3,7 @@ import SwiftUI
 private struct WeddingScheduleItem: Identifiable {
     let id: Int
     let title: String
+    let dateText: String
     let timeRange: String
     let location: String
     let iconName: String
@@ -17,12 +18,13 @@ struct WeddingDetailView: View {
     @State private var selectedTab: WeddingDetailTab = .ringkasan
     @State private var showEdit = false
     @State private var isLoading = false
+    @State private var loadErrorMessage: String?
 
     private var coupleName: String {
         let bride = info.brideName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let groom = info.groomName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if bride.isEmpty && groom.isEmpty {
-            return "Eliane & Jaeden"
+            return L10n.WeddingDetail.defaultCouple
         }
         if bride.isEmpty { return groom }
         if groom.isEmpty { return bride }
@@ -30,13 +32,18 @@ struct WeddingDetailView: View {
     }
 
     private var weddingDate: Date? {
-        events.compactMap { $0.tglAcara.flatMap { DateFormatter.detailInput.date(from: $0) } }
+        if let akad = events.first(where: { $0.jenisAcara == "akad" }),
+           let date = akad.tglAcara.flatMap({ DateFormatter.apiInput.date(from: $0) }) {
+            return date
+        }
+
+        return events.compactMap { $0.tglAcara.flatMap { DateFormatter.apiInput.date(from: $0) } }
             .sorted()
             .last
     }
 
     private var primaryLocation: String {
-        events.compactMap(\.lokasiAcara).first { !$0.isEmpty } ?? "Lake Maceyhaven, Indonesia"
+        events.compactMap(\.lokasiAcara).first { !$0.isEmpty } ?? L10n.WeddingDetail.defaultLocation
     }
 
     private var weddingConcept: String {
@@ -46,23 +53,23 @@ struct WeddingDetailView: View {
 
     private var weddingNote: String {
         let note = events.compactMap(\.catatan).first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-        return note ?? "Mohon konfirmasi ke semua vendor 1 minggu sebelum acara."
+        return note ?? L10n.WeddingDetail.defaultNote
     }
 
     private var scheduleItems: [WeddingScheduleItem] {
-        if events.isEmpty {
-            return WeddingScheduleItem.fallback
-        }
-
-        return events.enumerated().map { index, event in
-            WeddingScheduleItem(
-                id: event.id,
-                title: event.jenisLabel ?? event.jenisAcara.capitalized,
-                timeRange: Self.timeRange(for: event),
-                location: event.lokasiAcara ?? primaryLocation,
-                iconName: Self.icon(for: event.jenisAcara)
-            )
-        }
+        events
+            .sorted { ($0.sortOrder ?? Int.max) < ($1.sortOrder ?? Int.max) }
+            .map { event in
+                WeddingScheduleItem(
+                    id: event.id,
+                    title: event.jenisLabel ?? WeddingEvent.label(for: event.jenisAcara),
+                    dateText: event.tglAcara.flatMap { DateFormatter.apiInput.date(from: $0) }
+                        .map { DateFormatter.displayLocaleDate($0) } ?? L10n.WeddingDetail.defaultDate,
+                    timeRange: Self.timeRange(for: event),
+                    location: event.lokasiAcara ?? primaryLocation,
+                    iconName: Self.icon(for: event.jenisAcara)
+                )
+            }
     }
 
     private var confirmedGuests: Int {
@@ -121,7 +128,7 @@ struct WeddingDetailView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "square.and.pencil")
                             .font(.system(size: 14, weight: .medium))
-                        Text("Edit")
+                        Text(L10n.Common.edit)
                             .font(AppFont.medium(13))
                     }
                     .foregroundStyle(AppTheme.sageDark)
@@ -133,14 +140,20 @@ struct WeddingDetailView: View {
                 .buttonStyle(.plain)
             }
 
-            Text("Detail Pernikahan")
+            Text(L10n.WeddingDetail.title)
                 .font(.system(size: 32, weight: .bold, design: .serif))
                 .foregroundStyle(AppTheme.sageDark)
 
-            Text("Informasi lengkap rencana\npernikahan Anda.")
+            Text(L10n.WeddingDetail.subtitle)
                 .font(.system(size: 12, weight: .regular, design: .serif))
                 .foregroundStyle(AppTheme.gold)
                 .lineSpacing(2)
+
+            if let loadErrorMessage {
+                Text(loadErrorMessage)
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(AppTheme.peachDark)
+            }
         }
         .padding(.top, 4)
     }
@@ -165,7 +178,7 @@ struct WeddingDetailView: View {
                         .minimumScaleFactor(0.75)
 
                     Label(
-                        weddingDate.map { DateFormatter.detailDisplay.string(from: $0) } ?? "23 Juni 2027",
+                        weddingDate.map { DateFormatter.displayLocaleDate($0) } ?? L10n.WeddingDetail.defaultDate,
                         systemImage: "calendar"
                     )
                     .font(AppFont.regular(12))
@@ -206,7 +219,7 @@ struct WeddingDetailView: View {
 
     private var informasiSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Informasi Acara")
+            Text(L10n.WeddingDetail.eventInfo)
                 .font(AppFont.semibold(18))
                 .foregroundStyle(AppTheme.sageDark)
 
@@ -231,7 +244,7 @@ struct WeddingDetailView: View {
                         selectedTab = tab
                     }
                 } label: {
-                    Text(tab.rawValue)
+                    Text(tab.title)
                         .font(AppFont.medium(12))
                         .foregroundStyle(selectedTab == tab ? .white : AppTheme.ink.opacity(0.65))
                         .frame(maxWidth: .infinity)
@@ -260,24 +273,28 @@ struct WeddingDetailView: View {
 
             conceptCard
 
-            sectionBlock(title: "Rangkaian Acara") {
-                VStack(spacing: 0) {
-                    ForEach(scheduleItems) { item in
-                        scheduleRow(item)
-                        if item.id != scheduleItems.last?.id {
-                            Divider().padding(.leading, 54)
+            sectionBlock(title: L10n.WeddingDetail.eventSeries) {
+                if scheduleItems.isEmpty {
+                    emptyScheduleCard(message: L10n.WeddingDetail.noEventsSub)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(scheduleItems) { item in
+                            scheduleRow(item)
+                            if item.id != scheduleItems.last?.id {
+                                Divider().padding(.leading, 54)
+                            }
                         }
                     }
-                }
-                .padding(.vertical, 4)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                    .padding(.vertical, 4)
+                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                    }
                 }
             }
 
-            sectionBlock(title: "Catatan") {
+            sectionBlock(title: L10n.WeddingDetail.notes) {
                 noteRow
             }
         }
@@ -287,17 +304,17 @@ struct WeddingDetailView: View {
         HStack(alignment: .top, spacing: 0) {
             summaryCell(
                 icon: "calendar",
-                label: "Tanggal",
-                value: weddingDate.map { "\(DateFormatter.detailDisplay.string(from: $0)) (\(DateFormatter.detailWeekday.string(from: $0)))" } ?? "23 Juni 2027 (Rabu)"
+                label: L10n.Common.date,
+                value: weddingDate.map { "\(DateFormatter.displayLocaleDate($0)) (\(DateFormatter.detailWeekday.string(from: $0)))" } ?? L10n.WeddingDetail.defaultDateWeekday
             )
             summaryCell(
                 icon: "clock",
-                label: "Waktu",
-                value: "10.00 WIB\ns/d Selesai"
+                label: L10n.Common.time,
+                value: L10n.WeddingDetail.timeUntilDone
             )
             summaryCell(
                 icon: "mappin",
-                label: "Lokasi",
+                label: L10n.Common.location,
                 value: primaryLocation
             )
         }
@@ -341,7 +358,7 @@ struct WeddingDetailView: View {
                     .background(AppTheme.lightSage, in: Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Konsep Pernikahan")
+                    Text(L10n.WeddingDetail.concept)
                         .font(AppFont.medium(13))
                         .foregroundStyle(AppTheme.ink.opacity(0.55))
                     Text(weddingConcept)
@@ -378,6 +395,9 @@ struct WeddingDetailView: View {
                     .font(AppFont.semibold(14))
                     .foregroundStyle(AppTheme.ink)
                 Text(item.timeRange)
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                Text(item.dateText)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
                 Text(item.location)
@@ -426,33 +446,67 @@ struct WeddingDetailView: View {
 
     private var jadwalContent: some View {
         VStack(spacing: 12) {
-            ForEach(scheduleItems) { item in
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Image(systemName: item.iconName)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.white)
-                            .frame(width: 36, height: 36)
-                            .background(AppTheme.sageDark, in: Circle())
+            if scheduleItems.isEmpty {
+                emptyScheduleCard(message: L10n.WeddingDetail.noEventsSub)
+            } else {
+                ForEach(scheduleItems) { item in
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Image(systemName: item.iconName)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(.white)
+                                .frame(width: 36, height: 36)
+                                .background(AppTheme.sageDark, in: Circle())
 
-                        Text(item.title)
-                            .font(AppFont.semibold(16))
-                            .foregroundStyle(AppTheme.sageDark)
+                            Text(item.title)
+                                .font(AppFont.semibold(16))
+                                .foregroundStyle(AppTheme.sageDark)
 
-                        Spacer()
+                            Spacer()
+                        }
+
+                        infoLine(icon: "calendar", text: item.dateText)
+                        infoLine(icon: "clock", text: item.timeRange)
+                        infoLine(icon: "mappin", text: item.location)
                     }
-
-                    infoLine(icon: "clock", text: item.timeRange)
-                    infoLine(icon: "mappin", text: item.location)
-                }
-                .padding(16)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                    .padding(16)
+                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                    }
                 }
             }
         }
+    }
+
+    private func emptyScheduleCard(message: String) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: "calendar.badge.plus")
+                .font(.system(size: 28, weight: .light))
+                .foregroundStyle(AppTheme.ink.opacity(0.25))
+            Text(L10n.WeddingDetail.noEvents)
+                .font(AppFont.medium(14))
+                .foregroundStyle(AppTheme.ink.opacity(0.55))
+            Text(message)
+                .font(AppFont.regular(12))
+                .foregroundStyle(AppTheme.ink.opacity(0.4))
+                .multilineTextAlignment(.center)
+            Button { showEdit = true } label: {
+                Text(L10n.Common.edit)
+                    .font(AppFont.medium(12))
+                    .foregroundStyle(AppTheme.sageDark)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(AppTheme.lightSage, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .padding(.horizontal, 16)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     // MARK: - Tamu Tab
@@ -460,9 +514,9 @@ struct WeddingDetailView: View {
     private var tamuContent: some View {
         VStack(spacing: 12) {
             HStack(spacing: 0) {
-                guestStat(value: "\(guests.count)", label: "Total Tamu")
-                guestStat(value: "\(confirmedGuests)", label: "Konfirmasi")
-                guestStat(value: "\(max(guests.count - confirmedGuests, 0))", label: "Pending")
+                guestStat(value: "\(guests.count)", label: L10n.Guest.totalGuests)
+                guestStat(value: "\(confirmedGuests)", label: L10n.Common.confirmed)
+                guestStat(value: "\(max(guests.count - confirmedGuests, 0))", label: L10n.Common.pending)
             }
             .padding(.vertical, 16)
             .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -476,10 +530,10 @@ struct WeddingDetailView: View {
                     Image(systemName: "person.2")
                         .font(.system(size: 28, weight: .light))
                         .foregroundStyle(AppTheme.ink.opacity(0.25))
-                    Text("Belum ada data tamu")
+                    Text(L10n.WeddingDetail.noGuests)
                         .font(AppFont.medium(14))
                         .foregroundStyle(AppTheme.ink.opacity(0.55))
-                    Text("Kelola tamu dari tab Guest.")
+                    Text(L10n.WeddingDetail.noGuestsSub)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.4))
                 }
@@ -494,7 +548,7 @@ struct WeddingDetailView: View {
                                 .font(AppFont.medium(14))
                                 .foregroundStyle(AppTheme.ink)
                             Spacer()
-                            Text(guest.rsvpStatus == "hadir" ? "Hadir" : guest.rsvpStatus == "tidak_hadir" ? "Tidak Hadir" : "Pending")
+                            Text(guest.rsvpStatus == "hadir" ? L10n.WeddingDetail.attending : guest.rsvpStatus == "tidak_hadir" ? L10n.Common.notAttending : L10n.Common.pending)
                                 .font(AppFont.medium(11))
                                 .foregroundStyle(guest.rsvpStatus == "hadir" ? AppTheme.sageDark : AppTheme.ink.opacity(0.45))
                                 .padding(.horizontal, 10)
@@ -549,13 +603,11 @@ struct WeddingDetailView: View {
     }
 
     static func timeRange(for event: WeddingEvent) -> String {
-        switch event.jenisAcara.lowercased() {
-        case "akad": return "10.00 – 11.00 WIB"
-        case "resepsi": return "11.30 – 15.00 WIB"
-        case "lamaran": return "14.00 – 16.00 WIB"
-        case "pengajian": return "09.00 – 11.00 WIB"
-        default: return "Waktu belum diatur"
-        }
+        WeddingEventTime.timeRange(
+            waktuMulai: event.waktuMulai,
+            jamSelesai: event.jamSelesai,
+            jenisAcara: event.jenisAcara
+        )
     }
 
     static func icon(for jenis: String) -> String {
@@ -570,6 +622,7 @@ struct WeddingDetailView: View {
 
     private func load() async {
         isLoading = true
+        loadErrorMessage = nil
         defer { isLoading = false }
 
         do {
@@ -581,37 +634,15 @@ struct WeddingDetailView: View {
             events = try await eventEnvelope.data
             guests = try await guestEnvelope.data
         } catch {
-            // fallback sample data from mockup
+            loadErrorMessage = error.userFacingMessage
         }
     }
 }
 
-private extension WeddingScheduleItem {
-    static let fallback: [WeddingScheduleItem] = [
-        WeddingScheduleItem(id: 1, title: "Akad Nikah", timeRange: "10.00 – 11.00 WIB", location: "Aula Utama", iconName: "heart.circle"),
-        WeddingScheduleItem(id: 2, title: "Resepsi", timeRange: "11.30 – 15.00 WIB", location: "Ballroom", iconName: "fork.knife"),
-        WeddingScheduleItem(id: 3, title: "Hiburan", timeRange: "15.30 – 17.30 WIB", location: "Area Outdoor", iconName: "music.note.list"),
-    ]
-}
-
 private extension DateFormatter {
-    static let detailInput: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-
-    static let detailDisplay: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "id_ID")
-        formatter.dateFormat = "d MMMM yyyy"
-        return formatter
-    }()
-
     static let detailWeekday: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "id_ID")
+        formatter.locale = LocalizationManager.shared.locale
         formatter.dateFormat = "EEEE"
         return formatter
     }()
