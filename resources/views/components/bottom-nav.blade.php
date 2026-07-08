@@ -1,4 +1,4 @@
-<nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 border-t border-gray-100 bg-white">
+<nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 border-t border-gray-100 bg-white lg:hidden">
     <div class="flex items-center justify-around px-2 py-2">
 
         {{-- Dashboard --}}

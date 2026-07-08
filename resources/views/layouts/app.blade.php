@@ -7,33 +7,41 @@
     <title>{{ $title ?? config('app.name', 'Wedding App') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-gray-50 font-sans antialiased">
-    <div class="mx-auto max-w-md min-h-screen flex flex-col bg-white shadow-sm relative">
+<body class="min-h-screen bg-wedding-bg font-sans text-wedding-ink antialiased">
+    <div class="lg:flex lg:min-h-screen">
+        <x-sidebar-nav />
 
-        {{-- Header --}}
-        <header class="sticky top-0 z-20 bg-white border-b border-gray-100">
-            <div class="flex items-center justify-between px-4 py-3">
-                <div>
-                    <h1 class="text-lg font-semibold text-gray-800">@yield('heading', config('app.name'))</h1>
-                    @hasSection('subheading')
-                        <p class="text-xs text-gray-400">@yield('subheading')</p>
-                    @endif
-                </div>
-                @hasSection('headerActions')
-                <div class="flex items-center gap-2">
-                    @yield('headerActions')
-                </div>
-                @endif
-            </div>
-        </header>
+        <div @class([
+            'relative flex min-h-screen w-full min-w-0 flex-1 flex-col',
+            'mx-auto max-w-md bg-white shadow-sm lg:mx-0 lg:max-w-none lg:bg-wedding-bg lg:shadow-none' => true,
+        ])>
+            @unless(request()->routeIs('dashboard', 'checklist', 'tamu', 'biaya', 'vendor', 'inspiration', 'messages'))
+                <header class="sticky top-0 z-20 border-b border-gray-100 bg-white lg:border-sage-100 lg:bg-wedding-surface">
+                    <div class="flex items-center justify-between px-4 py-3 lg:px-8">
+                        <div>
+                            <h1 class="text-lg font-semibold text-gray-800 lg:text-wedding-ink">@yield('heading', config('app.name'))</h1>
+                            @hasSection('subheading')
+                                <p class="text-xs text-gray-400 lg:text-sage-500">@yield('subheading')</p>
+                            @endif
+                        </div>
+                        @hasSection('headerActions')
+                            <div class="flex items-center gap-2">
+                                @yield('headerActions')
+                            </div>
+                        @endif
+                    </div>
+                </header>
+            @endunless
 
-        {{-- Main Content --}}
-        <main class="flex-1 overflow-y-auto pb-24">
-            @yield('content')
-        </main>
+            <main @class([
+                'flex-1 overflow-y-auto',
+                'pb-24 lg:pb-8',
+            ])>
+                @yield('content')
+            </main>
 
-        {{-- Bottom Navigation --}}
-        <x-bottom-nav />
+            <x-bottom-nav />
+        </div>
     </div>
 </body>
 </html>

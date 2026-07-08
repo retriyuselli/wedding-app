@@ -69,6 +69,43 @@ class CustomerPreparationTask extends Model
     /**
      * Sinkronkan status task induk berdasarkan progress sub tugas.
      */
+    public function progressPercent(): int
+    {
+        $subTasks = $this->relationLoaded('subTasks')
+            ? $this->subTasks
+            : $this->subTasks()->get();
+
+        if ($subTasks->isNotEmpty()) {
+            $done = $subTasks->where('status', 'done')->count();
+
+            return (int) round(($done / $subTasks->count()) * 100);
+        }
+
+        return match ($this->status) {
+            'done' => 100,
+            'in_progress' => 50,
+            default => 0,
+        };
+    }
+
+    public function categoryLabel(): string
+    {
+        if ($this->weddingEvent) {
+            return $this->weddingEvent->jenis_label;
+        }
+
+        return $this->section?->title ?? 'Lainnya';
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'done' => 'Selesai',
+            'in_progress' => 'Proses',
+            default => 'Belum Mulai',
+        };
+    }
+
     public function syncStatusFromSubTasks(): void
     {
         $subTasks = $this->subTasks()->get();

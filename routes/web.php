@@ -4,10 +4,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BiayaController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InspirationController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\TamuController;
 use App\Http\Controllers\UangMasukController;
+use App\Http\Controllers\VendorController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/privacy-policy', [LegalController::class, 'privacyPolicy'])->name('privacy-policy');
@@ -67,6 +70,19 @@ Route::middleware('auth')->group(function () {
     Route::put('/tamu/{tab}/{id}', [TamuController::class, 'update'])->name('tamu.update');
     Route::delete('/tamu/{tab}/{id}', [TamuController::class, 'destroy'])->name('tamu.destroy');
     Route::patch('/tamu/{tab}/{id}/rsvp', [TamuController::class, 'updateRsvp'])->name('tamu.rsvp');
+
+    // Vendor
+    Route::get('/vendor', [VendorController::class, 'index'])->name('vendor');
+    Route::post('/vendor/{vendor}/favorite', [VendorController::class, 'toggleFavorite'])->name('vendor.favorite');
+
+    // Inspiration
+    Route::get('/inspiration', [InspirationController::class, 'index'])->name('inspiration');
+    Route::post('/inspiration/{inspiration}/save', [InspirationController::class, 'toggleSave'])->name('inspiration.save');
+
+    // Messages
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages');
+    Route::post('/messages/{thread}/send', [MessageController::class, 'send'])->name('messages.send');
+    Route::post('/messages/{thread}/favorite', [MessageController::class, 'toggleFavorite'])->name('messages.favorite');
 
     // Uang Masuk
     Route::get('/uang-masuk', [UangMasukController::class, 'index'])->name('uang-masuk');

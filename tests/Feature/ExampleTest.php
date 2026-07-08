@@ -24,5 +24,13 @@ class ExampleTest extends TestCase
         $response = $this->actingAs($user)->get('/');
 
         $response->assertOk();
+        $response->assertSee('Hari Pernikahan');
+        $response->assertSee('Persiapan Keseluruhan');
+        $response->assertSee('Vendor Terbaru');
+        $response->assertSee('Anggaran per Kategori');
+        $response->assertSee('Cuaca Pernikahan');
+        $response->assertSee('Tips Hari Ini');
+        $response->assertSee('dashboard-shell', false);
+        $response->assertSee('Wedding App', false);
     }
 }

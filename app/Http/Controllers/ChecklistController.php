@@ -5,47 +5,123 @@ namespace App\Http\Controllers;
 use App\Models\CustomerPreparationSection;
 use App\Models\CustomerPreparationTask;
 use App\Models\WeddingEvent;
+use App\Services\CustomerPreparationSummaryCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ChecklistController extends Controller
 {
-    public function index(Request $request): View
-    {
+    public function index(
+        Request $request,
+        CustomerPreparationSummaryCalculator $summaryCalculator,
+    ): View {
         $user = Auth::user();
+        $weddingInfo = $user->weddingInfo;
         $events = $user->weddingEvents()->get();
-        $eventId = $request->get('event');
 
-        $current = $eventId
-            ? $events->firstWhere('id', $eventId)
-            : $events->first();
+        $category = $request->string('category')->toString() ?: 'all';
+        $status = $request->string('status')->toString() ?: null;
+        $search = $request->string('q')->trim()->toString();
+        $sort = $request->string('sort')->toString() ?: 'due_date';
 
-        $sections = $user->preparationSections()
-            ->with(['tasks' => fn ($q) => $q->when(
-                $current,
-                fn ($q) => $q->where('wedding_event_id', $current->id)->orWhereNull('wedding_event_id')
-            )->orderBy('sort_order')])
-            ->get();
+        $summary = $summaryCalculator->calculate($user);
 
-        $looseTasksQuery = CustomerPreparationTask::where('user_id', Auth::id())
-            ->whereNull('section_id')
-            ->orderBy('sort_order');
+        $tasksQuery = CustomerPreparationTask::query()
+            ->where('user_id', $user->id)
+            ->with(['weddingEvent', 'section', 'subTasks']);
 
-        if ($current) {
-            $looseTasksQuery->where(fn ($q) => $q
-                ->where('wedding_event_id', $current->id)
-                ->orWhereNull('wedding_event_id')
-            );
+        if (in_array($category, ['akad', 'resepsi', 'pengajian'], true)) {
+            $tasksQuery->whereHas('weddingEvent', fn ($query) => $query->where('jenis_acara', $category));
+        } elseif ($category === 'lainnya') {
+            $tasksQuery->where(function ($query): void {
+                $query->whereNull('wedding_event_id')
+                    ->orWhereHas('weddingEvent', fn ($eventQuery) => $eventQuery->whereNotIn('jenis_acara', ['akad', 'resepsi', 'pengajian']));
+            });
         }
 
-        $looseTasks = $looseTasksQuery->get();
-        $allTasks = $sections->flatMap(fn ($s) => $s->tasks)->merge($looseTasks);
-        $doneCount = $allTasks->where('status', 'done')->count();
-        $total = $allTasks->count();
+        if (in_array($status, ['done', 'in_progress', 'pending'], true)) {
+            $tasksQuery->where('status', $status);
+        }
 
-        return view('checklist.index', compact('events', 'current', 'sections', 'looseTasks', 'doneCount', 'total'));
+        if ($search !== '') {
+            $tasksQuery->where(function ($query) use ($search): void {
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('label', 'like', "%{$search}%");
+            });
+        }
+
+        match ($sort) {
+            'title' => $tasksQuery->orderBy('title'),
+            'status' => $tasksQuery->orderByRaw("field(status, 'pending', 'in_progress', 'done')"),
+            default => $tasksQuery->orderByRaw('due_date is null')->orderBy('due_date'),
+        };
+
+        $tasks = $tasksQuery->paginate(7)->withQueryString();
+
+        $eventProgress = $this->eventProgress($user->id);
+
+        $upcomingTasksQuery = CustomerPreparationTask::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->whereNotNull('due_date')
+            ->with('weddingEvent');
+
+        if (in_array($category, ['akad', 'resepsi', 'pengajian'], true)) {
+            $upcomingTasksQuery->whereHas('weddingEvent', fn ($query) => $query->where('jenis_acara', $category));
+        } elseif ($category === 'lainnya') {
+            $upcomingTasksQuery->where(function ($query): void {
+                $query->whereNull('wedding_event_id')
+                    ->orWhereHas('weddingEvent', fn ($eventQuery) => $eventQuery->whereNotIn('jenis_acara', ['akad', 'resepsi', 'pengajian']));
+            });
+        }
+
+        $upcomingTasks = $upcomingTasksQuery
+            ->orderBy('due_date')
+            ->limit(3)
+            ->get();
+
+        $mainEvent = $events->firstWhere('jenis_acara', 'akad')
+            ?? $events->sortByDesc('tgl_acara')->first();
+
+        $unreadNotifications = $user->customerNotifications()
+            ->where('is_unread', true)
+            ->count();
+
+        $categories = [
+            ['key' => 'all', 'label' => 'Semua'],
+            ['key' => 'akad', 'label' => 'Akad Nikah'],
+            ['key' => 'resepsi', 'label' => 'Resepsi'],
+            ['key' => 'pengajian', 'label' => 'Pengajian'],
+            ['key' => 'lainnya', 'label' => 'Lainnya'],
+        ];
+
+        $sortOptions = [
+            'due_date' => 'Batas Waktu',
+            'title' => 'Nama Tugas',
+            'status' => 'Status',
+        ];
+
+        return view('checklist.index', [
+            'events' => $events,
+            'mainEvent' => $mainEvent,
+            'tasks' => $tasks,
+            'summary' => $summary,
+            'eventProgress' => $eventProgress,
+            'upcomingTasks' => $upcomingTasks,
+            'categories' => $categories,
+            'sortOptions' => $sortOptions,
+            'activeCategory' => $category,
+            'activeStatus' => $status,
+            'activeSort' => $sort,
+            'search' => $search,
+            'coupleLabel' => $this->coupleLabel($weddingInfo, $user->name),
+            'weddingDateLabel' => $mainEvent?->tgl_acara?->translatedFormat('d M Y'),
+            'unreadNotifications' => $unreadNotifications,
+        ]);
     }
 
     // ─── Tasks ───────────────────────────────────────────────────────────
@@ -231,5 +307,65 @@ class ChecklistController extends Controller
         WeddingEvent::where('user_id', Auth::id())->findOrFail($id)->delete();
 
         return redirect()->route('checklist')->with('success', 'Acara berhasil dihapus.');
+    }
+
+    /**
+     * @return Collection<int, array{title: string, done: int, total: int, percent: int}>
+     */
+    private function eventProgress(int $userId): Collection
+    {
+        $labels = [
+            'akad' => 'Akad Nikah',
+            'resepsi' => 'Resepsi',
+            'pengajian' => 'Pengajian',
+        ];
+
+        $progress = collect();
+
+        foreach ($labels as $jenis => $title) {
+            $tasks = CustomerPreparationTask::query()
+                ->where('user_id', $userId)
+                ->whereHas('weddingEvent', fn ($query) => $query->where('jenis_acara', $jenis))
+                ->get();
+
+            $total = $tasks->count();
+            $done = $tasks->where('status', 'done')->count();
+
+            $progress->push([
+                'title' => $title,
+                'done' => $done,
+                'total' => $total,
+                'percent' => $total > 0 ? (int) round(($done / $total) * 100) : 0,
+            ]);
+        }
+
+        $otherTasks = CustomerPreparationTask::query()
+            ->where('user_id', $userId)
+            ->where(function ($query): void {
+                $query->whereNull('wedding_event_id')
+                    ->orWhereHas('weddingEvent', fn ($eventQuery) => $eventQuery->whereNotIn('jenis_acara', ['akad', 'resepsi', 'pengajian']));
+            })
+            ->get();
+
+        $otherTotal = $otherTasks->count();
+        $otherDone = $otherTasks->where('status', 'done')->count();
+
+        $progress->push([
+            'title' => 'Lainnya',
+            'done' => $otherDone,
+            'total' => $otherTotal,
+            'percent' => $otherTotal > 0 ? (int) round(($otherDone / $otherTotal) * 100) : 0,
+        ]);
+
+        return $progress;
+    }
+
+    private function coupleLabel(?object $weddingInfo, string $fallbackName): string
+    {
+        if ($weddingInfo?->groom_name && $weddingInfo?->bride_name) {
+            return "{$weddingInfo->groom_name} & {$weddingInfo->bride_name}";
+        }
+
+        return $fallbackName;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\DummyImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Vendor extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'category_id',
         'name',
@@ -53,6 +55,32 @@ class Vendor extends Model
     public function activePackages(): HasMany
     {
         return $this->packages()->where('is_active', true);
+    }
+
+    public function displayRating(): float
+    {
+        return round(4.0 + (($this->id * 7) % 10) / 10, 1);
+    }
+
+    public function reviewCount(): int
+    {
+        return 40 + (($this->id * 13) % 180);
+    }
+
+    public function locationLabel(): string
+    {
+        return collect([$this->city, $this->province])
+            ->filter()
+            ->implode(', ') ?: 'Indonesia';
+    }
+
+    public function coverImageUrl(): string
+    {
+        if ($this->cover_image) {
+            return asset('storage/'.$this->cover_image);
+        }
+
+        return DummyImage::url('vendor', $this->id);
     }
 
     protected static function booted(): void

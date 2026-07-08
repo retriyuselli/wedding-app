@@ -7,7 +7,7 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-rose-50:  #fff1f2;
+    --color-rose-50: #fff1f2;
     --color-rose-100: #ffe4e6;
     --color-rose-200: #fecdd3;
     --color-rose-300: #fda4af;
@@ -16,8 +16,60 @@
     --color-rose-600: #e11d48;
     --color-rose-700: #be123c;
 
-    --color-mauve-50:  #fdf4ff;
+    --color-mauve-50: #fdf4ff;
     --color-mauve-100: #fae8ff;
     --color-mauve-200: #f5d0fe;
     --color-mauve-300: #e879f9;
+
+    --color-sage-50: #f6f8f6;
+    --color-sage-100: #e8ede6;
+    --color-sage-200: #d4ddd2;
+    --color-sage-300: #b5c4b3;
+    --color-sage-400: #8aa68a;
+    --color-sage-500: #6b8e6b;
+    --color-sage-600: #547054;
+    --color-sage-700: #385745;
+    --color-sage-800: #2d4638;
+    --color-sage-900: #243a2e;
+
+    --color-gold-400: #d4b06a;
+    --color-gold-500: #c29747;
+    --color-gold-600: #a67f3a;
+
+    --color-wedding-bg: #f9fafb;
+    --color-wedding-surface: #ffffff;
+    --color-wedding-ink: #1f2937;
+    --color-wedding-muted: #6b7280;
+}
+
+@layer utilities {
+    .dashboard-card {
+        @apply rounded-2xl border border-gray-100 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)];
+    }
+
+    .dashboard-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: #d4ddd2 transparent;
+    }
+
+    .dashboard-scroll::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .dashboard-scroll::-webkit-scrollbar-thumb {
+        background: #d4ddd2;
+        border-radius: 999px;
+    }
+
+    .below-page-header {
+        top: 3.25rem;
+    }
+
+    .dashboard-shell {
+        @apply mx-auto w-full max-w-6xl px-4 lg:px-6;
+    }
+
+    .messages-shell {
+        @apply mx-auto w-full max-w-7xl px-4 lg:px-6;
+    }
 }
