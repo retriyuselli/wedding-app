@@ -1,58 +1,106 @@
 {
-  "_fonts-DkuEHybc.css": {
-    "file": "assets/fonts-DkuEHybc.css",
-    "src": "_fonts-DkuEHybc.css"
+  "_fonts-BkxPBbEd.css": {
+    "file": "assets/fonts-BkxPBbEd.css",
+    "src": "_fonts-BkxPBbEd.css"
   },
-  "_instrument-sans-400-normal-D1W7dsQl.woff": {
-    "file": "assets/instrument-sans-400-normal-D1W7dsQl.woff",
-    "src": "_instrument-sans-400-normal-D1W7dsQl.woff"
+  "_poppins-400-normal-BOb3E3N0.woff": {
+    "file": "assets/poppins-400-normal-BOb3E3N0.woff",
+    "src": "_poppins-400-normal-BOb3E3N0.woff"
   },
-  "_instrument-sans-400-normal-DRC__1Mx.woff2": {
-    "file": "assets/instrument-sans-400-normal-DRC__1Mx.woff2",
-    "src": "_instrument-sans-400-normal-DRC__1Mx.woff2"
+  "_poppins-400-normal-CJDn6rn8.woff2": {
+    "file": "assets/poppins-400-normal-CJDn6rn8.woff2",
+    "src": "_poppins-400-normal-CJDn6rn8.woff2"
   },
-  "_instrument-sans-400-normal-Q_nF8v4l.woff2": {
-    "file": "assets/instrument-sans-400-normal-Q_nF8v4l.woff2",
-    "src": "_instrument-sans-400-normal-Q_nF8v4l.woff2"
+  "_poppins-400-normal-CqVvlrh5.woff": {
+    "file": "assets/poppins-400-normal-CqVvlrh5.woff",
+    "src": "_poppins-400-normal-CqVvlrh5.woff"
   },
-  "_instrument-sans-400-normal-r32jotim.woff": {
-    "file": "assets/instrument-sans-400-normal-r32jotim.woff",
-    "src": "_instrument-sans-400-normal-r32jotim.woff"
+  "_poppins-400-normal-DaBSavcJ.woff": {
+    "file": "assets/poppins-400-normal-DaBSavcJ.woff",
+    "src": "_poppins-400-normal-DaBSavcJ.woff"
   },
-  "_instrument-sans-500-normal-CAxz3nsc.woff": {
-    "file": "assets/instrument-sans-500-normal-CAxz3nsc.woff",
-    "src": "_instrument-sans-500-normal-CAxz3nsc.woff"
+  "_poppins-400-normal-by3JarPu.woff2": {
+    "file": "assets/poppins-400-normal-by3JarPu.woff2",
+    "src": "_poppins-400-normal-by3JarPu.woff2"
   },
-  "_instrument-sans-500-normal-CTEe1bJa.woff2": {
-    "file": "assets/instrument-sans-500-normal-CTEe1bJa.woff2",
-    "src": "_instrument-sans-500-normal-CTEe1bJa.woff2"
+  "_poppins-400-normal-cpxAROuN.woff2": {
+    "file": "assets/poppins-400-normal-cpxAROuN.woff2",
+    "src": "_poppins-400-normal-cpxAROuN.woff2"
   },
-  "_instrument-sans-500-normal-Dk9ku72i.woff2": {
-    "file": "assets/instrument-sans-500-normal-Dk9ku72i.woff2",
-    "src": "_instrument-sans-500-normal-Dk9ku72i.woff2"
+  "_poppins-500-normal-BIdkeU1p.woff2": {
+    "file": "assets/poppins-500-normal-BIdkeU1p.woff2",
+    "src": "_poppins-500-normal-BIdkeU1p.woff2"
   },
-  "_instrument-sans-500-normal-Z6ESRlEs.woff": {
-    "file": "assets/instrument-sans-500-normal-Z6ESRlEs.woff",
-    "src": "_instrument-sans-500-normal-Z6ESRlEs.woff"
+  "_poppins-500-normal-C8OXljZJ.woff2": {
+    "file": "assets/poppins-500-normal-C8OXljZJ.woff2",
+    "src": "_poppins-500-normal-C8OXljZJ.woff2"
   },
-  "_instrument-sans-600-normal-B7fBEWYG.woff2": {
-    "file": "assets/instrument-sans-600-normal-B7fBEWYG.woff2",
-    "src": "_instrument-sans-600-normal-B7fBEWYG.woff2"
+  "_poppins-500-normal-CK-6C4Hw.woff2": {
+    "file": "assets/poppins-500-normal-CK-6C4Hw.woff2",
+    "src": "_poppins-500-normal-CK-6C4Hw.woff2"
   },
-  "_instrument-sans-600-normal-B9e8oLYv.woff": {
-    "file": "assets/instrument-sans-600-normal-B9e8oLYv.woff",
-    "src": "_instrument-sans-600-normal-B9e8oLYv.woff"
+  "_poppins-500-normal-CgAe2rWW.woff": {
+    "file": "assets/poppins-500-normal-CgAe2rWW.woff",
+    "src": "_poppins-500-normal-CgAe2rWW.woff"
   },
-  "_instrument-sans-600-normal-BsaQcF38.woff2": {
-    "file": "assets/instrument-sans-600-normal-BsaQcF38.woff2",
-    "src": "_instrument-sans-600-normal-BsaQcF38.woff2"
+  "_poppins-500-normal-DGXqpDMm.woff": {
+    "file": "assets/poppins-500-normal-DGXqpDMm.woff",
+    "src": "_poppins-500-normal-DGXqpDMm.woff"
   },
-  "_instrument-sans-600-normal-DMks36a2.woff": {
-    "file": "assets/instrument-sans-600-normal-DMks36a2.woff",
-    "src": "_instrument-sans-600-normal-DMks36a2.woff"
+  "_poppins-500-normal-DMPDjHtT.woff": {
+    "file": "assets/poppins-500-normal-DMPDjHtT.woff",
+    "src": "_poppins-500-normal-DMPDjHtT.woff"
+  },
+  "_poppins-600-normal-BJdTmd5m.woff": {
+    "file": "assets/poppins-600-normal-BJdTmd5m.woff",
+    "src": "_poppins-600-normal-BJdTmd5m.woff"
+  },
+  "_poppins-600-normal-CAhIAdZj.woff2": {
+    "file": "assets/poppins-600-normal-CAhIAdZj.woff2",
+    "src": "_poppins-600-normal-CAhIAdZj.woff2"
+  },
+  "_poppins-600-normal-ClASKHrr.woff": {
+    "file": "assets/poppins-600-normal-ClASKHrr.woff",
+    "src": "_poppins-600-normal-ClASKHrr.woff"
+  },
+  "_poppins-600-normal-Df5ffKXP.woff": {
+    "file": "assets/poppins-600-normal-Df5ffKXP.woff",
+    "src": "_poppins-600-normal-Df5ffKXP.woff"
+  },
+  "_poppins-600-normal-STEjXBNN.woff2": {
+    "file": "assets/poppins-600-normal-STEjXBNN.woff2",
+    "src": "_poppins-600-normal-STEjXBNN.woff2"
+  },
+  "_poppins-600-normal-zEkxB9Mr.woff2": {
+    "file": "assets/poppins-600-normal-zEkxB9Mr.woff2",
+    "src": "_poppins-600-normal-zEkxB9Mr.woff2"
+  },
+  "_poppins-700-normal-BVuQR_eA.woff": {
+    "file": "assets/poppins-700-normal-BVuQR_eA.woff",
+    "src": "_poppins-700-normal-BVuQR_eA.woff"
+  },
+  "_poppins-700-normal-DctTR6Tg.woff": {
+    "file": "assets/poppins-700-normal-DctTR6Tg.woff",
+    "src": "_poppins-700-normal-DctTR6Tg.woff"
+  },
+  "_poppins-700-normal-O-jipLrW.woff2": {
+    "file": "assets/poppins-700-normal-O-jipLrW.woff2",
+    "src": "_poppins-700-normal-O-jipLrW.woff2"
+  },
+  "_poppins-700-normal-Qrb0O0WB.woff2": {
+    "file": "assets/poppins-700-normal-Qrb0O0WB.woff2",
+    "src": "_poppins-700-normal-Qrb0O0WB.woff2"
+  },
+  "_poppins-700-normal-cby-RkWa.woff2": {
+    "file": "assets/poppins-700-normal-cby-RkWa.woff2",
+    "src": "_poppins-700-normal-cby-RkWa.woff2"
+  },
+  "_poppins-700-normal-fHs-vx92.woff": {
+    "file": "assets/poppins-700-normal-fHs-vx92.woff",
+    "src": "_poppins-700-normal-fHs-vx92.woff"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DMDARuxg.css",
+    "file": "assets/app-Dl8MO62S.css",
     "name": "app",
     "names": [
       "app.css"
