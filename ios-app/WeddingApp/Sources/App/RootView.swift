@@ -30,22 +30,13 @@ struct RootView: View {
 private struct SplashView: View {
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            Color("SplashBackground")
+                .ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                HStack(spacing: 6) {
-                    Text("Wedding")
-                        .font(.system(size: 38, weight: .bold, design: .serif))
-                        .foregroundStyle(AppTheme.sageDark)
-                    Text("App")
-                        .font(.system(size: 38, weight: .bold, design: .serif))
-                        .foregroundStyle(AppTheme.gold)
-                }
-
-                ProgressView()
-                    .tint(AppTheme.sageDark)
-                    .scaleEffect(1.2)
-            }
+            Image("SplashScreen")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
     }
 }
