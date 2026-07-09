@@ -58,7 +58,7 @@
             @csrf
 
             <div>
-                <label for="email" class="mb-1.5 block text-sm font-medium text-gray-700">Email atau Nomor Telepon</label>
+                <label for="email" class="mb-1.5 block text-sm font-medium text-gray-700">Email</label>
                 <div class="relative">
                     <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
@@ -69,7 +69,7 @@
                         type="email"
                         value="{{ old('email') }}"
                         autocomplete="email"
-                        placeholder="Masukkan email atau nomor telepon"
+                        placeholder="Masukkan email"
                         class="h-12 w-full rounded-xl border bg-white pl-10 pr-4 text-sm text-gray-700 outline-none ring-sage-300 placeholder:text-gray-400 focus:ring-2 {{ $errors->has('email') ? 'border-red-400' : 'border-gray-200' }}"
                     >
                 </div>

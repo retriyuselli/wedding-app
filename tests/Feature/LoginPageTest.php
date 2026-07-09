@@ -17,7 +17,7 @@ class LoginPageTest extends TestCase
         $response->assertOk();
         $response->assertSee('Selamat Datang Kembali!');
         $response->assertSee('Merencanakan hari bahagiamu jadi lebih mudah', false);
-        $response->assertSee('Masukkan email atau nomor telepon');
+        $response->assertSee('Masukkan email');
         $response->assertSee('atau masuk dengan');
         $response->assertSee('Privasi & Aman', false);
         $response->assertSee('Bantuan 24/7');
