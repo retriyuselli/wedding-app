@@ -22,6 +22,7 @@ class BudgetPaymentCategoryApiTest extends TestCase
                         'key',
                         'label',
                         'icon',
+                        'description',
                     ],
                 ],
                 'meta' => [
@@ -46,6 +47,11 @@ class BudgetPaymentCategoryApiTest extends TestCase
         $this->assertSame(
             'Venue',
             collect($response->json('data'))->firstWhere('key', 'venue')['label']
+        );
+
+        $this->assertSame(
+            'Gedung, sewa tempat, dll',
+            collect($response->json('data'))->firstWhere('key', 'venue')['description']
         );
 
         $this->assertSame('IDR', $response->json('meta.default_currency'));

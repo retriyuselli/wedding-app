@@ -15,21 +15,6 @@ use Illuminate\View\View;
 
 class BiayaController extends Controller
 {
-    /**
-     * @var array<string, string>
-     */
-    private array $categoryDescriptions = [
-        'venue' => 'Gedung, sewa tempat, dll',
-        'catering' => 'Makanan & minuman tamu',
-        'decoration' => 'Dekorasi akad & resepsi',
-        'photo_video' => 'Foto, video, dokumentasi',
-        'entertainment' => 'Musik, hiburan, MC',
-        'makeup' => 'Busana & rias pengantin',
-        'transport' => 'Transportasi tamu & keluarga',
-        'wo' => 'Wedding organizer & koordinasi',
-        'other' => 'Biaya lain-lain',
-    ];
-
     public function index(
         Request $request,
         WeddingBudgetSummaryCalculator $budgetCalculator,
@@ -248,7 +233,7 @@ class BiayaController extends Controller
                 return [
                     'category' => $allocation->category_label,
                     'category_key' => $allocation->category,
-                    'description' => $this->categoryDescriptions[$allocation->category] ?? 'Alokasi anggaran kategori',
+                    'description' => WeddingPaymentSchedule::categoryDescription($allocation->category),
                     'allocated' => $allocated,
                     'spent' => $spent,
                     'remaining' => $remaining,
@@ -261,11 +246,7 @@ class BiayaController extends Controller
         $grouped = $user->paymentSchedules()->get()->groupBy('category');
 
         if ($grouped->isEmpty()) {
-            return collect([
-                ['category' => 'Venue', 'category_key' => 'venue', 'description' => 'Gedung, sewa tempat, dll', 'allocated' => 45000000, 'spent' => 28000000, 'remaining' => 17000000, 'percent' => 62, 'color' => $colors[0]],
-                ['category' => 'Catering', 'category_key' => 'catering', 'description' => 'Makanan & minuman tamu', 'allocated' => 35000000, 'spent' => 18000000, 'remaining' => 17000000, 'percent' => 51, 'color' => $colors[1]],
-                ['category' => 'Dekorasi', 'category_key' => 'decoration', 'description' => 'Dekorasi akad & resepsi', 'allocated' => 25000000, 'spent' => 12000000, 'remaining' => 13000000, 'percent' => 48, 'color' => $colors[2]],
-            ]);
+            return collect();
         }
 
         return $grouped->values()->map(function (Collection $items, int $index) use ($colors): array {
@@ -278,7 +259,7 @@ class BiayaController extends Controller
             return [
                 'category' => WeddingPaymentSchedule::$categoryOptions[$categoryKey] ?? 'Lainnya',
                 'category_key' => $categoryKey,
-                'description' => $this->categoryDescriptions[$categoryKey] ?? 'Alokasi anggaran kategori',
+                'description' => WeddingPaymentSchedule::categoryDescription($categoryKey),
                 'allocated' => $allocated,
                 'spent' => $spent,
                 'remaining' => $remaining,

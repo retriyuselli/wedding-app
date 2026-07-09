@@ -139,6 +139,16 @@
                     </div>
 
                     @if(in_array($activeTab, ['ringkasan', 'kategori'], true))
+                        @if($categoryRows->isEmpty())
+                            <div class="p-8 text-center text-sm text-gray-400">
+                                <p>Belum ada kategori anggaran.</p>
+                                <p class="mt-2">
+                                    <a href="{{ route('biaya.budget') }}" class="font-medium text-sage-600 hover:underline">Atur total anggaran</a>
+                                    <span class="text-gray-300">·</span>
+                                    <a href="{{ route('biaya.create') }}" class="font-medium text-sage-600 hover:underline">Tambah pengeluaran</a>
+                                </p>
+                            </div>
+                        @else
                         <div class="hidden overflow-x-auto lg:block">
                             <table class="w-full min-w-[720px] text-left text-sm">
                                 <thead>
@@ -221,6 +231,7 @@
                         <div class="border-t border-gray-100 px-4 py-3 text-sm text-gray-500">
                             1-{{ $categoryRows->count() }} dari {{ $categoryRows->count() }} kategori
                         </div>
+                        @endif
                     @endif
 
                     @if($activeTab === 'transaksi')
@@ -328,13 +339,15 @@
                             </div>
                         </div>
                         <div class="space-y-2 text-xs">
-                            @foreach($chartSegments as $segment)
+                            @forelse($chartSegments as $segment)
                                 <div class="flex items-center gap-2">
                                     <span class="h-2 w-2 rounded-full" style="background-color: {{ $segment['color'] }}"></span>
                                     <span class="text-gray-600">{{ $segment['label'] }}</span>
                                     <span class="ml-auto font-medium">{{ $segment['percent'] }}%</span>
                                 </div>
-                            @endforeach
+                            @empty
+                                <p class="text-gray-400">Belum ada data pengeluaran per kategori.</p>
+                            @endforelse
                         </div>
                     </div>
                 </div>

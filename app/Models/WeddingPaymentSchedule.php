@@ -60,6 +60,18 @@ class WeddingPaymentSchedule extends Model
         'other' => 'ellipsis',
     ];
 
+    public static array $categoryDescriptions = [
+        'venue' => 'Gedung, sewa tempat, dll',
+        'catering' => 'Makanan & minuman tamu',
+        'decoration' => 'Dekorasi akad & resepsi',
+        'photo_video' => 'Foto, video, dokumentasi',
+        'entertainment' => 'Musik, hiburan, MC',
+        'makeup' => 'Busana & rias pengantin',
+        'transport' => 'Transportasi tamu & keluarga',
+        'wo' => 'Wedding organizer & koordinasi',
+        'other' => 'Biaya lain-lain',
+    ];
+
     public static array $statusOptions = [
         'pending' => 'Belum Bayar',
         'paid' => 'Sudah Bayar',
@@ -110,8 +122,13 @@ class WeddingPaymentSchedule extends Model
         return self::$statusOptions[$this->status] ?? $this->status;
     }
 
+    public static function categoryDescription(string $category): string
+    {
+        return self::$categoryDescriptions[$category] ?? 'Alokasi anggaran kategori';
+    }
+
     /**
-     * @return list<array{key: string, label: string, icon: string}>
+     * @return list<array{key: string, label: string, icon: string, description: string}>
      */
     public static function paymentCategoriesForApi(): array
     {
@@ -120,6 +137,7 @@ class WeddingPaymentSchedule extends Model
                 'key' => $key,
                 'label' => $label,
                 'icon' => self::$categoryIcons[$key] ?? config('wedding.default_category_icon', 'ellipsis'),
+                'description' => self::categoryDescription($key),
             ])
             ->values()
             ->all();

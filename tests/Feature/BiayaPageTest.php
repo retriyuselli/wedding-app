@@ -64,4 +64,17 @@ class BiayaPageTest extends TestCase
         $response->assertOk();
         $response->assertSee('Pelunasan Catering');
     }
+
+    public function test_budget_page_shows_empty_state_when_no_categories(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('biaya'));
+
+        $response->assertOk();
+        $response->assertSee('Belum ada kategori anggaran.');
+        $response->assertSee('Atur total anggaran');
+        $response->assertDontSee('Rp 45.000.000', false);
+        $response->assertDontSee('Rp 28.000.000', false);
+    }
 }
