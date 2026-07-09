@@ -49,6 +49,7 @@ enum L10n {
         static var appName: String { "auth.app_name".localized }
         static var tagline: String { "auth.tagline".localized }
         static var emailOrPhone: String { "auth.email_or_phone".localized }
+        static var email: String { "auth.email".localized }
         static var emailPlaceholder: String { "auth.email_placeholder".localized }
         static var password: String { "auth.password".localized }
         static var passwordPlaceholder: String { "auth.password_placeholder".localized }

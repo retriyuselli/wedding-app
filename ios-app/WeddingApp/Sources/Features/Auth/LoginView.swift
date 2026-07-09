@@ -15,7 +15,7 @@ struct LoginView: View {
 
                     VStack(spacing: 20) {
                         AuthLabeledTextField(
-                            label: L10n.Auth.emailOrPhone,
+                            label: L10n.Auth.email,
                             icon: "envelope",
                             placeholder: L10n.Auth.emailPlaceholder,
                             text: $email,

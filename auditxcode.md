@@ -11,7 +11,7 @@ Terakhir diperbarui: 9 Juli 2026
 |---|---:|
 | Critical | 1 |
 | High | 1 |
-| Medium | 5 |
+| Medium | 3 |
 | Low | 3 |
 
 Build Xcode: 0 error, 0 warning (Debug). Release Archive tetap perlu diverifikasi manual dari Xcode.
@@ -26,11 +26,9 @@ Build Xcode: 0 error, 0 warning (Debug). Release Archive tetap perlu diverifikas
 |---|---|---|---|---|
 | Critical | `WeddingApp.entitlements` | File dev masih `aps-environment = development` | Saat **Archive Release**, pastikan exported entitlements memakai `production` (override sudah ada di `project.yml`) | Needs Manual Action |
 | High | `Sources/App/RootView.swift` | App wajib login | Siapkan demo/review account di App Review Notes | Needs Manual Action |
-| Medium | `Sources/Features/Vendor/VendorView.swift` | Carousel promo `VendorPromo.samples` hardcoded | Ganti dengan data API atau sembunyikan jika kosong | Open |
 | Medium | `Sources/Features/Guests/GuestView.swift` | Bagikan undangan, QR check-in, Export data | Masih alert "Coming Soon" | Open |
 | Medium | `Sources/Features/More/WeddingDocumentsView.swift` | Filter, upload, scan, share, delete | Mayoritas aksi belum fungsional | Open |
 | Medium | `Sources/Features/More/PrivacySecurityView.swift` | 2FA, download data, trusted devices | UI ada, belum fungsional penuh | Open |
-| Medium | `Sources/Features/Auth/LoginView.swift` | Label masih `Email or Phone` | Ubah ke `Email` saja (validasi sudah email-only) | Open |
 | Low | `Sources/Features/Dashboard/DashboardView.swift` | `NotificationsSheet` kosong/statik | Belum ada riwayat notifikasi in-app | Open |
 | Low | `InfoTabView.swift`, `SavedInspirationView.swift` | View tidak dinavigasi | Wiring belum selesai | Open |
 | Low | `LanguageFeature.isSelectionEnabled` | English dinonaktifkan | Aktifkan jika ingin dukung bilingual penuh | Open |

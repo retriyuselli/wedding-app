@@ -43,8 +43,9 @@
 /* Auth */
 "auth.app_name" = "Wedding App";
 "auth.tagline" = "Your best friend in planning your special day.";
-"auth.email_or_phone" = "Email or Phone Number";
-"auth.email_placeholder" = "Enter email or phone number";
+"auth.email_or_phone" = "Email";
+"auth.email" = "Email";
+"auth.email_placeholder" = "Enter email";
 "auth.password" = "Password";
 "auth.password_placeholder" = "Enter password";
 "auth.confirm_password" = "Confirm password";

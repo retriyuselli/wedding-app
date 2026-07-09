@@ -43,8 +43,9 @@
 /* Auth */
 "auth.app_name" = "Wedding App";
 "auth.tagline" = "Teman terbaik dalam merencanakan hari bahagia Anda.";
-"auth.email_or_phone" = "Email atau Nomor Telepon";
-"auth.email_placeholder" = "Masukkan email atau nomor telepon";
+"auth.email_or_phone" = "Email";
+"auth.email" = "Email";
+"auth.email_placeholder" = "Masukkan email";
 "auth.password" = "Kata Sandi";
 "auth.password_placeholder" = "Masukkan kata sandi";
 "auth.confirm_password" = "Ulangi kata sandi";

@@ -14,12 +14,10 @@ struct VendorView: View {
     @State private var showFilterSheet = false
     @State private var sortOption: VendorSortOption = .popular
     @State private var filterTask: Task<Void, Never>?
-    @State private var promoIndex = 0
     @ObservedObject private var savedStore = SavedVendorsStore.shared
     @State private var selectedVendorRoute: VendorRoute?
     @FocusState private var isSearchFocused: Bool
 
-    private let promoTimer = Timer.publish(every: 4, on: .main, in: .common).autoconnect()
     private let searchBarID = "vendor-search-bar"
 
     private var filterCatalog: VendorFilterCatalog {
@@ -90,9 +88,6 @@ struct VendorView: View {
                         }
                         if isSearching {
                             searchResultsHeader
-                        }
-                        if !isSearching && !filter.isActive {
-                            promoCarousel
                         }
                         vendorListSection
                         requestCTA
@@ -457,35 +452,6 @@ struct VendorView: View {
                     }
                     .padding(.vertical, 2)
                 }
-            }
-        }
-    }
-
-    // MARK: - Promo Carousel
-
-    private var promoCarousel: some View {
-        VStack(spacing: 10) {
-            TabView(selection: $promoIndex) {
-                ForEach(VendorPromo.samples.indices, id: \.self) { index in
-                    VendorPromoCard(promo: VendorPromo.samples[index])
-                        .tag(index)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 148)
-
-            HStack(spacing: 6) {
-                ForEach(VendorPromo.samples.indices, id: \.self) { index in
-                    Circle()
-                        .fill(AppTheme.sageDark.opacity(index == promoIndex ? 1 : 0.25))
-                        .frame(width: 6, height: 6)
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .onReceive(promoTimer) { _ in
-            withAnimation(.easeInOut(duration: 0.6)) {
-                promoIndex = (promoIndex + 1) % VendorPromo.samples.count
             }
         }
     }
@@ -961,72 +927,6 @@ private struct VendorCategoryChip: View {
             .frame(width: 72)
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Promo Card
-
-private struct VendorPromoCard: View {
-    let promo: VendorPromo
-
-    var body: some View {
-        ZStack(alignment: .leading) {
-            LinearGradient(
-                colors: promo.gradient,
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            if let imageName = promo.imageName {
-                HStack {
-                    Spacer()
-                    Image(imageName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 150)
-                        .clipped()
-                        .mask {
-                            LinearGradient(
-                                colors: [.clear, .white],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        }
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text(promo.eyebrow)
-                    .font(AppFont.regular(11))
-                    .foregroundStyle(.white.opacity(0.85))
-
-                Text(promo.title)
-                    .font(AppFont.semibold(18))
-                    .foregroundStyle(.white)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Button {} label: {
-                    HStack(spacing: 4) {
-                        Text(promo.buttonTitle)
-                            .font(AppFont.medium(12))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .semibold))
-                    }
-                    .foregroundStyle(AppTheme.sageDark)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(.white, in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 2)
-            }
-            .padding(18)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 148)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: AppTheme.sageDark.opacity(0.14), radius: 16, y: 8)
     }
 }
 
