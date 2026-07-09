@@ -10,93 +10,94 @@ struct LoginView: View {
 
     var body: some View {
         NavigationStack {
-            AuthScreenLayout {
-                VStack(spacing: 0) {
-                    AuthHeroHeader()
+            Form {
+                Section {
+                    AuthNativeBrandHeader()
+                }
+                .listRowBackground(Color.clear)
 
-                    VStack(spacing: 20) {
-                        AuthLabeledTextField(
-                            label: L10n.Auth.email,
-                            icon: "envelope",
-                            placeholder: L10n.Auth.emailPlaceholder,
-                            text: $email,
-                            keyboardType: .emailAddress,
-                            textContentType: .emailAddress,
-                            submitLabel: .next,
-                            fieldFocus: .email,
-                            focusedField: $focusedField,
-                            onSubmit: { focusedField = .password }
-                        )
+                Section {
+                    TextField(L10n.Auth.email, text: $email, prompt: Text(L10n.Auth.emailPlaceholder))
+                        .keyboardType(.emailAddress)
+                        .textContentType(.username)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .submitLabel(.next)
+                        .focused($focusedField, equals: .email)
+                        .onSubmit { focusedField = .password }
 
-                        if isEmailFormatInvalid {
-                            AuthHintBanner(message: L10n.Auth.invalidEmail)
-                        }
-
-                        VStack(alignment: .trailing, spacing: 8) {
-                            AuthLabeledSecureField(
-                                label: L10n.Auth.password,
-                                placeholder: L10n.Auth.passwordPlaceholder,
-                                text: $password,
-                                submitLabel: .go,
-                                fieldFocus: .password,
-                                focusedField: $focusedField,
-                                onSubmit: submitLogin
-                            )
-
-                            AuthDottedLink(title: L10n.Auth.forgotPassword) {
-                                showForgotPasswordComingSoon = true
-                            }
-                        }
-
-                        if let errorMessage = session.errorMessage {
-                            AuthErrorBanner(message: errorMessage)
-                        }
-
-                        AuthPrimaryButton(
-                            title: L10n.Auth.login,
-                            isLoading: session.isLoading,
-                            isDisabled: email.isEmpty || password.isEmpty || isEmailFormatInvalid
-                        ) {
-                            submitLogin()
-                        }
-
-                        #if DEBUG
-                        Button {
-                            session.simulateLoginForDebug()
-                        } label: {
-                            Text("Simulasi Masuk Debug")
-                                .font(AppFont.medium(13))
-                                .foregroundStyle(AppTheme.sageDark)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(AppTheme.lightSage.opacity(0.7), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(session.isLoading)
-                        .opacity(session.isLoading ? 0.55 : 1)
-                        #endif
-
-                        AuthSocialDivider(text: L10n.Auth.orLoginWith)
-
-                        VStack(spacing: 12) {
-                            AuthSocialFullButton(provider: .apple, isDisabled: session.isLoading) {
-                                submitAppleLogin()
-                            }
-
-                            AuthSocialFullButton(provider: .google, isDisabled: session.isLoading) {
-                                submitGoogleLogin()
-                            }
-                        }
+                    if isEmailFormatInvalid {
+                        AuthNativeStatusMessage(message: L10n.Auth.invalidEmail, systemImage: "info.circle")
                     }
 
-                    AuthFooterLink(
-                        prompt: L10n.Auth.noAccount,
-                        actionTitle: L10n.Auth.registerNow
-                    ) {
+                    SecureField(L10n.Auth.password, text: $password, prompt: Text(L10n.Auth.passwordPlaceholder))
+                        .textContentType(.password)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .submitLabel(.go)
+                        .focused($focusedField, equals: .password)
+                        .onSubmit(submitLogin)
+
+                    Button(L10n.Auth.forgotPassword) {
+                        showForgotPasswordComingSoon = true
+                    }
+                    .font(.callout)
+                }
+
+                if let errorMessage = session.errorMessage {
+                    Section {
+                        AuthNativeStatusMessage(
+                            message: errorMessage,
+                            systemImage: "exclamationmark.circle.fill",
+                            tint: .red
+                        )
+                    }
+                }
+
+                Section {
+                    AuthNativeSubmitButton(
+                        title: L10n.Auth.login,
+                        systemImage: "arrow.right.circle.fill",
+                        isLoading: session.isLoading,
+                        isDisabled: email.isEmpty || password.isEmpty || isEmailFormatInvalid,
+                        action: submitLogin
+                    )
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
+
+                Section(L10n.Auth.orLoginWith) {
+                    AuthNativeProviderButton(provider: .apple, isDisabled: session.isLoading) {
+                        submitAppleLogin()
+                    }
+
+                    AuthNativeProviderButton(provider: .google, isDisabled: session.isLoading) {
+                        submitGoogleLogin()
+                    }
+                }
+
+                Section {
+                    Button {
                         showRegister = true
+                    } label: {
+                        HStack {
+                            Text(L10n.Auth.noAccount)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(L10n.Auth.registerNow)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                        }
                     }
                 }
             }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .background(AppTheme.background)
+            .navigationTitle(L10n.Auth.login)
+            .navigationBarTitleDisplayMode(.large)
+            .tint(AppTheme.sageDark)
+            .scrollDismissesKeyboard(.interactively)
             .navigationDestination(isPresented: $showRegister) {
                 RegisterView()
             }
@@ -104,6 +105,9 @@ struct LoginView: View {
                 Button(L10n.Common.ok, role: .cancel) {}
             } message: {
                 Text(L10n.Common.comingSoonMessage)
+            }
+            .onAppear {
+                session.errorMessage = nil
             }
             .onChange(of: email) { _, _ in
                 session.errorMessage = nil

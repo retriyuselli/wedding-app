@@ -14,10 +14,24 @@ class PushSendTestCommand extends Command
 
     public function handle(PushNotificationService $pushNotificationService): int
     {
-        $user = User::query()->where('email', $this->argument('email'))->first();
+        $email = (string) $this->argument('email');
+
+        $user = User::query()->where('email', $email)->first();
 
         if (! $user) {
             $this->components->error('User tidak ditemukan.');
+
+            $knownEmails = User::query()
+                ->orderBy('email')
+                ->limit(5)
+                ->pluck('email');
+
+            if ($knownEmails->isNotEmpty()) {
+                $this->line('Email terdaftar (contoh):');
+                foreach ($knownEmails as $knownEmail) {
+                    $this->line("  - {$knownEmail}");
+                }
+            }
 
             return self::FAILURE;
         }
@@ -25,7 +39,13 @@ class PushSendTestCommand extends Command
         $tokenCount = $user->deviceTokens()->count();
 
         if ($tokenCount === 0) {
-            $this->components->error('User belum punya device token. Buka app iOS, login, dan izinkan notifikasi.');
+            $this->components->error('User belum punya device token.');
+            $this->newLine();
+            $this->line('Langkah perbaikan:');
+            $this->line('  1. Build ulang app di Xcode (⌘R) ke iPhone fisik — bukan Simulator');
+            $this->line('  2. Login → Allow notifikasi');
+            $this->line('  3. Cek log Xcode: "[Push] Device token synced to backend"');
+            $this->line('  4. Pastikan backend jalan: php artisan serve --host=0.0.0.0 --port=8000');
 
             return self::FAILURE;
         }

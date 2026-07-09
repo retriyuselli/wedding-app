@@ -18,14 +18,27 @@ final class PushNotificationManager: NSObject, ObservableObject {
         UNUserNotificationCenter.current().delegate = self
     }
 
-    func promptForAuthorizationIfNeeded() async {
+    /// Minta izin (jika belum) dan daftarkan ulang ke APNs setelah user login.
+    func prepareAfterAuthentication() async {
         await refreshAuthorizationStatus()
 
-        guard authorizationStatus == .notDetermined else {
-            return
+        switch authorizationStatus {
+        case .notDetermined:
+            requestAuthorizationAndRegister()
+        case .authorized, .provisional, .ephemeral:
+            UIApplication.shared.registerForRemoteNotifications()
+            await syncDeviceTokenIfPossible()
+        case .denied:
+            #if DEBUG
+            print("[Push] Notifications denied — buka Pengaturan iOS untuk mengaktifkan.")
+            #endif
+        @unknown default:
+            break
         }
+    }
 
-        requestAuthorizationAndRegister()
+    func promptForAuthorizationIfNeeded() async {
+        await prepareAfterAuthentication()
     }
 
     func requestAuthorizationAndRegister() {
@@ -34,6 +47,9 @@ final class PushNotificationManager: NSObject, ObservableObject {
                 await self.refreshAuthorizationStatus()
 
                 guard granted else {
+                    #if DEBUG
+                    print("[Push] User menolak izin notifikasi.")
+                    #endif
                     return
                 }
 
@@ -59,7 +75,17 @@ final class PushNotificationManager: NSObject, ObservableObject {
     }
 
     func syncDeviceTokenIfPossible() async {
-        guard let token = pendingToken, KeychainStore.loadToken() != nil else {
+        guard let token = pendingToken else {
+            #if DEBUG
+            print("[Push] Belum ada device token dari APNs — tunggu registerForRemoteNotifications.")
+            #endif
+            return
+        }
+
+        guard KeychainStore.loadToken() != nil else {
+            #if DEBUG
+            print("[Push] Token APNs ada, tapi user belum login — sync ditunda.")
+            #endif
             return
         }
 
@@ -79,7 +105,7 @@ final class PushNotificationManager: NSObject, ObservableObject {
             #endif
         } catch {
             #if DEBUG
-            print("Device token sync failed: \(error)")
+            print("[Push] Device token sync failed: \(error)")
             #endif
         }
     }

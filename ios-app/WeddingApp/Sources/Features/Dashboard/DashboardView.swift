@@ -6,7 +6,7 @@ struct DashboardView: View {
     var body: some View {
         NativeDashboardTabs(selectedTab: $selectedTab)
             .task {
-                await PushNotificationManager.shared.promptForAuthorizationIfNeeded()
+                await PushNotificationManager.shared.prepareAfterAuthentication()
             }
     }
 }

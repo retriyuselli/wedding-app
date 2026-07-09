@@ -131,23 +131,6 @@ final class SessionStore: ObservableObject {
         clearSession()
     }
 
-    #if DEBUG
-    func simulateLoginForDebug() {
-        currentUser = User(
-            id: -1,
-            name: "Debug User",
-            email: "debug@weddingapp.local",
-            avatarUrl: nil,
-            whatsapp: nil,
-            hasSocialLogin: false,
-            updatedAt: nil
-        )
-        isLoading = false
-        errorMessage = nil
-        print("[Auth] Simulated login for debug user")
-    }
-    #endif
-
     /// Hapus state sesi secara lokal tanpa memanggil API — digunakan saat 401 atau token kedaluwarsa.
     func clearSession() {
         KeychainStore.deleteToken()
@@ -196,7 +179,7 @@ final class SessionStore: ObservableObject {
 
     private func schedulePushTokenSync() {
         Task {
-            await PushNotificationManager.shared.syncDeviceTokenIfPossible()
+            await PushNotificationManager.shared.prepareAfterAuthentication()
         }
     }
 }
