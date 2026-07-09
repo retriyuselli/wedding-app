@@ -8,7 +8,7 @@ struct RootView: View {
 
     private let splashFadeDuration = 0.5
     private let minimumSplashDuration: Duration = .milliseconds(800)
-    private let bootstrapTimeout: Duration = .seconds(10)
+    private let sessionRestoreTimeout: Duration = .seconds(8)
 
     var body: some View {
         ZStack {
@@ -44,45 +44,15 @@ struct RootView: View {
     private func bootstrapApp() async {
         let startedAt = ContinuousClock.now
 
-        await loadStartupData()
+        await APIResolver.resolveIfNeeded()
+
+        Task {
+            await BudgetCategoriesStore.shared.loadIfNeeded()
+        }
+
+        await session.restoreSession(timeout: sessionRestoreTimeout)
 
         await finishSplashTransition(since: startedAt)
-    }
-
-    private func loadStartupData() async {
-        await withTaskGroup(of: Bool.self) { group in
-            group.addTask {
-                await BudgetCategoriesStore.shared.loadIfNeeded()
-                return true
-            }
-
-            group.addTask {
-                await session.restoreSession()
-                return true
-            }
-
-            group.addTask {
-                try? await Task.sleep(for: bootstrapTimeout)
-                return false
-            }
-
-            var completedLoads = 0
-
-            while completedLoads < 2 {
-                guard let finished = await group.next() else {
-                    break
-                }
-
-                if finished {
-                    completedLoads += 1
-                    continue
-                }
-
-                break
-            }
-
-            group.cancelAll()
-        }
     }
 
     @MainActor

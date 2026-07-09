@@ -10,23 +10,19 @@ enum APIConfig {
     /// Start backend with: `php artisan serve --host=0.0.0.0 --port=8000`
     private static let lanHost = "192.168.1.3"
 
-    /// Set `true` untuk menguji build Debug terhadap server production HTTPS.
+    /// Set `true` untuk memaksa build Debug memakai server production HTTPS.
     static var usesProductionAPI = false
+
+    static var localCandidateBaseURLs: [URL] {
+        #if targetEnvironment(simulator)
+        [URL(string: "http://127.0.0.1:8000/api/v1")!]
+        #else
+        [URL(string: "http://\(lanHost):8000/api/v1")!]
+        #endif
+    }
     #endif
 
     static var baseURL: URL {
-        #if DEBUG
-        if usesProductionAPI {
-            return productionURL
-        }
-
-        #if targetEnvironment(simulator)
-        return URL(string: "http://127.0.0.1:8000/api/v1")!
-        #else
-        return URL(string: "http://\(lanHost):8000/api/v1")!
-        #endif
-        #else
-        return productionURL
-        #endif
+        APIResolver.resolvedBaseURL
     }
 }

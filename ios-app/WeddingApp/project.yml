@@ -46,9 +46,7 @@ targets:
       path: Generated/Info.plist
       properties:
         UILaunchScreen:
-          UIImageName: SplashScreen
           UIColorName: SplashBackground
-          UIImageRespectsSafeAreaInsets: false
         GIDClientID: "1008010367829-am6itqilhmatsctp7ckj1flhrkeg77es.apps.googleusercontent.com"
         CFBundleURLTypes:
           - CFBundleURLSchemes:

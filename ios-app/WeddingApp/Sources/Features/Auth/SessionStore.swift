@@ -11,8 +11,29 @@ final class SessionStore: ObservableObject {
         UIDevice.current.name
     }
 
-    func restoreSession() async {
-        guard KeychainStore.loadToken() != nil else { return }
+    func restoreSession(timeout: Duration = .seconds(8)) async {
+        guard KeychainStore.loadToken() != nil else {
+            return
+        }
+
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { @MainActor in
+                await self.performSessionRestore()
+            }
+
+            group.addTask {
+                try? await Task.sleep(for: timeout)
+            }
+
+            _ = await group.next()
+            group.cancelAll()
+        }
+    }
+
+    private func performSessionRestore() async {
+        guard KeychainStore.loadToken() != nil else {
+            return
+        }
 
         isLoading = true
         defer { isLoading = false }
