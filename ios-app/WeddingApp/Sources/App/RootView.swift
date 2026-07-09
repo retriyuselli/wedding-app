@@ -2,28 +2,61 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var session: SessionStore
-    @State private var hasRestoredSession = false
+    @State private var isAppReady = false
+    @State private var splashOpacity = 1.0
+    @State private var showSplashOverlay = true
+
+    private let splashFadeDuration = 0.5
+    private let minimumSplashDuration: Duration = .milliseconds(800)
 
     var body: some View {
-        Group {
-            if !hasRestoredSession {
+        ZStack {
+            mainContent
+                .opacity(isAppReady ? 1 : 0)
+
+            if showSplashOverlay {
                 SplashView()
-            } else if session.currentUser != nil {
-                DashboardView()
-            } else {
-                LoginView()
+                    .opacity(splashOpacity)
+                    .transition(.opacity)
+                    .zIndex(1)
             }
         }
         .font(AppFont.regular(16))
         .task {
-            await BudgetCategoriesStore.shared.loadIfNeeded()
-            await session.restoreSession()
-            hasRestoredSession = true
+            await bootstrapApp()
         }
         .onReceive(NotificationCenter.default.publisher(for: .sessionExpired).receive(on: DispatchQueue.main)) { _ in
             session.clearSession()
-            hasRestoredSession = true
         }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if session.currentUser != nil {
+            DashboardView()
+        } else {
+            LoginView()
+        }
+    }
+
+    private func bootstrapApp() async {
+        let startedAt = ContinuousClock.now
+
+        await BudgetCategoriesStore.shared.loadIfNeeded()
+        await session.restoreSession()
+
+        let elapsed = startedAt.duration(to: .now)
+        if elapsed < minimumSplashDuration {
+            try? await Task.sleep(for: minimumSplashDuration - elapsed)
+        }
+
+        withAnimation(.easeInOut(duration: splashFadeDuration)) {
+            isAppReady = true
+            splashOpacity = 0
+        }
+
+        try? await Task.sleep(for: .milliseconds(Int(splashFadeDuration * 1_000) + 50))
+        showSplashOverlay = false
     }
 }
 
