@@ -28,6 +28,7 @@ final class BudgetCategoriesStore: ObservableObject {
             isLoaded = true
         } catch {
             categories = []
+            isLoaded = true
         }
     }
 

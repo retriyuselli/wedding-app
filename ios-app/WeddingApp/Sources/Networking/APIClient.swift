@@ -3,7 +3,14 @@ import Foundation
 final class APIClient {
     static let shared = APIClient()
 
-    private let session = URLSession.shared
+    private init() {}
+
+    private lazy var session: URLSession = {
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 15
+        configuration.timeoutIntervalForResource = 20
+        return URLSession(configuration: configuration)
+    }()
 
     private static let dateFormatters: [DateFormatter] = {
         let iso = DateFormatter()
@@ -34,8 +41,6 @@ final class APIClient {
         }
         return decoder
     }()
-
-    private init() {}
 
     func request<Response: Decodable>(
         _ path: String,

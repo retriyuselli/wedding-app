@@ -8,6 +8,7 @@ struct RootView: View {
 
     private let splashFadeDuration = 0.5
     private let minimumSplashDuration: Duration = .milliseconds(800)
+    private let bootstrapTimeout: Duration = .seconds(10)
 
     var body: some View {
         ZStack {
@@ -17,6 +18,7 @@ struct RootView: View {
             if showSplashOverlay {
                 SplashView()
                     .opacity(splashOpacity)
+                    .allowsHitTesting(splashOpacity > 0.05)
                     .transition(.opacity)
                     .zIndex(1)
             }
@@ -42,9 +44,49 @@ struct RootView: View {
     private func bootstrapApp() async {
         let startedAt = ContinuousClock.now
 
-        await BudgetCategoriesStore.shared.loadIfNeeded()
-        await session.restoreSession()
+        await loadStartupData()
 
+        await finishSplashTransition(since: startedAt)
+    }
+
+    private func loadStartupData() async {
+        await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                await BudgetCategoriesStore.shared.loadIfNeeded()
+                return true
+            }
+
+            group.addTask {
+                await session.restoreSession()
+                return true
+            }
+
+            group.addTask {
+                try? await Task.sleep(for: bootstrapTimeout)
+                return false
+            }
+
+            var completedLoads = 0
+
+            while completedLoads < 2 {
+                guard let finished = await group.next() else {
+                    break
+                }
+
+                if finished {
+                    completedLoads += 1
+                    continue
+                }
+
+                break
+            }
+
+            group.cancelAll()
+        }
+    }
+
+    @MainActor
+    private func finishSplashTransition(since startedAt: ContinuousClock.Instant) async {
         let elapsed = startedAt.duration(to: .now)
         if elapsed < minimumSplashDuration {
             try? await Task.sleep(for: minimumSplashDuration - elapsed)
