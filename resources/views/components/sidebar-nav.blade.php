@@ -23,7 +23,7 @@
         ['route' => 'dokumen', 'label' => 'Dokumen', 'active' => request()->routeIs('dokumen*')],
         ['route' => 'privacy-policy', 'label' => 'Privasi & Keamanan', 'active' => request()->routeIs('privacy-policy')],
         ['route' => 'bantuan', 'label' => 'Bantuan & FAQ', 'active' => request()->routeIs('bantuan*')],
-        ['route' => 'profil', 'label' => 'Settings', 'active' => false],
+        ['route' => 'pengaturan', 'label' => 'Settings', 'active' => request()->routeIs('pengaturan*')],
     ];
 @endphp
 

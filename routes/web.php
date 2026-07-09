@@ -9,6 +9,7 @@ use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\InspirationController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\TamuController;
 use App\Http\Controllers\UangMasukController;
@@ -105,4 +106,9 @@ Route::middleware('auth')->group(function () {
 
     // Bantuan
     Route::get('/bantuan', [BantuanController::class, 'index'])->name('bantuan');
+
+    // Pengaturan
+    Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan');
+    Route::put('/pengaturan', [PengaturanController::class, 'update'])->name('pengaturan.update');
+    Route::post('/pengaturan/clear-cache', [PengaturanController::class, 'clearCache'])->name('pengaturan.clear-cache');
 });

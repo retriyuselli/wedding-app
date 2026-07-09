@@ -15,7 +15,7 @@
             'relative flex min-h-screen w-full min-w-0 flex-1 flex-col',
             'mx-auto max-w-md bg-white shadow-sm lg:mx-0 lg:max-w-none lg:bg-wedding-bg lg:shadow-none' => true,
         ])>
-            @unless(request()->routeIs('dashboard', 'checklist', 'tamu', 'biaya', 'vendor', 'inspiration', 'messages', 'profil', 'dokumen', 'bantuan'))
+            @unless(request()->routeIs('dashboard', 'checklist', 'tamu', 'biaya', 'vendor', 'inspiration', 'messages', 'profil', 'dokumen', 'bantuan', 'pengaturan'))
                 <header class="sticky top-0 z-20 border-b border-gray-100 bg-white lg:border-sage-100 lg:bg-wedding-surface">
                     <div class="flex items-center justify-between px-4 py-3 lg:px-8">
                         <div>
