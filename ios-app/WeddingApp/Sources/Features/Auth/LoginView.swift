@@ -5,6 +5,7 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var showRegister = false
+    @State private var showForgotPasswordComingSoon = false
     @FocusState private var focusedField: AuthFormField?
 
     var body: some View {
@@ -42,6 +43,9 @@ struct LoginView: View {
                                 onSubmit: submitLogin
                             )
 
+                            AuthDottedLink(title: L10n.Auth.forgotPassword) {
+                                showForgotPasswordComingSoon = true
+                            }
                         }
 
                         if let errorMessage = session.errorMessage {
@@ -56,15 +60,31 @@ struct LoginView: View {
                             submitLogin()
                         }
 
+                        #if DEBUG
+                        Button {
+                            session.simulateLoginForDebug()
+                        } label: {
+                            Text("Simulasi Masuk Debug")
+                                .font(AppFont.medium(13))
+                                .foregroundStyle(AppTheme.sageDark)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(AppTheme.lightSage.opacity(0.7), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(session.isLoading)
+                        .opacity(session.isLoading ? 0.55 : 1)
+                        #endif
+
                         AuthSocialDivider(text: L10n.Auth.orLoginWith)
 
                         VStack(spacing: 12) {
-                            AuthSocialFullButton(provider: .apple) {
-                                Task { await session.loginWithApple() }
+                            AuthSocialFullButton(provider: .apple, isDisabled: session.isLoading) {
+                                submitAppleLogin()
                             }
 
-                            AuthSocialFullButton(provider: .google) {
-                                Task { await session.loginWithGoogle() }
+                            AuthSocialFullButton(provider: .google, isDisabled: session.isLoading) {
+                                submitGoogleLogin()
                             }
                         }
                     }
@@ -79,6 +99,11 @@ struct LoginView: View {
             }
             .navigationDestination(isPresented: $showRegister) {
                 RegisterView()
+            }
+            .alert(L10n.Common.comingSoon, isPresented: $showForgotPasswordComingSoon) {
+                Button(L10n.Common.ok, role: .cancel) {}
+            } message: {
+                Text(L10n.Common.comingSoonMessage)
             }
             .onChange(of: email) { _, _ in
                 session.errorMessage = nil
@@ -103,5 +128,23 @@ struct LoginView: View {
 
         focusedField = nil
         Task { await session.login(email: email, password: password) }
+    }
+
+    private func submitAppleLogin() {
+        guard !session.isLoading else {
+            return
+        }
+
+        focusedField = nil
+        Task { await session.loginWithApple() }
+    }
+
+    private func submitGoogleLogin() {
+        guard !session.isLoading else {
+            return
+        }
+
+        focusedField = nil
+        Task { await session.loginWithGoogle() }
     }
 }

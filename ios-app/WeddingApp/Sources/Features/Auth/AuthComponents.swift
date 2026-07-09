@@ -455,6 +455,7 @@ struct AuthSocialFullButton: View {
     }
 
     let provider: Provider
+    var isDisabled: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -480,6 +481,8 @@ struct AuthSocialFullButton: View {
             }
         }
         .buttonStyle(AuthPressableButtonStyle())
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.55 : 1)
     }
 }
 

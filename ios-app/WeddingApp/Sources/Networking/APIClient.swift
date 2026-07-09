@@ -7,8 +7,9 @@ final class APIClient {
 
     private lazy var session: URLSession = {
         let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = 15
-        configuration.timeoutIntervalForResource = 20
+        configuration.timeoutIntervalForRequest = 8
+        configuration.timeoutIntervalForResource = 10
+        configuration.waitsForConnectivity = false
         return URLSession(configuration: configuration)
     }()
 
@@ -51,7 +52,7 @@ final class APIClient {
         let (data, httpResponse) = try await send(path: path, method: method, queryItems: queryItems, json: json)
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw errorFromResponse(statusCode: httpResponse.statusCode, data: data)
+            throw errorFromResponse(path: path, statusCode: httpResponse.statusCode, data: data)
         }
 
         do {
@@ -73,7 +74,7 @@ final class APIClient {
         let (data, httpResponse) = try await send(path: path, method: method, queryItems: queryItems, json: json)
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw errorFromResponse(statusCode: httpResponse.statusCode, data: data)
+            throw errorFromResponse(path: path, statusCode: httpResponse.statusCode, data: data)
         }
     }
 
@@ -110,7 +111,7 @@ final class APIClient {
         )
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw errorFromResponse(statusCode: httpResponse.statusCode, data: data)
+            throw errorFromResponse(path: path, statusCode: httpResponse.statusCode, data: data)
         }
 
         do {
@@ -131,6 +132,8 @@ final class APIClient {
         multipartBody: Data? = nil,
         contentType: String? = nil
     ) async throws -> (Data, HTTPURLResponse) {
+        await APIResolver.resolveIfNeeded()
+
         var url = APIConfig.baseURL
         url.append(path: path)
 
@@ -160,19 +163,29 @@ final class APIClient {
             urlRequest.setValue(contentType, forHTTPHeaderField: "Content-Type")
         }
 
+        #if DEBUG
+        print("[API] \(method) \(url.absoluteString)")
+        #endif
+
         let (data, response) = try await session.data(for: urlRequest)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.unknown
         }
 
+        #if DEBUG
+        print("[API] \(method) \(url.path) -> \(httpResponse.statusCode)")
+        #endif
+
         return (data, httpResponse)
     }
 
-    private func errorFromResponse(statusCode: Int, data: Data) -> APIError {
+    private func errorFromResponse(path: String, statusCode: Int, data: Data) -> APIError {
         if statusCode == 401 {
-            KeychainStore.deleteToken()
-            NotificationCenter.default.post(name: .sessionExpired, object: nil)
+            if shouldBroadcastSessionExpired(for: path) {
+                KeychainStore.deleteToken()
+                NotificationCenter.default.post(name: .sessionExpired, object: nil)
+            }
             return .unauthorized
         }
 
@@ -182,6 +195,10 @@ final class APIClient {
         }
 
         return .unknown
+    }
+
+    private func shouldBroadcastSessionExpired(for path: String) -> Bool {
+        !["auth/me", "auth/login", "auth/google", "auth/apple", "auth/register"].contains(path)
     }
 }
 

@@ -99,10 +99,12 @@ struct RegisterView: View {
                     AuthSocialDivider(text: L10n.Auth.orRegisterWith)
 
                     VStack(spacing: 12) {
-                        AuthSocialFullButton(provider: .apple) {
+                        AuthSocialFullButton(provider: .apple, isDisabled: session.isLoading) {
+                            guard !session.isLoading else { return }
                             Task { await session.loginWithApple() }
                         }
-                        AuthSocialFullButton(provider: .google) {
+                        AuthSocialFullButton(provider: .google, isDisabled: session.isLoading) {
+                            guard !session.isLoading else { return }
                             Task { await session.loginWithGoogle() }
                         }
                     }

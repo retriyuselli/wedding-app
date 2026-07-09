@@ -8,7 +8,7 @@ struct RootView: View {
 
     private let splashFadeDuration = 0.5
     private let minimumSplashDuration: Duration = .milliseconds(800)
-    private let sessionRestoreTimeout: Duration = .seconds(8)
+    private let sessionRestoreTimeout: Duration = .seconds(5)
 
     var body: some View {
         ZStack {
@@ -29,6 +29,11 @@ struct RootView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .sessionExpired).receive(on: DispatchQueue.main)) { _ in
             session.clearSession()
+        }
+        .onChange(of: session.currentUser?.id) { _, userId in
+            #if DEBUG
+            print("[Root] currentUser id changed: \(userId.map(String.init) ?? "nil")")
+            #endif
         }
     }
 

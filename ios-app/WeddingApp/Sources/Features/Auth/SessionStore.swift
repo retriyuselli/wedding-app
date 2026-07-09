@@ -7,11 +7,13 @@ final class SessionStore: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    private var authStateVersion = 0
+
     private var deviceName: String {
         UIDevice.current.name
     }
 
-    func restoreSession(timeout: Duration = .seconds(8)) async {
+    func restoreSession(timeout: Duration = .seconds(5)) async {
         guard KeychainStore.loadToken() != nil else {
             return
         }
@@ -35,14 +37,25 @@ final class SessionStore: ObservableObject {
             return
         }
 
-        isLoading = true
-        defer { isLoading = false }
+        let restoreVersion = authStateVersion
 
         do {
             let response: UserResponse = try await APIClient.shared.request("auth/me")
+            guard authStateVersion == restoreVersion else {
+                return
+            }
+
             currentUser = response.user
-            await syncPushTokenAfterAuth()
+            schedulePushTokenSync()
         } catch {
+            guard authStateVersion == restoreVersion else {
+                return
+            }
+
+            if error.isRequestCancelled {
+                return
+            }
+
             KeychainStore.deleteToken()
             currentUser = nil
         }
@@ -55,9 +68,7 @@ final class SessionStore: ObservableObject {
                 method: "POST",
                 json: ["email": email, "password": password, "device_name": self.deviceName]
             )
-            KeychainStore.saveToken(response.token)
-            self.currentUser = response.user
-            await self.syncPushTokenAfterAuth()
+            self.completeAuthentication(with: response)
         }
     }
 
@@ -69,9 +80,7 @@ final class SessionStore: ObservableObject {
                 method: "POST",
                 json: ["id_token": idToken, "device_name": self.deviceName]
             )
-            KeychainStore.saveToken(response.token)
-            self.currentUser = response.user
-            await self.syncPushTokenAfterAuth()
+            self.completeAuthentication(with: response)
         }
     }
 
@@ -95,9 +104,7 @@ final class SessionStore: ObservableObject {
                 method: "POST",
                 json: json
             )
-            KeychainStore.saveToken(response.token)
-            self.currentUser = response.user
-            await self.syncPushTokenAfterAuth()
+            self.completeAuthentication(with: response)
         }
     }
 
@@ -114,9 +121,7 @@ final class SessionStore: ObservableObject {
                     "device_name": self.deviceName,
                 ]
             )
-            KeychainStore.saveToken(response.token)
-            self.currentUser = response.user
-            await self.syncPushTokenAfterAuth()
+            self.completeAuthentication(with: response)
         }
     }
 
@@ -125,6 +130,23 @@ final class SessionStore: ObservableObject {
         try? await APIClient.shared.requestNoContent("auth/logout", method: "POST")
         clearSession()
     }
+
+    #if DEBUG
+    func simulateLoginForDebug() {
+        currentUser = User(
+            id: -1,
+            name: "Debug User",
+            email: "debug@weddingapp.local",
+            avatarUrl: nil,
+            whatsapp: nil,
+            hasSocialLogin: false,
+            updatedAt: nil
+        )
+        isLoading = false
+        errorMessage = nil
+        print("[Auth] Simulated login for debug user")
+    }
+    #endif
 
     /// Hapus state sesi secara lokal tanpa memanggil API — digunakan saat 401 atau token kedaluwarsa.
     func clearSession() {
@@ -137,7 +159,8 @@ final class SessionStore: ObservableObject {
         clearSession()
     }
 
-    private func perform(_ action: () async throws -> Void) async {
+    private func perform(_ action: @escaping () async throws -> Void) async {
+        authStateVersion += 1
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -149,11 +172,31 @@ final class SessionStore: ObservableObject {
         } catch AppleSignInError.cancelled {
             return
         } catch {
-            errorMessage = error.localizedDescription
+            if error is URLError {
+                await APIResolver.invalidateAndResolve()
+            }
+
+            let message = error.userFacingMessage
+            if !message.isEmpty {
+                errorMessage = message
+            }
         }
     }
 
-    private func syncPushTokenAfterAuth() async {
-        await PushNotificationManager.shared.syncDeviceTokenIfPossible()
+    private func completeAuthentication(with response: AuthResponse) {
+        currentUser = response.user
+        isLoading = false
+        KeychainStore.saveToken(response.token)
+        schedulePushTokenSync()
+
+        #if DEBUG
+        print("[Auth] Login succeeded for user id \(response.user.id)")
+        #endif
+    }
+
+    private func schedulePushTokenSync() {
+        Task {
+            await PushNotificationManager.shared.syncDeviceTokenIfPossible()
+        }
     }
 }
