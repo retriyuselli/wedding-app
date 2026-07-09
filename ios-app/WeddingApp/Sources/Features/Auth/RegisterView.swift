@@ -105,7 +105,6 @@ struct RegisterView: View {
                         AuthSocialFullButton(provider: .google) {
                             Task { await session.loginWithGoogle() }
                         }
-                        AuthSocialFullButton(provider: .phone) {}
                     }
                 }
 

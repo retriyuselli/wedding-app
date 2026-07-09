@@ -42,9 +42,6 @@ struct LoginView: View {
                                 onSubmit: submitLogin
                             )
 
-                            AuthDottedLink(title: L10n.Auth.forgotPassword) {
-                                // Forgot password — coming soon
-                            }
                         }
 
                         if let errorMessage = session.errorMessage {
@@ -68,10 +65,6 @@ struct LoginView: View {
 
                             AuthSocialFullButton(provider: .google) {
                                 Task { await session.loginWithGoogle() }
-                            }
-
-                            AuthSocialFullButton(provider: .phone) {
-                                // Sign in with phone — coming soon
                             }
                         }
                     }

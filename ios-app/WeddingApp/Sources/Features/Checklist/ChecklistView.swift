@@ -19,7 +19,7 @@ struct ChecklistView: View {
     }
 
     private var groups: [ChecklistGroup] {
-        var source = tasks.isEmpty && events.isEmpty ? ChecklistGroup.samples : buildGroups()
+        var source = buildGroups()
 
         if selectedFilter != L10n.Common.all {
             source = source.filter { $0.title == selectedFilter }
@@ -37,7 +37,7 @@ struct ChecklistView: View {
     }
 
     private var allGroups: [ChecklistGroup] {
-        tasks.isEmpty && events.isEmpty ? ChecklistGroup.samples : buildGroups()
+        buildGroups()
     }
 
     private var filterOptions: [String] {
@@ -63,9 +63,7 @@ struct ChecklistView: View {
                         if isSearching { searchBar }
                         summaryCard
                         if !isSearching { filterChips }
-                        ForEach(groups) { group in
-                            sectionCard(group)
-                        }
+                        checklistContent
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -307,6 +305,31 @@ struct ChecklistView: View {
         }
     }
 
+    @ViewBuilder
+    private var checklistContent: some View {
+        if isLoading && tasks.isEmpty && events.isEmpty {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 28)
+        } else if let errorMessage, allGroups.isEmpty {
+            MoreEmptyState(
+                icon: "exclamationmark.triangle",
+                title: L10n.Common.warning,
+                message: errorMessage
+            )
+        } else if allGroups.isEmpty {
+            MoreEmptyState(
+                icon: "checklist",
+                title: L10n.Checklist.emptyTitle,
+                message: L10n.Checklist.emptySub
+            )
+        } else {
+            ForEach(groups) { group in
+                sectionCard(group)
+            }
+        }
+    }
+
     private func sectionCard(_ group: ChecklistGroup) -> some View {
         let isExpanded = expandedSections.contains(group.id) || isSearching
         let showAll = showAllSections.contains(group.id)
@@ -438,9 +461,6 @@ struct ChecklistView: View {
             }
         } catch {
             errorMessage = error.localizedDescription
-            if let first = ChecklistGroup.samples.first {
-                expandedSections.insert(first.id)
-            }
         }
     }
 }
@@ -460,31 +480,6 @@ private struct ChecklistGroup: Identifiable {
         default: return "sparkles"
         }
     }
-
-    static let samples: [ChecklistGroup] = [
-        ChecklistGroup(
-            id: 1,
-            title: "Akad Nikah",
-            iconName: "hands.and.sparkles",
-            tasks: [
-                PreparationTask(id: 101, weddingEventId: 1, sectionId: nil, title: "Menentukan tanggal akad", label: nil, status: "done", dueDate: "2026-02-12", sortOrder: 0),
-                PreparationTask(id: 102, weddingEventId: 1, sectionId: nil, title: "Dokumen pernikahan", label: nil, status: "in_progress", dueDate: nil, sortOrder: 1),
-                PreparationTask(id: 103, weddingEventId: 1, sectionId: nil, title: "MUA & Hijab", label: nil, status: "in_progress", dueDate: nil, sortOrder: 2),
-                PreparationTask(id: 104, weddingEventId: 1, sectionId: nil, title: "Mas kawin", label: nil, status: "pending", dueDate: nil, sortOrder: 3),
-                PreparationTask(id: 105, weddingEventId: 1, sectionId: nil, title: "Dekorasi akad", label: nil, status: "done", dueDate: "2026-03-10", sortOrder: 4),
-            ]
-        ),
-        ChecklistGroup(
-            id: 2,
-            title: "Resepsi",
-            iconName: "party.popper",
-            tasks: [
-                PreparationTask(id: 201, weddingEventId: 2, sectionId: nil, title: "Booking gedung", label: nil, status: "done", dueDate: "2026-01-20", sortOrder: 0),
-                PreparationTask(id: 202, weddingEventId: 2, sectionId: nil, title: "Katering", label: nil, status: "in_progress", dueDate: nil, sortOrder: 1),
-                PreparationTask(id: 203, weddingEventId: 2, sectionId: nil, title: "Undangan", label: nil, status: "pending", dueDate: nil, sortOrder: 2),
-            ]
-        ),
-    ]
 }
 
 private struct TaskRow: View {

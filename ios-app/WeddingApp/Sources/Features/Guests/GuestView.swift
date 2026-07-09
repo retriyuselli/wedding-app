@@ -11,8 +11,7 @@ struct GuestView: View {
     @State private var comingSoonTitle = ""
 
     private var rows: [GuestRowItem] {
-        let source = guests.isEmpty ? GuestRowItem.samples : guests.map(GuestRowItem.init(guest:))
-        return source.filter { row in
+        guests.map(GuestRowItem.init(guest:)).filter { row in
             let matchFilter = selectedFilter == nil || row.kind == selectedFilter
             let matchSearch = searchText.isEmpty
                 || row.name.localizedCaseInsensitiveContains(searchText)
@@ -22,7 +21,7 @@ struct GuestView: View {
     }
 
     private var allRows: [GuestRowItem] {
-        guests.isEmpty ? GuestRowItem.samples : guests.map(GuestRowItem.init(guest:))
+        guests.map(GuestRowItem.init(guest:))
     }
 
     private var totalGuests: Int { allRows.reduce(0) { $0 + $1.count } }
@@ -47,11 +46,7 @@ struct GuestView: View {
                         filterChips
                         searchRow
                         listHeader
-                        LazyVStack(spacing: 10) {
-                            ForEach(rows) { row in
-                                GuestRow(item: row)
-                            }
-                        }
+                        guestListContent
                         actionBar
                     }
                     .padding(.horizontal, 16)
@@ -266,6 +261,39 @@ struct GuestView: View {
         .padding(.top, 2)
     }
 
+    @ViewBuilder
+    private var guestListContent: some View {
+        if isLoading && guests.isEmpty {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 28)
+        } else if let errorMessage, guests.isEmpty {
+            MoreEmptyState(
+                icon: "exclamationmark.triangle",
+                title: L10n.Common.warning,
+                message: errorMessage
+            )
+        } else if guests.isEmpty {
+            MoreEmptyState(
+                icon: "person.2",
+                title: L10n.Guest.emptyTitle,
+                message: L10n.Guest.emptySub
+            )
+        } else if rows.isEmpty {
+            MoreEmptyState(
+                icon: "magnifyingglass",
+                title: L10n.Guest.noResults,
+                message: L10n.Guest.searchPlaceholder
+            )
+        } else {
+            LazyVStack(spacing: 10) {
+                ForEach(rows) { row in
+                    GuestRow(item: row)
+                }
+            }
+        }
+    }
+
     private var actionBar: some View {
         HStack(spacing: 0) {
             actionItem(icon: "square.and.arrow.up", title: "Bagikan Undangan", sub: "Kirim undangan digital")
@@ -390,14 +418,6 @@ private struct GuestRowItem: Identifiable {
         self.hasEmail = guest.email?.isEmpty == false
         self.kind = RsvpKind.from(rsvp: guest.rsvpStatus)
     }
-
-    static let samples: [GuestRowItem] = [
-        GuestRowItem(id: 1, name: "Keluarga Besar Pratama", subtitle: "Grup Keluarga", count: 25, hasPhone: true, hasEmail: false, kind: .confirmed),
-        GuestRowItem(id: 2, name: "Sahabat SMA", subtitle: "Grup Teman", count: 15, hasPhone: false, hasEmail: true, kind: .confirmed),
-        GuestRowItem(id: 3, name: "Rekan Kerja Office", subtitle: "Grup Kantor", count: 30, hasPhone: true, hasEmail: true, kind: .pending),
-        GuestRowItem(id: 4, name: "Dosen & Alumni", subtitle: "Grup Lainnya", count: 18, hasPhone: false, hasEmail: true, kind: .confirmed),
-        GuestRowItem(id: 5, name: "Tetangga & Lingkungan", subtitle: "Grup Lainnya", count: 12, hasPhone: true, hasEmail: false, kind: .absent),
-    ]
 }
 
 private struct GuestRow: View {

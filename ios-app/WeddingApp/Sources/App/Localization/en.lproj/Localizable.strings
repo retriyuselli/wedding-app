@@ -147,6 +147,9 @@
 "guest.name" = "Name";
 "guest.phone" = "Phone";
 "guest.email" = "Email";
+"guest.empty_title" = "No guests yet";
+"guest.empty_sub" = "Add your first guest to start tracking RSVPs.";
+"guest.no_results" = "No guests match your search or filter.";
 
 /* Checklist */
 "checklist.title" = "Checklist";
@@ -158,6 +161,8 @@
 "checklist.not_started" = "Not Started";
 "checklist.total_progress" = "Total Progress";
 "checklist.tasks_completed" = "%d of %d tasks completed";
+"checklist.empty_title" = "No checklist yet";
+"checklist.empty_sub" = "Preparation tasks will appear once your events and checklist data are available.";
 
 /* Budget */
 "budget.title" = "Budget";

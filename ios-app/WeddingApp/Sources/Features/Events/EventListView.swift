@@ -87,7 +87,7 @@ private struct AddEventView: View {
     @Environment(\.dismiss) private var dismiss
     let onSaved: () async -> Void
 
-    @State private var jenisAcara = WeddingEvent.jenisOptions.first!
+    @State private var jenisAcara = WeddingEvent.jenisOptions.first ?? "akad"
     @State private var tglAcara = Date()
     @State private var lokasiAcara = ""
     @State private var catatan = ""

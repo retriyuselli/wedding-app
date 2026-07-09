@@ -105,6 +105,7 @@
 		E6D1138B5B9C76A2697C4EE4 /* VendorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E2B1F6CB207E402D70B466 /* VendorView.swift */; };
 		EB0492B4BD42CCAB193E7E3B /* LanguageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3AECF4F64C65DE5DB454105 /* LanguageStore.swift */; };
 		F892312E5FF478CEC0B87DFC /* PrivacySecurityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 463B7B02EAA92D28939FF73E /* PrivacySecurityView.swift */; };
+		FA4CA98A2FFFA9D8007363B5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FA4CA9892FFFA9D8007363B5 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -206,6 +207,7 @@
 		F2B79086DC38F3F4C7B20A09 /* WeddingDetailEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingDetailEditView.swift; sourceTree = "<group>"; };
 		F9129EF3C2E5BB8D4637C985 /* IndonesiaRegionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndonesiaRegionsStore.swift; sourceTree = "<group>"; };
 		F96C30225F48FB3402F222A0 /* AboutContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutContent.swift; sourceTree = "<group>"; };
+		FA4CA9892FFFA9D8007363B5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		FCD8134A6EDAA696F70B84FF /* PrivacyPolicyContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyContent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -264,6 +266,7 @@
 			children = (
 				572F06071E523ED69487AB40 /* Assets.xcassets */,
 				8CFAEB7E9152CFA035F83142 /* Fonts */,
+				FA4CA9892FFFA9D8007363B5 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -557,6 +560,7 @@
 				6097B6059B2D7441EE99E827 /* Poppins-Bold.ttf in Resources */,
 				5E50C8E32B2CB4CE86A09ABC /* Poppins-Medium.ttf in Resources */,
 				7AEBBFA8F4CAE02008531BF7 /* Poppins-Regular.ttf in Resources */,
+				FA4CA98A2FFFA9D8007363B5 /* PrivacyInfo.xcprivacy in Resources */,
 				59FAA22B04A4EF49FC08B419 /* Poppins-SemiBold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

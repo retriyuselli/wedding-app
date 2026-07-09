@@ -162,6 +162,9 @@ enum L10n {
         static var name: String { "guest.name".localized }
         static var phone: String { "guest.phone".localized }
         static var email: String { "guest.email".localized }
+        static var emptyTitle: String { "guest.empty_title".localized }
+        static var emptySub: String { "guest.empty_sub".localized }
+        static var noResults: String { "guest.no_results".localized }
     }
 
     enum Checklist {
@@ -176,6 +179,8 @@ enum L10n {
         static func tasksCompleted(_ done: Int, _ total: Int) -> String {
             "checklist.tasks_completed".localized(done, total)
         }
+        static var emptyTitle: String { "checklist.empty_title".localized }
+        static var emptySub: String { "checklist.empty_sub".localized }
     }
 
     enum Budget {

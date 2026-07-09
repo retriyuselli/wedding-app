@@ -147,6 +147,9 @@
 "guest.name" = "Nama";
 "guest.phone" = "No. HP";
 "guest.email" = "Email";
+"guest.empty_title" = "Belum ada tamu";
+"guest.empty_sub" = "Mulai dengan menambahkan tamu pertama untuk melacak RSVP.";
+"guest.no_results" = "Tidak ada tamu yang cocok dengan pencarian atau filter.";
 
 /* Checklist */
 "checklist.title" = "Checklist";
@@ -158,6 +161,8 @@
 "checklist.not_started" = "Belum Mulai";
 "checklist.total_progress" = "Total Progress";
 "checklist.tasks_completed" = "%d dari %d tugas selesai";
+"checklist.empty_sub" = "Tugas persiapan akan muncul setelah data acara dan checklist tersedia.";
+"checklist.empty_title" = "Belum ada checklist";
 
 /* Budget */
 "budget.title" = "Budget";

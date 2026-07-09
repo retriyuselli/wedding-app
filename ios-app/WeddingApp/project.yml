@@ -26,6 +26,7 @@ targets:
     sources:
       - path: Sources
     resources:
+      - path: Sources/Resources/PrivacyInfo.xcprivacy
       - path: Sources/App/Localization/id.lproj/Localizable.strings
       - path: Sources/App/Localization/en.lproj/Localizable.strings
     dependencies:

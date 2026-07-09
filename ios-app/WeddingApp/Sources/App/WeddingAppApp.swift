@@ -8,7 +8,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         Task { @MainActor in
             PushNotificationManager.shared.configure()
-            PushNotificationManager.shared.requestAuthorizationAndRegister()
         }
 
         return true
@@ -55,7 +54,9 @@ struct WeddingAppApp: App {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 let now = Date()
-                guard lastActivated == nil || now.timeIntervalSince(lastActivated!) > 300 else { return }
+                if let lastActivated, now.timeIntervalSince(lastActivated) <= 300 {
+                    return
+                }
                 lastActivated = now
                 NotificationCenter.default.post(name: .appDidBecomeActive, object: nil)
                 Task { @MainActor in
