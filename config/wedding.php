@@ -28,6 +28,7 @@ return [
         'website_display' => env('WEDDING_WEBSITE_DISPLAY', 'www.weddingapp.co.id'),
         'contact_email' => env('WEDDING_CONTACT_EMAIL', 'info@weddingapp.co.id'),
         'support_email' => env('WEDDING_SUPPORT_EMAIL', 'support@weddingapp.co.id'),
+        'support_whatsapp' => env('WEDDING_SUPPORT_WHATSAPP', '+62 812 3456 7890'),
     ],
 
 ];

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BantuanController;
 use App\Http\Controllers\BiayaController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\DashboardController;
@@ -101,4 +102,7 @@ Route::middleware('auth')->group(function () {
 
     // Dokumen
     Route::get('/dokumen', [DokumenController::class, 'index'])->name('dokumen');
+
+    // Bantuan
+    Route::get('/bantuan', [BantuanController::class, 'index'])->name('bantuan');
 });
