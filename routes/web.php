@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BiayaController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\InspirationController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MessageController;
@@ -97,4 +98,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/profil', [ProfilController::class, 'updateProfile'])->name('profil.update');
     Route::put('/profil/wedding-info', [ProfilController::class, 'updateWeddingInfo'])->name('profil.wedding');
     Route::put('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.password');
+
+    // Dokumen
+    Route::get('/dokumen', [DokumenController::class, 'index'])->name('dokumen');
 });

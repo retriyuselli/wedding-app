@@ -211,7 +211,7 @@
                 ['route' => 'profil', 'label' => 'Detail Pernikahan', 'sub' => 'Lihat & edit detail', 'icon' => 'heart'],
                 ['route' => 'biaya', 'label' => 'Anggaran', 'sub' => 'Kelola budget', 'icon' => 'wallet'],
                 ['route' => 'tamu', 'label' => 'Tamu', 'sub' => 'Kelola tamu', 'icon' => 'users'],
-                ['route' => 'checklist', 'label' => 'Dokumen', 'sub' => 'Simpan dokumen', 'icon' => 'doc'],
+                ['route' => 'dokumen', 'label' => 'Dokumen', 'sub' => 'Simpan dokumen', 'icon' => 'doc'],
                 ['route' => 'checklist', 'label' => 'Inspirasi', 'sub' => 'Ide & referensi', 'icon' => 'sparkle'],
                 ['route' => 'profil', 'label' => 'Pesan', 'sub' => 'Chat vendor', 'icon' => 'chat'],
             ] as $action)

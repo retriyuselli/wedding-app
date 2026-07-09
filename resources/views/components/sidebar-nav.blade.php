@@ -20,7 +20,7 @@
 
     $moreNav = [
         ['route' => 'profil', 'label' => 'Profil', 'active' => request()->routeIs('profil*')],
-        ['route' => 'checklist', 'label' => 'Dokumen', 'active' => false],
+        ['route' => 'dokumen', 'label' => 'Dokumen', 'active' => request()->routeIs('dokumen*')],
         ['route' => 'privacy-policy', 'label' => 'Privasi & Keamanan', 'active' => request()->routeIs('privacy-policy')],
         ['route' => 'profil', 'label' => 'Bantuan & FAQ', 'active' => false],
         ['route' => 'profil', 'label' => 'Settings', 'active' => false],
