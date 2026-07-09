@@ -75,4 +75,10 @@
     .messages-shell {
         @apply mx-auto w-full max-w-7xl px-4 lg:px-6;
     }
+
+    .auth-hero-panel {
+        background:
+            radial-gradient(circle at 85% 15%, rgba(212, 221, 210, 0.65), transparent 42%),
+            linear-gradient(135deg, #f8faf7 0%, #eef3ee 55%, #e8ede6 100%);
+    }
 }
