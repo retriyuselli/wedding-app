@@ -18,12 +18,24 @@ final class PushNotificationManager: NSObject, ObservableObject {
         UNUserNotificationCenter.current().delegate = self
     }
 
+    func promptForAuthorizationIfNeeded() async {
+        await refreshAuthorizationStatus()
+
+        guard authorizationStatus == .notDetermined else {
+            return
+        }
+
+        requestAuthorizationAndRegister()
+    }
+
     func requestAuthorizationAndRegister() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             Task { @MainActor in
                 await self.refreshAuthorizationStatus()
 
-                guard granted else { return }
+                guard granted else {
+                    return
+                }
 
                 UIApplication.shared.registerForRemoteNotifications()
             }
@@ -38,11 +50,18 @@ final class PushNotificationManager: NSObject, ObservableObject {
     func updateDeviceToken(_ tokenData: Data) {
         let token = tokenData.map { String(format: "%02.2hhx", $0) }.joined()
         pendingToken = token
+
+        #if DEBUG
+        print("[Push] Device token received (\(token.prefix(12))...)")
+        #endif
+
         Task { await syncDeviceTokenIfPossible() }
     }
 
     func syncDeviceTokenIfPossible() async {
-        guard let token = pendingToken, KeychainStore.loadToken() != nil else { return }
+        guard let token = pendingToken, KeychainStore.loadToken() != nil else {
+            return
+        }
 
         do {
             let _: Envelope<DeviceTokenRegistration> = try await APIClient.shared.request(
@@ -54,6 +73,10 @@ final class PushNotificationManager: NSObject, ObservableObject {
                     "device_name": UIDevice.current.name,
                 ]
             )
+
+            #if DEBUG
+            print("[Push] Device token synced to backend")
+            #endif
         } catch {
             #if DEBUG
             print("Device token sync failed: \(error)")
@@ -62,7 +85,9 @@ final class PushNotificationManager: NSObject, ObservableObject {
     }
 
     func unregisterCurrentDeviceToken() async {
-        guard let token = pendingToken else { return }
+        guard let token = pendingToken else {
+            return
+        }
 
         do {
             try await APIClient.shared.requestNoContent(
@@ -80,7 +105,9 @@ final class PushNotificationManager: NSObject, ObservableObject {
     func handleRemoteNotification(userInfo: [AnyHashable: Any]) {
         let destination = userInfo["destination"] as? String
 
-        guard destination == "messages" else { return }
+        guard destination == "messages" else {
+            return
+        }
 
         NotificationCenter.default.post(name: .openMessages, object: nil)
     }
@@ -100,7 +127,9 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
     ) async {
         let destination = response.notification.request.content.userInfo["destination"] as? String
 
-        guard destination == "messages" else { return }
+        guard destination == "messages" else {
+            return
+        }
 
         await MainActor.run {
             NotificationCenter.default.post(name: .openMessages, object: nil)

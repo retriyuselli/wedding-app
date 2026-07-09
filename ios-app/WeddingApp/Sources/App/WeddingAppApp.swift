@@ -59,6 +59,9 @@ struct WeddingAppApp: App {
                 }
                 lastActivated = now
                 NotificationCenter.default.post(name: .appDidBecomeActive, object: nil)
+                Task { @MainActor in
+                    await PushNotificationManager.shared.syncDeviceTokenIfPossible()
+                }
             }
         }
     }

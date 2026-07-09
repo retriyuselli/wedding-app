@@ -1,4 +1,6 @@
 *
 !private/
 !public/
+!apns/
+!apns/.gitignore
 !.gitignore

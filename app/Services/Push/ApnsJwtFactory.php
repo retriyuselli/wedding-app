@@ -40,10 +40,16 @@ class ApnsJwtFactory
             return $configuredKey;
         }
 
-        if (! is_file($configuredKey)) {
+        $path = $configuredKey;
+
+        if (! is_file($path)) {
+            $path = base_path($configuredKey);
+        }
+
+        if (! is_file($path)) {
             throw new \RuntimeException('File private key APNs tidak ditemukan.');
         }
 
-        return file_get_contents($configuredKey) ?: null;
+        return file_get_contents($path) ?: null;
     }
 }
