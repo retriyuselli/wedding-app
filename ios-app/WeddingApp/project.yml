@@ -36,6 +36,11 @@ targets:
       properties:
         com.apple.developer.applesignin:
           - Default
+        aps-environment: development
+      configs:
+        Release:
+          properties:
+            aps-environment: production
     info:
       path: Generated/Info.plist
       properties:
