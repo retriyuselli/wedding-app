@@ -19,11 +19,11 @@
     ];
 
     $moreNav = [
-        ['route' => 'profil', 'label' => 'Detail Pernikahan'],
-        ['route' => 'checklist', 'label' => 'Dokumen'],
-        ['route' => 'privacy-policy', 'label' => 'Privasi & Keamanan'],
-        ['route' => 'profil', 'label' => 'Bantuan & FAQ'],
-        ['route' => 'profil', 'label' => 'Settings'],
+        ['route' => 'profil', 'label' => 'Profil', 'active' => request()->routeIs('profil*')],
+        ['route' => 'checklist', 'label' => 'Dokumen', 'active' => false],
+        ['route' => 'privacy-policy', 'label' => 'Privasi & Keamanan', 'active' => request()->routeIs('privacy-policy')],
+        ['route' => 'profil', 'label' => 'Bantuan & FAQ', 'active' => false],
+        ['route' => 'profil', 'label' => 'Settings', 'active' => false],
     ];
 @endphp
 
@@ -68,7 +68,11 @@
             <div class="mt-1 space-y-0.5 pl-9">
                 @foreach ($moreNav as $item)
                     <a href="{{ Route::has($item['route']) ? route($item['route']) : '#' }}"
-                       class="block rounded-lg px-3 py-2 text-[13px] text-gray-500 hover:bg-gray-50 hover:text-gray-800">
+                       @class([
+                           'block rounded-lg px-3 py-2 text-[13px] hover:bg-gray-50 hover:text-gray-800',
+                           'bg-sage-50 font-medium text-sage-800' => $item['active'] ?? false,
+                           'text-gray-500' => ! ($item['active'] ?? false),
+                       ])>
                         {{ $item['label'] }}
                     </a>
                 @endforeach
