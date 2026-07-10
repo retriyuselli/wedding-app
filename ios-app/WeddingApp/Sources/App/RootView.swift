@@ -8,7 +8,7 @@ struct RootView: View {
 
     private let splashFadeDuration = 0.5
     private let minimumSplashDuration: Duration = .milliseconds(800)
-    private let sessionRestoreTimeout: Duration = .seconds(5)
+    private let sessionRestoreTimeout: Duration = .milliseconds(1500)
 
     var body: some View {
         ZStack {
@@ -30,20 +30,18 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .sessionExpired).receive(on: DispatchQueue.main)) { _ in
             session.clearSession()
         }
-        .onChange(of: session.currentUser?.id) { _, userId in
-            #if DEBUG
-            print("[Root] currentUser id changed: \(userId.map(String.init) ?? "nil")")
-            #endif
-        }
     }
 
     @ViewBuilder
     private var mainContent: some View {
-        if session.currentUser != nil {
-            DashboardView()
-        } else {
-            LoginView()
+        Group {
+            if session.currentUser != nil {
+                DashboardView()
+            } else {
+                LoginView()
+            }
         }
+        .animation(.easeInOut(duration: 0.25), value: session.currentUser?.id)
     }
 
     private func bootstrapApp() async {

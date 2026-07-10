@@ -7,7 +7,7 @@ final class SessionStore: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private var authStateVersion = 0
+    private var restoreGeneration = 0
 
     private var deviceName: String {
         UIDevice.current.name
@@ -18,9 +18,11 @@ final class SessionStore: ObservableObject {
             return
         }
 
+        let generation = restoreGeneration
+
         await withTaskGroup(of: Void.self) { group in
             group.addTask { @MainActor in
-                await self.performSessionRestore()
+                await self.performSessionRestore(generation: generation)
             }
 
             group.addTask {
@@ -32,23 +34,25 @@ final class SessionStore: ObservableObject {
         }
     }
 
-    private func performSessionRestore() async {
+    private func performSessionRestore(generation: Int) async {
+        guard generation == restoreGeneration else {
+            return
+        }
+
         guard KeychainStore.loadToken() != nil else {
             return
         }
 
-        let restoreVersion = authStateVersion
-
         do {
             let response: UserResponse = try await APIClient.shared.request("auth/me")
-            guard authStateVersion == restoreVersion else {
+            guard generation == restoreGeneration else {
                 return
             }
 
             currentUser = response.user
             schedulePushTokenSync()
         } catch {
-            guard authStateVersion == restoreVersion else {
+            guard generation == restoreGeneration else {
                 return
             }
 
@@ -62,6 +66,7 @@ final class SessionStore: ObservableObject {
     }
 
     func login(email: String, password: String) async {
+        invalidateRestore()
         await perform {
             let response: AuthResponse = try await APIClient.shared.request(
                 "auth/login",
@@ -73,6 +78,7 @@ final class SessionStore: ObservableObject {
     }
 
     func loginWithGoogle() async {
+        invalidateRestore()
         await perform {
             let idToken = try await GoogleSignInService.shared.signIn()
             let response: AuthResponse = try await APIClient.shared.request(
@@ -85,6 +91,7 @@ final class SessionStore: ObservableObject {
     }
 
     func loginWithApple() async {
+        invalidateRestore()
         await perform {
             let credential = try await AppleSignInService.shared.signIn()
 
@@ -109,6 +116,7 @@ final class SessionStore: ObservableObject {
     }
 
     func register(name: String, email: String, password: String, passwordConfirmation: String) async {
+        invalidateRestore()
         await perform {
             let response: AuthResponse = try await APIClient.shared.request(
                 "auth/register",
@@ -126,6 +134,7 @@ final class SessionStore: ObservableObject {
     }
 
     func logout() async {
+        invalidateRestore()
         await PushNotificationManager.shared.unregisterCurrentDeviceToken()
         try? await APIClient.shared.requestNoContent("auth/logout", method: "POST")
         clearSession()
@@ -133,6 +142,7 @@ final class SessionStore: ObservableObject {
 
     /// Hapus state sesi secara lokal tanpa memanggil API — digunakan saat 401 atau token kedaluwarsa.
     func clearSession() {
+        invalidateRestore()
         KeychainStore.deleteToken()
         currentUser = nil
         BudgetCategoriesStore.shared.reset()
@@ -142,8 +152,11 @@ final class SessionStore: ObservableObject {
         clearSession()
     }
 
+    private func invalidateRestore() {
+        restoreGeneration += 1
+    }
+
     private func perform(_ action: @escaping () async throws -> Void) async {
-        authStateVersion += 1
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -167,9 +180,8 @@ final class SessionStore: ObservableObject {
     }
 
     private func completeAuthentication(with response: AuthResponse) {
-        currentUser = response.user
-        isLoading = false
         KeychainStore.saveToken(response.token)
+        currentUser = response.user
         schedulePushTokenSync()
 
         #if DEBUG
@@ -178,7 +190,7 @@ final class SessionStore: ObservableObject {
     }
 
     private func schedulePushTokenSync() {
-        Task {
+        Task(priority: .utility) {
             await PushNotificationManager.shared.prepareAfterAuthentication()
         }
     }
