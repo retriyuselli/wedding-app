@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Contracts\PushNotificationDriver;
 use App\Models\User;
+use App\Models\WeddingEvent;
 use App\Observers\UserObserver;
+use App\Observers\WeddingEventObserver;
 use App\Services\PushNotificationService;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,5 +26,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         User::observe(UserObserver::class);
+        WeddingEvent::observe(WeddingEventObserver::class);
     }
 }

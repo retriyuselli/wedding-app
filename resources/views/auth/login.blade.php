@@ -54,6 +54,12 @@
             <p class="mt-1 text-sm text-gray-500">Masuk untuk melanjutkan perencanaan pernikahan Anda.</p>
         </div>
 
+        @if (session('status'))
+            <div class="mb-4 rounded-xl border border-sage-200 bg-sage-50 px-4 py-3 text-sm text-sage-800">
+                {{ session('status') }}
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('login') }}" class="space-y-4">
             @csrf
 
@@ -134,32 +140,14 @@
             </button>
         </form>
 
-        <div class="my-6 flex items-center gap-3">
-            <div class="h-px flex-1 bg-gray-200"></div>
-            <span class="text-xs text-gray-400">atau masuk dengan</span>
-            <div class="h-px flex-1 bg-gray-200"></div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-            <button
-                type="button"
-                class="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-            >
-                <svg class="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.3-1.7 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.5 3.2 15 2.2 12 2.2 6.8 2.2 2.5 6.5 2.5 11.7S6.8 21.2 12 21.2c6.9 0 8.6-4.8 8.6-7.2 0-.5 0-.9-.1-1.2H12z"/>
-                </svg>
-                Google
-            </button>
-            <button
-                type="button"
-                class="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-            >
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M16.365 1.43c0 1.14-.46 2.23-1.28 3.03-.84.82-2.04 1.28-3.27 1.22-.04-1.1.48-2.22 1.28-3.02.86-.84 2.1-1.3 3.27-1.23ZM20.8 17.13c-.57 1.3-.85 1.88-1.58 3.03-1.03 1.58-2.48 3.55-4.28 3.56-1.6.01-2.01-1.03-4.18-1.02-2.17.01-2.64 1.04-4.24 1.02-1.8-.01-3.17-1.72-4.2-3.3-2.88-4.4-3.18-9.56-1.4-12.3 1.27-1.95 3.28-3.1 5.18-3.1 1.93 0 3.14 1.03 4.74 1.03 1.53 0 2.46-1.03 4.66-1.03 1.67 0 3.44.9 4.7 2.46-4.13 2.24-3.46 8.07.6 9.65Z"/>
-                </svg>
-                Apple
-            </button>
-        </div>
+        <x-auth.social-login
+            divider-text="atau masuk dengan"
+            :google-enabled="$googleEnabled"
+            :apple-enabled="$appleEnabled"
+            :google-client-id="$googleClientId"
+            :apple-client-id="$appleClientId"
+            :apple-redirect-uri="$appleRedirectUri"
+        />
 
         <p class="mt-6 text-center text-sm text-gray-500">
             Belum punya akun?

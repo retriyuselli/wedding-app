@@ -149,7 +149,7 @@ final class APIClient {
         urlRequest.httpMethod = method
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        if let token = KeychainStore.loadToken() {
+        if shouldAttachAuthorization(for: path), let token = KeychainStore.loadToken() {
             urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
@@ -197,8 +197,12 @@ final class APIClient {
         return .unknown
     }
 
+    private func shouldAttachAuthorization(for path: String) -> Bool {
+        !["auth/login", "auth/google", "auth/apple", "auth/register", "auth/forgot-password"].contains(path)
+    }
+
     private func shouldBroadcastSessionExpired(for path: String) -> Bool {
-        !["auth/me", "auth/login", "auth/google", "auth/apple", "auth/register"].contains(path)
+        !["auth/me", "auth/login", "auth/google", "auth/apple", "auth/register", "auth/forgot-password"].contains(path)
     }
 }
 

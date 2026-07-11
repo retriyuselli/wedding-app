@@ -127,4 +127,9 @@ class User extends Authenticatable
     {
         return filled($this->google_id) || filled($this->apple_id);
     }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(config('filament-shield.super_admin.name', 'super_admin'));
+    }
 }

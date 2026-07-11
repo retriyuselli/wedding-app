@@ -4,8 +4,11 @@ namespace Tests\Feature\Api;
 
 use App\Models\User;
 use Database\Seeders\UserSeeder;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class AccountSecurityApiTest extends TestCase
@@ -77,6 +80,66 @@ class AccountSecurityApiTest extends TestCase
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['current_password']);
+    }
+
+    public function test_user_can_request_password_reset_instructions(): void
+    {
+        Notification::fake();
+
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        $this->postJson('/api/v1/auth/forgot-password', [
+            'email' => $user->email,
+        ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Jika email terdaftar, instruksi reset kata sandi sudah dikirim.');
+
+        Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_password_reset_request_does_not_reveal_unknown_email(): void
+    {
+        Notification::fake();
+
+        $this->postJson('/api/v1/auth/forgot-password', [
+            'email' => 'unknown@example.com',
+        ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Jika email terdaftar, instruksi reset kata sandi sudah dikirim.');
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_password_reset_request_requires_valid_email(): void
+    {
+        $this->postJson('/api/v1/auth/forgot-password', [
+            'email' => 'bukan-email',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_user_can_reset_password_from_email_link(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+        $token = Password::createToken($user);
+
+        $this->get(route('password.reset', [
+            'token' => $token,
+            'email' => $user->email,
+        ]))
+            ->assertOk()
+            ->assertSee('Buat kata sandi baru');
+
+        $this->post(route('password.update'), [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'new-password-123',
+            'password_confirmation' => 'new-password-123',
+        ])
+            ->assertRedirect(route('login'));
+
+        $this->assertTrue(Hash::check('new-password-123', $user->fresh()->password));
     }
 
     public function test_user_can_delete_account_with_password(): void

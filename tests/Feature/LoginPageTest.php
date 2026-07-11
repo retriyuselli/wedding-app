@@ -12,6 +12,11 @@ class LoginPageTest extends TestCase
 
     public function test_login_page_shows_redesigned_layout(): void
     {
+        config([
+            'services.google.client_id' => 'test-web-client.apps.googleusercontent.com',
+            'services.apple.client_id' => 'com.weddingapp.web',
+        ]);
+
         $response = $this->get(route('login'));
 
         $response->assertOk();

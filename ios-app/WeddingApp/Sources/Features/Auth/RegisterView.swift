@@ -15,6 +15,7 @@ struct RegisterView: View {
             Section {
                 AuthNativeBrandHeader()
             }
+            .listRowInsets(EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20))
             .listRowBackground(Color.clear)
 
             Section {
@@ -111,7 +112,7 @@ struct RegisterView: View {
         .tint(AppTheme.sageDark)
         .scrollDismissesKeyboard(.interactively)
         .onAppear {
-            session.errorMessage = nil
+            session.resetTransientUIState()
         }
         .onChange(of: name) { _, _ in
             session.errorMessage = nil
@@ -124,6 +125,11 @@ struct RegisterView: View {
         }
         .onChange(of: passwordConfirmation) { _, _ in
             session.errorMessage = nil
+        }
+        .onChange(of: session.authRevision) { _, _ in
+            if session.currentUser != nil {
+                dismiss()
+            }
         }
     }
 
@@ -148,17 +154,12 @@ struct RegisterView: View {
         }
 
         focusedField = nil
-        Task {
-            await session.register(
-                name: name,
-                email: email,
-                password: password,
-                passwordConfirmation: passwordConfirmation
-            )
-            if session.currentUser != nil {
-                dismiss()
-            }
-        }
+        session.register(
+            name: name,
+            email: email,
+            password: password,
+            passwordConfirmation: passwordConfirmation
+        )
     }
 
     private func submitAppleLogin() {

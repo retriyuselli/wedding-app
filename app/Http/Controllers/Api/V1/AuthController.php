@@ -6,19 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\ActiveSessionResource;
 use App\Http\Resources\V1\UserResource;
 use App\Models\User;
-use App\Services\AppleTokenVerifier;
-use App\Services\GoogleTokenVerifier;
+use App\Services\SocialAuthenticationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     public function __construct(
-        private GoogleTokenVerifier $googleTokenVerifier,
-        private AppleTokenVerifier $appleTokenVerifier,
+        private SocialAuthenticationService $socialAuthenticationService,
     ) {}
 
     public function register(Request $request): JsonResponse
@@ -68,6 +66,21 @@ class AuthController extends Controller
         ]);
     }
 
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        Password::sendResetLink([
+            'email' => $data['email'],
+        ]);
+
+        return response()->json([
+            'message' => 'Jika email terdaftar, instruksi reset kata sandi sudah dikirim.',
+        ]);
+    }
+
     public function google(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -75,44 +88,7 @@ class AuthController extends Controller
             'device_name' => ['required', 'string', 'max:255'],
         ]);
 
-        $payload = $this->googleTokenVerifier->verify($data['id_token']);
-
-        $googleId = (string) $payload['sub'];
-        $email = (string) $payload['email'];
-        $name = (string) ($payload['name'] ?? Str::before($email, '@'));
-        $avatarUrl = isset($payload['picture']) ? (string) $payload['picture'] : null;
-        $emailVerified = filter_var($payload['email_verified'] ?? false, FILTER_VALIDATE_BOOL);
-
-        $user = User::query()
-            ->where('google_id', $googleId)
-            ->orWhere('email', $email)
-            ->first();
-
-        if ($user) {
-            $user->fill([
-                'google_id' => $googleId,
-                'name' => $name,
-            ]);
-
-            if ($avatarUrl && ! $user->avatar_url) {
-                $user->avatar_url = $avatarUrl;
-            }
-
-            if ($emailVerified && ! $user->email_verified_at) {
-                $user->email_verified_at = now();
-            }
-
-            $user->save();
-        } else {
-            $user = User::create([
-                'name' => $name,
-                'email' => $email,
-                'google_id' => $googleId,
-                'avatar_url' => $avatarUrl,
-                'password' => Hash::make(Str::password(32)),
-                'email_verified_at' => $emailVerified ? now() : null,
-            ]);
-        }
+        $user = $this->socialAuthenticationService->userFromGoogleIdToken($data['id_token']);
 
         $token = $user->createToken($data['device_name'])->plainTextToken;
 
@@ -131,50 +107,11 @@ class AuthController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
         ]);
 
-        $payload = $this->appleTokenVerifier->verify($data['identity_token']);
-
-        $appleId = (string) $payload['sub'];
-        $email = $data['email'] ?? (isset($payload['email']) ? (string) $payload['email'] : null);
-        $name = $data['full_name'] ?? ($email ? Str::before($email, '@') : 'Apple User');
-        $emailVerified = filter_var($payload['email_verified'] ?? false, FILTER_VALIDATE_BOOL);
-
-        $user = User::query()
-            ->where(function ($query) use ($appleId, $email): void {
-                $query->where('apple_id', $appleId);
-
-                if ($email) {
-                    $query->orWhere('email', $email);
-                }
-            })
-            ->first();
-
-        if ($user) {
-            $user->fill([
-                'apple_id' => $appleId,
-            ]);
-
-            if ($data['full_name'] ?? false) {
-                $user->name = $data['full_name'];
-            }
-
-            if ($email && ! $user->email) {
-                $user->email = $email;
-            }
-
-            if ($emailVerified && ! $user->email_verified_at) {
-                $user->email_verified_at = now();
-            }
-
-            $user->save();
-        } else {
-            $user = User::create([
-                'name' => $name,
-                'email' => $email ?? $appleId.'@privaterelay.appleid.com',
-                'apple_id' => $appleId,
-                'password' => Hash::make(Str::password(32)),
-                'email_verified_at' => $emailVerified ? now() : null,
-            ]);
-        }
+        $user = $this->socialAuthenticationService->userFromAppleIdentityToken(
+            $data['identity_token'],
+            $data['full_name'] ?? null,
+            $data['email'] ?? null,
+        );
 
         $token = $user->createToken($data['device_name'])->plainTextToken;
 

@@ -302,7 +302,7 @@ struct EditProfileView: View {
                 method: "PUT",
                 json: payload
             )
-            session.currentUser = response.user
+            session.updateCurrentUser(response.user)
             dismiss()
         } catch {
             errorMessage = error.userFacingMessage

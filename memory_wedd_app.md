@@ -790,6 +790,114 @@ Tombol pencil di header "Detail Tugas" (sejajar tombol back) kini aktif.
 
 ---
 
+## Update Log — 2026-07-12: Login iOS + Forgot Password End-to-End
+
+Update ini berfokus pada halaman login iOS sesuai referensi desain dan perbaikan alur **Lupa Kata Sandi** dari iOS sampai backend Laravel.
+
+### iOS — Halaman Login
+
+- **`LoginView.swift`** didesain ulang mengikuti referensi visual yang diberikan:
+  - Hero bagian atas memakai gambar pasangan.
+  - Area form memakai shape putih melengkung.
+  - Dekorasi floral di bagian bawah.
+  - Tombol login, Apple, Google, link daftar, dan link lupa kata sandi disusun agar muat dalam satu layar tanpa perlu scroll normal.
+- Semua teks di halaman login menggunakan **Poppins** via `AppFont`, bukan Cormorant.
+- Gambar pasangan diganti memakai asset **`CouplePortrait`** dari gambar pasangan berhijab yang diberikan.
+- Asset pasangan dikompresi menjadi sekitar **828 KB** agar tidak terlalu besar untuk bundle aplikasi.
+- Posisi gambar pasangan beberapa kali disesuaikan:
+  - Diturunkan agar tidak terlalu menempel ke atas.
+  - Badan pasangan dibuat tetap terlihat sampai bawah.
+  - Shape putih tetap berada di atas gambar sesuai referensi.
+- Bagian brand atas (`Wedding App`, logo hati, tagline) diturunkan agar tidak bertabrakan dengan status bar.
+- `DashboardView.swift` ditambahkan `import Combine` untuk mengatasi warning/error `Timer.publish(...).autoconnect()` terkait `Publishers` / `Autoconnect`.
+
+### iOS — Lupa Kata Sandi
+
+- Tombol **“Lupa kata sandi?”** tidak lagi menampilkan alert `Coming Soon`.
+- Ditambahkan sheet **Atur ulang kata sandi** di `LoginView.swift`:
+  - Email dari form login otomatis terbawa.
+  - Validasi email dilakukan sebelum request.
+  - Menampilkan loading state.
+  - Menampilkan pesan sukses/error.
+- Request iOS diarahkan ke:
+  - `POST /api/v1/auth/forgot-password`
+  - Payload: `{ "email": "..." }`
+- **`APIClient.swift`** diperbarui agar endpoint `auth/forgot-password` tidak mengirim Authorization token dan tidak memicu session-expired broadcast.
+
+### Backend — API Forgot Password
+
+- **`routes/api.php`**
+  - Ditambahkan route publik:
+    - `POST api/v1/auth/forgot-password`
+- **`App\Http\Controllers\Api\V1\AuthController`**
+  - Ditambahkan method `forgotPassword()`.
+  - Validasi email.
+  - Menggunakan `Password::sendResetLink()`.
+  - Response selalu generik agar tidak membocorkan apakah email terdaftar:
+    - `Jika email terdaftar, instruksi reset kata sandi sudah dikirim.`
+- Endpoint ini memperbaiki error awal:
+  - `404` karena route belum ada.
+
+### Backend — Web Reset Password
+
+Setelah API ditambahkan, muncul error `500` karena Laravel membutuhkan route bernama `password.reset` saat membuat link reset password.
+
+- Penyebab `500` dari log:
+  - `Route [password.reset] not defined.`
+- **`routes/web.php`**
+  - Ditambahkan route guest:
+    - `GET /reset-password/{token}` → name `password.reset`
+    - `POST /reset-password` → name `password.update`
+- **`App\Http\Controllers\AuthController`**
+  - Ditambahkan `showResetPassword(Request $request, string $token)`.
+  - Ditambahkan `resetPassword(Request $request)`.
+  - Reset password memakai `Password::reset()`.
+  - Password baru di-hash dengan `Hash::make()`.
+  - `remember_token` diperbarui dengan `Str::random(60)`.
+  - Setelah sukses diarahkan ke halaman login dengan pesan:
+    - `Kata sandi berhasil diatur ulang. Silakan masuk dengan kata sandi baru.`
+- **`resources/views/auth/reset-password.blade.php`**
+  - View baru untuk form reset password web:
+    - Email
+    - Kata sandi baru
+    - Konfirmasi kata sandi
+- **`resources/views/auth/login.blade.php`**
+  - Ditambahkan tampilan `session('status')` agar pesan sukses reset password terlihat di halaman login.
+
+### Test & Verifikasi
+
+- **`tests/Feature/Api/AccountSecurityApiTest.php`** ditambah coverage:
+  - User bisa request instruksi reset password.
+  - Email tidak terdaftar tetap mendapat response generik dan tidak mengirim notifikasi.
+  - Email invalid ditolak validasi.
+  - User bisa membuka link reset password dan mengganti password dari form web.
+- Verifikasi route:
+  - `POST api/v1/auth/forgot-password` terdaftar.
+  - `GET reset-password/{token}` dan `POST reset-password` terdaftar.
+- Pint:
+  - `vendor/bin/pint --dirty --format agent` → **passed**.
+- Test:
+  - `php artisan test --compact tests/Feature/Api/AccountSecurityApiTest.php` dengan `LOG_CHANNEL=stderr` dan `VIEW_COMPILED_PATH=/tmp/wedding-app-views`.
+  - Hasil: **15 passed, 62 assertions**.
+- Catatan test:
+  - Ada warning `.phpunit.result.cache` tidak bisa ditulis karena izin sandbox, tetapi test tetap lulus.
+  - `VIEW_COMPILED_PATH=/tmp/wedding-app-views` dipakai saat test karena sandbox membatasi penulisan compiled Blade ke folder `storage/framework/views`.
+- Cache Laravel sudah dibersihkan:
+  - `php artisan route:clear`
+  - `php artisan config:clear`
+
+### Catatan Operasional
+
+- Untuk device iOS yang memakai local base URL:
+  - Pastikan backend Laravel jalan dan dapat diakses dari jaringan lokal, contoh:
+    - `php artisan serve --host=0.0.0.0 --port=8000`
+  - iOS log yang diharapkan:
+    - `POST http://192.168.1.3:8000/api/v1/auth/forgot-password`
+    - Response sukses seharusnya bukan `404` atau `500`.
+- Mailer default project adalah `log` jika `MAIL_MAILER` tidak diubah, sehingga email reset bisa masuk ke log Laravel pada mode lokal.
+
+---
+
 ## Catatan Penting
 
 - **Multi-tenant by `user_id`:** Hampir semua model terikat ke `user_id`. Pastikan selalu scope query per user.

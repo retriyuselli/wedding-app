@@ -11,17 +11,41 @@ enum APIResolver {
     private(set) static var resolvedBaseURL = APIConfig.productionURL
     private(set) static var source: Source = .production
 
-    private static var didResolve = false
-    private static let probeTimeout: TimeInterval = 1.5
+    private static var resolveTask: Task<Void, Never>?
+    private static let probeTimeout: TimeInterval = 0.75
     private static let lastGoodURLKey = "APIResolver.lastGoodBaseURL"
 
     static func resolveIfNeeded() async {
-        guard !didResolve else {
+        if let resolveTask {
+            await resolveTask.value
             return
         }
 
-        defer { didResolve = true }
+        let task = Task {
+            await performResolve()
+        }
 
+        resolveTask = task
+        await task.value
+        resolveTask = nil
+    }
+
+    static func invalidateAndResolve() async {
+        resolveTask?.cancel()
+        resolveTask = nil
+        clearCachedBaseURL()
+        await resolveIfNeeded()
+    }
+
+    #if DEBUG
+    static func clearCachedBaseURL() {
+        UserDefaults.standard.removeObject(forKey: lastGoodURLKey)
+    }
+    #else
+    static func clearCachedBaseURL() {}
+    #endif
+
+    private static func performResolve() async {
         #if DEBUG
         if APIConfig.usesProductionAPI {
             resolvedBaseURL = APIConfig.productionURL
@@ -37,6 +61,8 @@ enum APIResolver {
             return
         }
 
+        clearCachedBaseURL()
+
         let candidates = APIConfig.localCandidateBaseURLs + [APIConfig.productionURL]
 
         if let reachableURL = await firstReachableURL(from: candidates) {
@@ -44,18 +70,20 @@ enum APIResolver {
             return
         }
 
-        resolvedBaseURL = APIConfig.localCandidateBaseURLs.first ?? APIConfig.productionURL
-        source = .local
+        if let localURL = APIConfig.localCandidateBaseURLs.first {
+            resolvedBaseURL = localURL
+            source = .local
+            logSelection()
+            return
+        }
+
+        resolvedBaseURL = APIConfig.productionURL
+        source = .production
         logSelection()
         #else
         resolvedBaseURL = APIConfig.productionURL
         source = .production
         #endif
-    }
-
-    static func invalidateAndResolve() async {
-        didResolve = false
-        await resolveIfNeeded()
     }
 
     #if DEBUG

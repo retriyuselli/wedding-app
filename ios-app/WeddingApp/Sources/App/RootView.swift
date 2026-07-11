@@ -1,90 +1,57 @@
 import SwiftUI
 
 struct RootView: View {
-    @EnvironmentObject private var session: SessionStore
-    @State private var isAppReady = false
-    @State private var splashOpacity = 1.0
-    @State private var showSplashOverlay = true
-
-    private let splashFadeDuration = 0.5
-    private let minimumSplashDuration: Duration = .milliseconds(800)
-    private let sessionRestoreTimeout: Duration = .milliseconds(1500)
+    @ObservedObject var session: SessionStore
+    @State private var hasBootstrapped = false
 
     var body: some View {
-        ZStack {
-            mainContent
-                .opacity(isAppReady ? 1 : 0)
-
-            if showSplashOverlay {
-                SplashView()
-                    .opacity(splashOpacity)
-                    .allowsHitTesting(splashOpacity > 0.05)
-                    .transition(.opacity)
-                    .zIndex(1)
-            }
-        }
-        .font(AppFont.regular(16))
-        .task {
-            await bootstrapApp()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .sessionExpired).receive(on: DispatchQueue.main)) { _ in
-            session.clearSession()
-        }
-    }
-
-    @ViewBuilder
-    private var mainContent: some View {
         Group {
             if session.currentUser != nil {
                 DashboardView()
+                    .id(session.authRevision)
             } else {
                 LoginView()
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: session.currentUser?.id)
-    }
-
-    private func bootstrapApp() async {
-        let startedAt = ContinuousClock.now
-
-        await APIResolver.resolveIfNeeded()
-
-        Task {
-            await BudgetCategoriesStore.shared.loadIfNeeded()
+        .font(AppFont.regular(16))
+        .task(priority: .utility) {
+            await bootstrapIfNeeded()
         }
-
-        await session.restoreSession(timeout: sessionRestoreTimeout)
-
-        await finishSplashTransition(since: startedAt)
+        .onReceive(NotificationCenter.default.publisher(for: .sessionExpired).receive(on: DispatchQueue.main)) { _ in
+            session.clearSession()
+        }
+        #if DEBUG
+        .onChange(of: session.currentUser?.id) { _, userId in
+            print("[Root] currentUser changed -> \(userId.map(String.init) ?? "nil")")
+        }
+        #endif
     }
 
     @MainActor
-    private func finishSplashTransition(since startedAt: ContinuousClock.Instant) async {
-        let elapsed = startedAt.duration(to: .now)
-        if elapsed < minimumSplashDuration {
-            try? await Task.sleep(for: minimumSplashDuration - elapsed)
+    private func bootstrapIfNeeded() async {
+        guard !hasBootstrapped else {
+            return
         }
 
-        withAnimation(.easeInOut(duration: splashFadeDuration)) {
-            isAppReady = true
-            splashOpacity = 0
+        hasBootstrapped = true
+
+        #if DEBUG
+        print("[Bootstrap] Starting background bootstrap")
+        #endif
+
+        await APIResolver.resolveIfNeeded()
+
+        guard session.currentUser == nil else {
+            #if DEBUG
+            print("[Bootstrap] Skipped restore — user already authenticated")
+            #endif
+            return
         }
 
-        try? await Task.sleep(for: .milliseconds(Int(splashFadeDuration * 1_000) + 50))
-        showSplashOverlay = false
-    }
-}
+        await session.restoreSession(timeout: .seconds(3))
 
-private struct SplashView: View {
-    var body: some View {
-        ZStack {
-            Color("SplashBackground")
-                .ignoresSafeArea()
-
-            Image("SplashScreen")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        #if DEBUG
+        print("[Bootstrap] Finished — user=\(session.currentUser.map { String($0.id) } ?? "nil")")
+        #endif
     }
 }

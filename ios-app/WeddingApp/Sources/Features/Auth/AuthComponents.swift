@@ -33,7 +33,6 @@ struct AuthBackgroundView: View {
                         .scaledToFit()
                         .frame(width: 260, height: 260)
                         .offset(x: 52, y: -36)
-                        .allowsHitTesting(false)
                 }
 
                 Spacer()
@@ -51,13 +50,13 @@ struct AuthBackgroundView: View {
                         .scaleEffect(x: 1, y: -1)
                         .opacity(0.55)
                         .offset(x: -18, y: 88)
-                        .allowsHitTesting(false)
 
                     Spacer()
                 }
             }
             .ignoresSafeArea()
         }
+        .allowsHitTesting(false)
     }
 }
 
@@ -119,6 +118,7 @@ struct AuthScreenLayout<Content: View>: View {
                     .padding(.bottom, 36)
             }
             .scrollDismissesKeyboard(.interactively)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             if showsBackButton, let onBack {
                 AuthBackButton(action: onBack)
@@ -215,6 +215,7 @@ struct AuthLabeledTextField: View {
                 .autocorrectionDisabled()
                 .submitLabel(submitLabel)
                 .focused(focusedField, equals: fieldFocus)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .onSubmit {
                     onSubmit?()
                 }
@@ -225,6 +226,13 @@ struct AuthLabeledTextField: View {
             .overlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(AppTheme.sage.opacity(0.14), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .onTapGesture {
+                if let fieldFocus {
+                    focusedField.wrappedValue = fieldFocus
+                }
             }
         }
     }
@@ -279,6 +287,7 @@ struct AuthLabeledSecureField: View {
                 .autocorrectionDisabled()
                 .submitLabel(submitLabel)
                 .focused(focusedField, equals: fieldFocus)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .onSubmit {
                     onSubmit?()
                 }
@@ -298,6 +307,13 @@ struct AuthLabeledSecureField: View {
             .overlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(AppTheme.sage.opacity(0.14), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .onTapGesture {
+                if let fieldFocus {
+                    focusedField.wrappedValue = fieldFocus
+                }
             }
         }
     }
@@ -478,6 +494,7 @@ struct AuthSocialFullButton: View {
             .overlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(AppTheme.sage.opacity(0.14), lineWidth: 1)
+                    .allowsHitTesting(false)
             }
         }
         .buttonStyle(AuthPressableButtonStyle())
@@ -505,6 +522,157 @@ struct AuthFooterLink: View {
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
         .padding(.top, 8)
+    }
+}
+
+// MARK: - Native Auth Components
+
+struct AuthNativeBrandHeader: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: "heart.text.square.fill")
+                .font(.system(size: 36, weight: .semibold))
+                .foregroundStyle(AppTheme.sageDark)
+                .symbolRenderingMode(.hierarchical)
+                .padding(.bottom, 4)
+
+            Text(L10n.Auth.appName)
+                .font(.largeTitle.bold())
+                .foregroundStyle(AppTheme.ink)
+
+            Text(L10n.Auth.tagline)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 12)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+struct AuthNativeStatusMessage: View {
+    let message: String
+    var systemImage: String = "info.circle"
+    var tint: Color = AppTheme.sageDark
+
+    var body: some View {
+        Label {
+            Text(message)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(tint)
+        }
+        .labelStyle(.titleAndIcon)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+struct AuthNativeSubmitButton: View {
+    let title: String
+    let systemImage: String
+    let isLoading: Bool
+    let isDisabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: systemImage)
+                    Text(title)
+                        .fontWeight(.semibold)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .disabled(isDisabled || isLoading)
+    }
+}
+
+struct AuthNativeProviderButton: View {
+    enum Provider {
+        case apple
+        case google
+
+        var title: String {
+            switch self {
+            case .apple: return L10n.Auth.continueApple
+            case .google: return L10n.Auth.continueGoogle
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .apple: return "apple.logo"
+            case .google: return "g.circle.fill"
+            }
+        }
+    }
+
+    let provider: Provider
+    var isDisabled: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(provider.title, systemImage: provider.systemImage)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+        .disabled(isDisabled)
+    }
+}
+
+struct AuthNativeFormCard<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            content()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppTheme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(AppTheme.mist, lineWidth: 1)
+                .allowsHitTesting(false)
+        }
+    }
+}
+
+struct AuthNativeFieldLabel: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(AppTheme.ink)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct AuthNativeFieldContainer<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        content()
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

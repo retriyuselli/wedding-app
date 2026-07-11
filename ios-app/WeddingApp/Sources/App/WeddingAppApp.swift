@@ -41,7 +41,7 @@ struct WeddingAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            RootView(session: session)
                 .environmentObject(session)
                 .modifier(AppLanguageModifier())
                 .onAppear {

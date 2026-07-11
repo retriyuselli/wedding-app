@@ -25,6 +25,14 @@
         ['route' => 'bantuan', 'label' => 'Bantuan & FAQ', 'active' => request()->routeIs('bantuan*')],
         ['route' => 'pengaturan', 'label' => 'Settings', 'active' => request()->routeIs('pengaturan*')],
     ];
+
+    if (auth()->user()?->isSuperAdmin()) {
+        array_unshift($moreNav, [
+            'url' => url('/admin'),
+            'label' => 'Admin Panel',
+            'active' => request()->is('admin*'),
+        ]);
+    }
 @endphp
 
 <aside class="hidden lg:flex lg:w-[260px] lg:shrink-0 lg:flex-col lg:border-r lg:border-gray-100 lg:bg-white">
@@ -67,7 +75,7 @@
             </summary>
             <div class="mt-1 space-y-0.5 pl-9">
                 @foreach ($moreNav as $item)
-                    <a href="{{ Route::has($item['route']) ? route($item['route']) : '#' }}"
+                    <a href="{{ $item['url'] ?? (Route::has($item['route']) ? route($item['route']) : '#') }}"
                        @class([
                            'block rounded-lg px-3 py-2 text-[13px] hover:bg-gray-50 hover:text-gray-800',
                            'bg-sage-50 font-medium text-sage-800' => $item['active'] ?? false,
