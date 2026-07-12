@@ -1,0 +1,7 @@
+{
+  "webcredentials": {
+    "apps": [
+      "LHH9LVRYVY.com.weddingapp.ios"
+    ]
+  }
+}

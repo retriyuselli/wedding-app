@@ -27,6 +27,7 @@ class LoginPageTest extends TestCase
         $response->assertSee('Privasi & Aman', false);
         $response->assertSee('Bantuan 24/7');
         $response->assertSee('Daftar sekarang');
+        $response->assertSee('font-family: "Poppins"', false);
     }
 
     public function test_user_can_login_from_redesigned_form(): void

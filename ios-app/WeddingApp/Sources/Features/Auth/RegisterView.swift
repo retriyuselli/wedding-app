@@ -11,106 +11,48 @@ struct RegisterView: View {
     @FocusState private var focusedField: AuthFormField?
 
     var body: some View {
-        Form {
-            Section {
-                AuthNativeBrandHeader()
-            }
-            .listRowInsets(EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20))
-            .listRowBackground(Color.clear)
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                LoginReferenceBackground()
 
-            Section {
-                TextField(L10n.Auth.fullName, text: $name, prompt: Text(L10n.Auth.fullNamePlaceholder))
-                    .textContentType(.name)
-                    .submitLabel(.next)
-                    .focused($focusedField, equals: .name)
-                    .onSubmit { focusedField = .email }
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: -58) {
+                        LoginHeroSection(topInset: geometry.safeAreaInsets.top)
+                            .frame(height: AuthLoginLayout.heroHeight(for: geometry.size.height))
+                            .overlay(alignment: .topLeading) {
+                                AuthLoginBackButton(action: { dismiss() })
+                                    .padding(.leading, 20)
+                                    .padding(.top, geometry.safeAreaInsets.top + 12)
+                            }
 
-                TextField(L10n.Auth.email, text: $email, prompt: Text(L10n.Auth.emailPlaceholder))
-                    .keyboardType(.emailAddress)
-                    .textContentType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.next)
-                    .focused($focusedField, equals: .email)
-                    .onSubmit { focusedField = .password }
-
-                if isEmailFormatInvalid {
-                    AuthNativeStatusMessage(message: L10n.Auth.invalidEmail, systemImage: "info.circle")
-                }
-
-                SecureField(L10n.Auth.password, text: $password, prompt: Text(L10n.Auth.passwordPlaceholder))
-                    .textContentType(.newPassword)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.next)
-                    .focused($focusedField, equals: .password)
-                    .onSubmit { focusedField = .passwordConfirmation }
-
-                SecureField(L10n.Auth.confirmPassword, text: $passwordConfirmation, prompt: Text(L10n.Auth.confirmPassword))
-                    .textContentType(.newPassword)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.go)
-                    .focused($focusedField, equals: .passwordConfirmation)
-                    .onSubmit(submitRegister)
-
-                if passwordsMismatch {
-                    AuthNativeStatusMessage(message: L10n.Auth.passwordMismatch, systemImage: "info.circle")
-                }
-            }
-
-            if let errorMessage = session.errorMessage {
-                Section {
-                    AuthNativeStatusMessage(
-                        message: errorMessage,
-                        systemImage: "exclamationmark.circle.fill",
-                        tint: .red
-                    )
-                }
-            }
-
-            Section {
-                AuthNativeSubmitButton(
-                    title: L10n.Auth.register,
-                    systemImage: "person.badge.plus.fill",
-                    isLoading: session.isLoading,
-                    isDisabled: !isFormValid || passwordsMismatch,
-                    action: submitRegister
-                )
-            }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
-
-            Section(L10n.Auth.orRegisterWith) {
-                AuthNativeProviderButton(provider: .apple, isDisabled: session.isLoading) {
-                    submitAppleLogin()
-                }
-
-                AuthNativeProviderButton(provider: .google, isDisabled: session.isLoading) {
-                    submitGoogleLogin()
-                }
-            }
-
-            Section {
-                Button {
-                    dismiss()
-                } label: {
-                    HStack {
-                        Text(L10n.Auth.haveAccount)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text(L10n.Auth.login)
+                        RegisterFormSheet(
+                            name: $name,
+                            email: $email,
+                            password: $password,
+                            passwordConfirmation: $passwordConfirmation,
+                            focusedField: $focusedField,
+                            isLoading: session.isLoading,
+                            isEmailFormatInvalid: isEmailFormatInvalid,
+                            passwordsMismatch: passwordsMismatch,
+                            errorMessage: session.errorMessage,
+                            onRegister: submitRegister,
+                            onApple: submitAppleLogin,
+                            onGoogle: submitGoogleLogin,
+                            onLogin: { dismiss() }
+                        )
+                        .frame(minHeight: AuthLoginLayout.formSheetMinimumHeight(for: geometry, extraPadding: 300))
                     }
+                    .padding(.bottom, max(18, geometry.safeAreaInsets.bottom + 8))
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: geometry.size.height + 72, alignment: .top)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
+            .ignoresSafeArea(.container, edges: [.top, .bottom])
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(AppTheme.background)
-        .navigationTitle(L10n.Auth.register)
-        .navigationBarTitleDisplayMode(.large)
-        .tint(AppTheme.sageDark)
-        .scrollDismissesKeyboard(.interactively)
+        .background(LoginPalette.background)
+        .toolbar(.hidden, for: .navigationBar)
+        .tint(LoginPalette.green)
         .onAppear {
             session.resetTransientUIState()
         }
@@ -178,5 +120,167 @@ struct RegisterView: View {
 
         focusedField = nil
         Task { await session.loginWithGoogle() }
+    }
+}
+
+private struct RegisterFormSheet: View {
+    @Binding var name: String
+    @Binding var email: String
+    @Binding var password: String
+    @Binding var passwordConfirmation: String
+    var focusedField: FocusState<AuthFormField?>.Binding
+    let isLoading: Bool
+    let isEmailFormatInvalid: Bool
+    let passwordsMismatch: Bool
+    let errorMessage: String?
+    let onRegister: () -> Void
+    let onApple: () -> Void
+    let onGoogle: () -> Void
+    let onLogin: () -> Void
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            LoginSheetShape()
+                .fill(LoginPalette.sheet)
+                .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: -8)
+                .overlay(alignment: .bottom) {
+                    AuthLoginSheetFlorals()
+                }
+
+            VStack(spacing: 0) {
+                LoginBadge(systemImage: "person.badge.plus", overlaySystemImage: nil)
+                    .offset(y: -5)
+
+                HStack(spacing: 8) {
+                    Text("Buat akun baru")
+                        .font(AppFont.semibold(27))
+                        .foregroundStyle(LoginPalette.green)
+
+                    Image(systemName: "heart")
+                        .font(.system(size: 19, weight: .light))
+                        .foregroundStyle(LoginPalette.gold)
+                        .offset(y: 2)
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+
+                Text(L10n.Auth.tagline)
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(LoginPalette.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 5)
+                    .padding(.bottom, 12)
+
+                VStack(spacing: 9) {
+                    LoginInputField(
+                        icon: "person",
+                        placeholder: L10n.Auth.fullNamePlaceholder,
+                        text: $name,
+                        textContentType: .name,
+                        submitLabel: .next,
+                        fieldFocus: .name,
+                        focusedField: focusedField,
+                        onSubmit: { focusedField.wrappedValue = .email }
+                    )
+
+                    LoginInputField(
+                        icon: "envelope",
+                        placeholder: L10n.Auth.emailPlaceholder,
+                        text: $email,
+                        keyboardType: .emailAddress,
+                        textContentType: .emailAddress,
+                        submitLabel: .next,
+                        fieldFocus: .email,
+                        focusedField: focusedField,
+                        onSubmit: { focusedField.wrappedValue = .password }
+                    )
+
+                    LoginPasswordField(
+                        placeholder: L10n.Auth.passwordPlaceholder,
+                        text: $password,
+                        textContentType: .newPassword,
+                        submitLabel: .next,
+                        fieldFocus: .password,
+                        focusedField: focusedField,
+                        onSubmit: { focusedField.wrappedValue = .passwordConfirmation }
+                    )
+
+                    LoginPasswordField(
+                        placeholder: L10n.Auth.confirmPassword,
+                        text: $passwordConfirmation,
+                        textContentType: .newPassword,
+                        submitLabel: .go,
+                        fieldFocus: .passwordConfirmation,
+                        focusedField: focusedField,
+                        onSubmit: onRegister
+                    )
+                }
+
+                if isEmailFormatInvalid {
+                    AuthNativeStatusMessage(message: L10n.Auth.invalidEmail, systemImage: "info.circle")
+                        .padding(.top, 10)
+                }
+
+                if passwordsMismatch {
+                    AuthNativeStatusMessage(message: L10n.Auth.passwordMismatch, systemImage: "info.circle")
+                        .padding(.top, 10)
+                }
+
+                if let errorMessage {
+                    AuthNativeStatusMessage(
+                        message: errorMessage,
+                        systemImage: "exclamationmark.circle.fill",
+                        tint: .red
+                    )
+                    .padding(.top, 13)
+                }
+
+                LoginPrimaryButton(
+                    title: L10n.Auth.register,
+                    isLoading: isLoading,
+                    isDisabled: !isFormValid || passwordsMismatch,
+                    action: onRegister
+                )
+                .padding(.top, 14)
+
+                LoginDivider(text: L10n.Auth.orRegisterWith)
+                    .padding(.top, 16)
+                    .padding(.bottom, 10)
+
+                HStack(spacing: 12) {
+                    LoginSocialButton(provider: .apple, isDisabled: isLoading, action: onApple)
+                    LoginSocialButton(provider: .google, isDisabled: isLoading, action: onGoogle)
+                }
+
+                Button(action: onLogin) {
+                    HStack(spacing: 8) {
+                        Text(L10n.Auth.haveAccount)
+                            .font(AppFont.regular(13))
+                            .foregroundStyle(LoginPalette.textSecondary)
+
+                        Text(L10n.Auth.login)
+                            .font(AppFont.semibold(13))
+                            .foregroundStyle(LoginPalette.green)
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(LoginPalette.green)
+                    }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 18)
+                .padding(.bottom, 28)
+            }
+            .padding(.horizontal, 34)
+            .padding(.top, 18)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var isFormValid: Bool {
+        !name.isEmpty && !email.isEmpty && !password.isEmpty && !passwordConfirmation.isEmpty && !isEmailFormatInvalid
     }
 }
