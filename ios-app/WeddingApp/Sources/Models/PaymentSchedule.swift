@@ -95,7 +95,7 @@ struct PaymentSchedule: Decodable, Identifiable, Hashable {
 
     var displayStatusLabel: String {
         if isPaid {
-            return "Sudah Bayar"
+            return L10n.Budget.paid
         }
 
         if isOverdue {
@@ -103,14 +103,14 @@ struct PaymentSchedule: Decodable, Identifiable, Hashable {
                 return statusLabel
             }
 
-            return "Terlambat"
+            return L10n.Budget.overdue
         }
 
         if let statusLabel, !statusLabel.isEmpty {
             return statusLabel
         }
 
-        return "Belum Bayar"
+        return L10n.Budget.unpaid
     }
 
     var displayStatusColorName: String {

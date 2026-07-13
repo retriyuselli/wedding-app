@@ -2,17 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\PushNotificationDriver;
 use App\Jobs\SendSupportReplyPushNotification;
 use App\Models\DeviceToken;
 use App\Models\Message;
 use App\Models\MessageThread;
 use App\Models\User;
+use App\Services\Push\LogPushNotificationDriver;
 use App\Services\PushNotificationService;
 use App\Services\SupportMessageReplyService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use InvalidArgumentException;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class SupportMessageReplyServiceTest extends TestCase
@@ -23,6 +27,7 @@ class SupportMessageReplyServiceTest extends TestCase
     {
         Queue::fake();
 
+        $admin = $this->actingAsSuperAdmin();
         $user = User::factory()->create();
         $thread = MessageThread::factory()->for($user)->create([
             'category' => 'support',
@@ -43,12 +48,14 @@ class SupportMessageReplyServiceTest extends TestCase
             'is_outgoing' => false,
         ]);
         $this->assertNull($message->read_at);
+        $this->assertTrue($admin->isSuperAdmin());
     }
 
     public function test_reply_creates_customer_notification(): void
     {
         Queue::fake();
 
+        $this->actingAsSuperAdmin();
         $user = User::factory()->create();
         $thread = MessageThread::factory()->for($user)->create([
             'category' => 'support',
@@ -72,6 +79,7 @@ class SupportMessageReplyServiceTest extends TestCase
     {
         Queue::fake();
 
+        $this->actingAsSuperAdmin();
         $user = User::factory()->create();
         $thread = MessageThread::factory()->for($user)->create([
             'category' => 'support',
@@ -90,6 +98,7 @@ class SupportMessageReplyServiceTest extends TestCase
     {
         Queue::fake();
 
+        $this->actingAsSuperAdmin();
         $user = User::factory()->create();
         $thread = MessageThread::factory()->for($user)->create([
             'category' => 'support',
@@ -107,6 +116,7 @@ class SupportMessageReplyServiceTest extends TestCase
     {
         Queue::fake();
 
+        $this->actingAsSuperAdmin();
         $user = User::factory()->create();
         $thread = MessageThread::factory()->for($user)->create([
             'category' => 'vendor',
@@ -117,10 +127,51 @@ class SupportMessageReplyServiceTest extends TestCase
         app(SupportMessageReplyService::class)->reply($thread, 'Test');
     }
 
+    public function test_non_super_admin_cannot_reply(): void
+    {
+        Queue::fake();
+
+        $staff = User::factory()->create();
+        $this->actingAs($staff);
+
+        $user = User::factory()->create();
+        $thread = MessageThread::factory()->for($user)->create([
+            'category' => 'support',
+        ]);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(SupportMessageReplyService::class)->reply($thread, 'Balasan tidak diizinkan.');
+
+        $this->assertDatabaseMissing('messages', [
+            'message_thread_id' => $thread->id,
+            'body' => 'Balasan tidak diizinkan.',
+        ]);
+        $this->assertDatabaseMissing('customer_notifications', [
+            'user_id' => $user->id,
+            'title' => 'Balasan dari Support',
+        ]);
+    }
+
+    public function test_guest_cannot_reply_without_authentication(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $thread = MessageThread::factory()->for($user)->create([
+            'category' => 'support',
+        ]);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(SupportMessageReplyService::class)->reply($thread, 'Tanpa login.');
+    }
+
     public function test_user_sees_unread_count_after_admin_reply(): void
     {
         Queue::fake();
 
+        $this->actingAsSuperAdmin();
         $user = User::factory()->create();
         $thread = MessageThread::factory()->for($user)->create([
             'category' => 'support',
@@ -140,6 +191,8 @@ class SupportMessageReplyServiceTest extends TestCase
     public function test_push_notification_job_sends_to_registered_device_tokens(): void
     {
         Log::spy();
+        config(['push.driver' => 'log']);
+        $this->app->instance(PushNotificationDriver::class, app(LogPushNotificationDriver::class));
 
         $user = User::factory()->create();
         DeviceToken::factory()->for($user)->create([
@@ -161,5 +214,17 @@ class SupportMessageReplyServiceTest extends TestCase
                 return $message === 'Push notification dispatched.'
                     && $context['title'] === 'Balasan dari Support';
             });
+    }
+
+    private function actingAsSuperAdmin(): User
+    {
+        Role::findOrCreate(config('filament-shield.super_admin.name', 'super_admin'), 'web');
+
+        $admin = User::factory()->create();
+        $admin->assignRole(config('filament-shield.super_admin.name', 'super_admin'));
+
+        $this->actingAs($admin);
+
+        return $admin;
     }
 }

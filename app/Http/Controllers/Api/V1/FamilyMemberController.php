@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\FamilyMemberResource;
 use App\Models\FamilyMember;
+use App\Services\FamilyMemberExcelService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FamilyMemberController extends Controller
 {
@@ -21,6 +26,7 @@ class FamilyMemberController extends Controller
     {
         $data = $this->validated($request);
         $data['rsvp_status'] ??= 'menunggu';
+        $data['no'] ??= ((int) $request->user()->familyMembers()->max('no')) + 1;
 
         $member = $request->user()->familyMembers()->create($data);
 
@@ -42,11 +48,23 @@ class FamilyMemberController extends Controller
         return new FamilyMemberResource($record);
     }
 
-    public function destroy(Request $request, int $familyMember): \Illuminate\Http\Response
+    public function destroy(Request $request, int $familyMember): Response
     {
         $this->findOwned($request, $familyMember)->delete();
 
         return response()->noContent();
+    }
+
+    public function destroyAll(Request $request): JsonResponse
+    {
+        $deleted = $request->user()->familyMembers()->delete();
+
+        return response()->json([
+            'message' => 'Semua data anggota keluarga berhasil dihapus.',
+            'data' => [
+                'deleted' => $deleted,
+            ],
+        ]);
     }
 
     public function updateRsvp(Request $request, int $familyMember): FamilyMemberResource
@@ -57,12 +75,43 @@ class FamilyMemberController extends Controller
 
         $record = $this->findOwned($request, $familyMember);
         $record->update([
-            'rsvp_status'          => $data['rsvp_status'],
+            'rsvp_status' => $data['rsvp_status'],
             'rsvp_updated_by_name' => $request->user()->name,
-            'rsvp_updated_at'      => now(),
+            'rsvp_updated_at' => now(),
         ]);
 
         return new FamilyMemberResource($record);
+    }
+
+    public function downloadTemplate(): BinaryFileResponse
+    {
+        return app(FamilyMemberExcelService::class)->downloadTemplate();
+    }
+
+    public function importExcel(Request $request): JsonResponse
+    {
+        $request->validate([
+            'spreadsheet' => [
+                'required',
+                'file',
+                'mimes:xlsx',
+                'max:5120',
+            ],
+        ]);
+
+        $storedPath = $request->file('spreadsheet')->store('imports/family-members', 'local');
+        $absolutePath = Storage::disk('local')->path($storedPath);
+
+        try {
+            $result = app(FamilyMemberExcelService::class)->import($request->user(), $absolutePath);
+        } finally {
+            Storage::disk('local')->delete($storedPath);
+        }
+
+        return response()->json([
+            'message' => 'Import anggota keluarga selesai.',
+            'data' => $result,
+        ]);
     }
 
     /**
@@ -71,10 +120,10 @@ class FamilyMemberController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'no'          => ['nullable', 'integer', 'min:0'],
-            'name'        => ['required', 'string', 'max:255'],
-            'role'        => ['nullable', 'string', 'max:255'],
-            'phone'       => ['nullable', 'string', 'max:20'],
+            'no' => ['nullable', 'integer', 'min:0'],
+            'name' => ['required', 'string', 'max:255'],
+            'role' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'rsvp_status' => ['nullable', 'string', 'in:'.implode(',', array_keys(FamilyMember::$rsvpOptions))],
         ]);
     }

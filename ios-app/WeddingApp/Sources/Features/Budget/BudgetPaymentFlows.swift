@@ -10,6 +10,7 @@ struct PaymentScheduleListView: View {
     let onReload: () async -> Void
     var categorySummary: BudgetCategory?
     var totalBudget: Double = 0
+    var onSetAllocation: (() -> Void)? = nil
 
     @State private var showAddExpense = false
     @State private var editingScheduleRoute: EditableScheduleRoute?
@@ -46,13 +47,46 @@ struct PaymentScheduleListView: View {
                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                         .listRowBackground(Color.clear)
                 }
+
+                if shouldPromptSetAllocation(for: categorySummary), let onSetAllocation {
+                    Section {
+                        Button(action: onSetAllocation) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundStyle(AppTheme.sageDark)
+
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(L10n.Budget.setAllocationPromptTitle)
+                                        .font(AppFont.medium(14))
+                                        .foregroundStyle(AppTheme.ink)
+                                    Text(L10n.Budget.setAllocationPromptSub)
+                                        .font(AppFont.regular(12))
+                                        .foregroundStyle(AppTheme.ink.opacity(0.5))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+
+                                Spacer(minLength: 4)
+
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(AppTheme.ink.opacity(0.28))
+                            }
+                            .padding(14)
+                            .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
+                        .listRowBackground(Color.clear)
+                    }
+                }
             }
 
             if sortedSchedules.isEmpty {
                 ContentUnavailableView(
-                    "Belum ada pengeluaran",
+                    L10n.Budget.noExpenses,
                     systemImage: "creditcard",
-                    description: Text("Tambahkan jadwal pembayaran untuk mulai melacak budget.")
+                    description: Text(L10n.Budget.noExpensesScheduleSub)
                 )
             } else {
                 ForEach(sortedSchedules) { schedule in
@@ -66,7 +100,7 @@ struct PaymentScheduleListView: View {
                         Button(role: .destructive) {
                             Task { await delete(schedule) }
                         } label: {
-                            Label("Hapus", systemImage: "trash")
+                            Label(L10n.Common.delete, systemImage: "trash")
                         }
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -74,7 +108,7 @@ struct PaymentScheduleListView: View {
                             Button {
                                 Task { await markPaid(schedule) }
                             } label: {
-                                Label("Lunas", systemImage: "checkmark.circle")
+                                Label(L10n.Budget.markPaid, systemImage: "checkmark.circle")
                             }
                             .tint(.green)
                         }
@@ -114,6 +148,10 @@ struct PaymentScheduleListView: View {
         }
     }
 
+    private func shouldPromptSetAllocation(for category: BudgetCategory) -> Bool {
+        !category.hasPlannedAllocation && category.totalRecorded > 0
+    }
+
     private func markPaid(_ schedule: PaymentSchedule) async {
         do {
             let _: Envelope<PaymentSchedule> = try await APIClient.shared.request(
@@ -146,8 +184,14 @@ struct BudgetCategoryDetailView: View {
     var categoryOptions: [BudgetPaymentCategory] = []
     var allocations: [BudgetCategoryAllocation] = []
 
+    @State private var showEditAllocation = false
+
     private var budgetDefaults: BudgetDefaults {
         categoriesStore.defaults
+    }
+
+    private var allocationMap: [String: BudgetCategoryAllocation] {
+        BudgetCategory.allocationsMap(from: allocations)
     }
 
     private var category: BudgetCategory {
@@ -165,7 +209,7 @@ struct BudgetCategoryDetailView: View {
                     options: categoryOptions,
                     defaultIcon: budgetDefaults.categoryIcon
                 ),
-                plannedAllocation: BudgetCategory.allocationsMap(from: allocations)[categoryId]?.allocatedAmount ?? 0,
+                plannedAllocation: allocationMap[categoryId]?.allocatedAmount ?? 0,
                 spent: 0,
                 commitment: 0
             )
@@ -183,8 +227,19 @@ struct BudgetCategoryDetailView: View {
             schedules: filteredSchedules,
             onReload: onReload,
             categorySummary: category,
-            totalBudget: totalBudget
+            totalBudget: totalBudget,
+            onSetAllocation: {
+                showEditAllocation = true
+            }
         )
+        .navigationDestination(isPresented: $showEditAllocation) {
+            EditCategoryAllocationView(
+                category: category,
+                allocation: allocationMap[categoryId]
+            ) {
+                await onReload()
+            }
+        }
     }
 }
 
@@ -229,14 +284,14 @@ struct BudgetSummaryDetailView: View {
 
                 if categories.isEmpty {
                     ContentUnavailableView(
-                        "Belum ada pengeluaran",
+                        L10n.Budget.noExpenses,
                         systemImage: "chart.pie",
-                        description: Text("Tambahkan expense untuk melihat ringkasan per kategori.")
+                        description: Text(L10n.Budget.noExpensesSummarySub)
                     )
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 24)
                 } else {
-                    Text("Per Kategori")
+                    Text(L10n.Budget.perCategory)
                         .font(AppFont.medium(16))
                         .foregroundStyle(AppTheme.sageDark)
 
@@ -262,13 +317,13 @@ struct BudgetSummaryDetailView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .navigationTitle("Ringkasan Anggaran")
+        .navigationTitle(L10n.Budget.summary)
         .navigationBarTitleDisplayMode(.large)
     }
 
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Total Anggaran")
+            Text(L10n.Budget.totalBudget)
                 .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.ink.opacity(0.5))
             Text(CurrencyFormatter.rupiah(metrics.totalBudget))
@@ -276,9 +331,9 @@ struct BudgetSummaryDetailView: View {
                 .foregroundStyle(AppTheme.sageDark)
 
             HStack(spacing: 10) {
-                summaryMetric(title: "Terpakai", amount: metrics.spent, percent: metrics.percent(metrics.spent), tint: AppTheme.sageDark)
-                summaryMetric(title: "Komitmen", amount: metrics.commitment, percent: metrics.percent(metrics.commitment), tint: AppTheme.gold)
-                summaryMetric(title: "Sisa", amount: metrics.remaining, percent: metrics.percent(metrics.remaining), tint: AppTheme.ink.opacity(0.55))
+                summaryMetric(title: L10n.Budget.spent, amount: metrics.spent, percent: metrics.percent(metrics.spent), tint: AppTheme.sageDark)
+                summaryMetric(title: L10n.Budget.commitment, amount: metrics.commitment, percent: metrics.percent(metrics.commitment), tint: AppTheme.gold)
+                summaryMetric(title: L10n.Budget.remainingShort, amount: metrics.remaining, percent: metrics.percent(metrics.remaining), tint: AppTheme.ink.opacity(0.55))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -336,6 +391,10 @@ struct BudgetCategoriesView: View {
         categories.reduce(0) { $0 + $1.plannedAllocation }
     }
 
+    private var totalRecordedAcrossCategories: Double {
+        categories.reduce(0) { $0 + $1.totalRecorded }
+    }
+
     var body: some View {
         ZStack {
             LuxuryWeddingBackground()
@@ -348,9 +407,9 @@ struct BudgetCategoriesView: View {
 
                     if categories.isEmpty {
                         ContentUnavailableView(
-                            "Belum ada kategori",
+                            L10n.Budget.noCategories,
                             systemImage: "square.grid.2x2",
-                            description: Text("Gagal memuat daftar kategori budget.")
+                            description: Text(L10n.Budget.categoriesLoadError)
                         )
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 32)
@@ -367,7 +426,7 @@ struct BudgetCategoriesView: View {
                 .padding(.bottom, 24)
             }
         }
-        .navigationTitle("Kategori Budget")
+        .navigationTitle(L10n.Budget.categoriesTitle)
         .navigationBarTitleDisplayMode(.large)
         .refreshable { await onReload() }
         .navigationDestination(item: $editingCategory) { category in
@@ -406,13 +465,13 @@ struct BudgetCategoriesView: View {
                     .frame(width: 44, height: 44)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(category.hasPlannedAllocation ? "Edit alokasi \(category.name)" : "Atur alokasi \(category.name)")
+            .accessibilityLabel(category.hasPlannedAllocation ? L10n.Budget.editAllocationNamed(category.name) : L10n.Budget.setAllocationNamed(category.name))
         }
     }
 
     private var allocationSummary: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Total Alokasi Kategori")
+            Text(L10n.Budget.totalCategoryAllocation)
                 .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.ink.opacity(0.5))
 
@@ -422,7 +481,7 @@ struct BudgetCategoriesView: View {
                     .foregroundStyle(AppTheme.sageDark)
 
                 if totalBudget > 0 {
-                    Text("dari \(CurrencyFormatter.rupiah(totalBudget))")
+                    Text(L10n.Budget.fromTotal(CurrencyFormatter.rupiah(totalBudget)))
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
                 }
@@ -436,9 +495,15 @@ struct BudgetCategoriesView: View {
                 .frame(height: 6)
             }
 
-            Text("Ketuk + untuk atur alokasi per kategori.")
-                .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
+            if totalPlannedAllocation == 0, totalRecordedAcrossCategories > 0 {
+                Text(L10n.Budget.allocationPlanEmpty(CurrencyFormatter.rupiah(totalRecordedAcrossCategories)))
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.gold.opacity(0.9))
+            } else {
+                Text(L10n.Budget.tapToAllocate)
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -487,11 +552,11 @@ struct PaymentScheduleRow: View {
                     .clipShape(Capsule())
 
                 if schedule.isPaid, let paidAtDisplay = schedule.paidAtDisplay {
-                    Text("Dibayar: \(paidAtDisplay)")
+                    Text(L10n.Budget.paidOn(paidAtDisplay))
                         .font(AppFont.regular(11))
                         .foregroundStyle(.secondary)
                 } else if let dueDate = schedule.dueDate, !dueDate.isEmpty {
-                    Text("Jatuh tempo: \(dueDate)")
+                    Text(L10n.Budget.dueOn(dueDate))
                         .font(AppFont.regular(11))
                         .foregroundStyle(.secondary)
                 }
@@ -538,12 +603,12 @@ struct EditTotalBudgetView: View {
 
                         budgetInfoCard
 
-                        formSection(title: "Total Anggaran") {
+                        formSection(title: L10n.Budget.totalBudget) {
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack(spacing: 12) {
                                     fieldIcon("banknote")
 
-                                    TextField("Masukkan nominal", text: $totalBudgetText)
+                                    TextField(L10n.Budget.enterAmount, text: $totalBudgetText)
                                         .font(AppFont.regular(14))
                                         .foregroundStyle(AppTheme.ink)
                                         .keyboardType(.numberPad)
@@ -558,17 +623,17 @@ struct EditTotalBudgetView: View {
                                         .minimumScaleFactor(0.7)
                                 }
 
-                                Text("Ini adalah plafon rencana pengeluaran pernikahan Anda.")
+                                Text(L10n.Budget.ceilingHint)
                                     .font(AppFont.regular(11))
                                     .foregroundStyle(AppTheme.ink.opacity(0.45))
                             }
                         }
 
-                        formSection(title: "Catatan") {
+                        formSection(title: L10n.Common.notes) {
                             HStack(alignment: .top, spacing: 12) {
                                 fieldIcon("note.text")
 
-                                TextField("Opsional — misalnya sumber dana atau catatan rencana", text: $notes, axis: .vertical)
+                                TextField(L10n.Budget.budgetNotesPlaceholder, text: $notes, axis: .vertical)
                                     .font(AppFont.regular(14))
                                     .foregroundStyle(AppTheme.ink)
                                     .lineLimit(3...5)
@@ -606,10 +671,10 @@ struct EditTotalBudgetView: View {
             Spacer()
 
             VStack(spacing: 4) {
-                Text("Atur Budget")
+                Text(L10n.Budget.setBudget)
                     .font(AppFont.medium(18))
                     .foregroundStyle(AppTheme.sageDark)
-                Text("Tetapkan total rencana anggaran")
+                Text(L10n.Budget.setBudgetSub)
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
                     .multilineTextAlignment(.center)
@@ -631,10 +696,10 @@ struct EditTotalBudgetView: View {
                 .background(AppTheme.sage.opacity(0.12), in: Circle())
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Rencana Pengeluaran")
+                Text(L10n.Budget.spendingPlan)
                     .font(AppFont.medium(15))
                     .foregroundStyle(AppTheme.sageDark)
-                Text("Total anggaran dipakai untuk menghitung sisa budget, persentase terpakai, dan komitmen.")
+                Text(L10n.Budget.spendingPlanInfo)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.5))
                     .fixedSize(horizontal: false, vertical: true)
@@ -688,7 +753,7 @@ struct EditTotalBudgetView: View {
                     Image(systemName: "square.and.arrow.down")
                         .font(.system(size: 16, weight: .semibold))
                 }
-                Text("Simpan Budget")
+                Text(L10n.Budget.saveBudget)
                     .font(AppFont.medium(16))
             }
             .foregroundStyle(.white)
@@ -768,29 +833,308 @@ struct EditTotalBudgetView: View {
 }
 
 struct BudgetReportShareView: View {
-    let reportText: String
+    let metrics: BudgetSummaryMetrics
+    let categories: [BudgetCategory]
+    let incomingTotal: Double
+
     @Environment(\.dismiss) private var dismiss
+    @State private var reportFileURL: URL?
+
+    private var reportText: String {
+        metrics.reportText(categories: categories, incomingTotal: incomingTotal)
+    }
+
+    private var sortedCategories: [BudgetCategory] {
+        categories.sorted { lhs, rhs in
+            if lhs.totalRecorded == rhs.totalRecorded {
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            }
+            return lhs.totalRecorded > rhs.totalRecorded
+        }
+    }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                Text(reportText)
-                    .font(AppFont.regular(14))
-                    .foregroundStyle(AppTheme.ink)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+            ZStack {
+                LuxuryWeddingBackground()
+
+                VStack(spacing: 0) {
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 18) {
+                            overviewSection
+
+                            if metrics.isOverBudget {
+                                overBudgetBanner
+                            }
+
+                            categoriesSection
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                        .padding(.bottom, 24)
+                    }
+
+                    shareBar
+                }
             }
-            .navigationTitle("Laporan Budget")
+            .navigationTitle(L10n.Budget.report)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Tutup") { dismiss() }
+                    Button(L10n.Common.close) { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    ShareLink(item: reportText) {
-                        Image(systemName: "square.and.arrow.up")
+                    if let reportFileURL {
+                        ShareLink(item: reportFileURL) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
                     }
                 }
             }
+            .task {
+                reportFileURL = writeReportFile()
+            }
+        }
+    }
+
+    private var overviewSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(L10n.Budget.reportOverview)
+                .font(AppFont.medium(13))
+                .foregroundStyle(AppTheme.ink.opacity(0.5))
+
+            LazyVGrid(
+                columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                spacing: 10
+            ) {
+                reportMetricCard(
+                    title: L10n.Budget.totalBudget,
+                    amount: metrics.totalBudget,
+                    subtitle: nil,
+                    tint: AppTheme.sageDark
+                )
+                reportMetricCard(
+                    title: L10n.Budget.spent,
+                    amount: metrics.spent,
+                    subtitle: "\(metrics.percent(metrics.spent))%",
+                    tint: AppTheme.sage
+                )
+                reportMetricCard(
+                    title: L10n.Budget.commitment,
+                    amount: metrics.commitment,
+                    subtitle: "\(metrics.percent(metrics.commitment))%",
+                    tint: AppTheme.gold
+                )
+                reportMetricCard(
+                    title: metrics.isOverBudget ? L10n.Budget.overBudget : L10n.Budget.remaining,
+                    amount: metrics.isOverBudget ? metrics.overspend : metrics.remaining,
+                    subtitle: metrics.isOverBudget
+                        ? L10n.Budget.overBudgetBy(CurrencyFormatter.rupiahShort(metrics.overspend))
+                        : "\(metrics.percent(metrics.remaining))%",
+                    tint: metrics.isOverBudget ? Color.red.opacity(0.75) : AppTheme.ink.opacity(0.55)
+                )
+            }
+
+            HStack {
+                Text(L10n.Budget.incoming)
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                Spacer()
+                Text(CurrencyFormatter.rupiah(incomingTotal))
+                    .font(AppFont.medium(13))
+                    .foregroundStyle(AppTheme.ink)
+            }
+            .padding(.horizontal, 4)
+        }
+        .padding(16)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        }
+    }
+
+    private var overBudgetBanner: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 16))
+                .foregroundStyle(Color.red.opacity(0.8))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.Budget.overBudget)
+                    .font(AppFont.medium(14))
+                    .foregroundStyle(AppTheme.ink)
+                Text(L10n.Budget.overBudgetBy(CurrencyFormatter.rupiah(metrics.overspend)))
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.red.opacity(0.15), lineWidth: 1)
+        }
+    }
+
+    private var categoriesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.Budget.reportCategories)
+                .font(AppFont.medium(13))
+                .foregroundStyle(AppTheme.ink.opacity(0.5))
+
+            if sortedCategories.isEmpty {
+                Text(L10n.Budget.noExpenses)
+                    .font(AppFont.regular(13))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(sortedCategories) { category in
+                        reportCategoryRow(category)
+                    }
+                }
+            }
+        }
+    }
+
+    private func reportCategoryRow(_ category: BudgetCategory) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: category.iconName)
+                    .font(.system(size: 14))
+                    .foregroundStyle(AppTheme.sageDark)
+                    .frame(width: 34, height: 34)
+                    .background(AppTheme.sage.opacity(0.12), in: Circle())
+
+                Text(category.name)
+                    .font(AppFont.medium(14))
+                    .foregroundStyle(AppTheme.ink)
+
+                Spacer()
+
+                Text(CurrencyFormatter.rupiah(category.spent))
+                    .font(AppFont.medium(13))
+                    .foregroundStyle(AppTheme.sageDark)
+            }
+
+            HStack(spacing: 12) {
+                reportMetaChip(
+                    label: L10n.Budget.reportRecordedLabel,
+                    value: CurrencyFormatter.rupiah(category.totalRecorded)
+                )
+                reportMetaChip(
+                    label: L10n.Budget.reportAllocationLabel,
+                    value: category.hasPlannedAllocation
+                        ? CurrencyFormatter.rupiah(category.plannedAllocation)
+                        : L10n.Budget.notSetShort
+                )
+            }
+
+            if category.commitment > 0 {
+                Text(L10n.Budget.commitmentAmount(CurrencyFormatter.rupiah(category.commitment)))
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.gold.opacity(0.9))
+            }
+
+            BudgetBar(
+                progress: category.hasPlannedAllocation
+                    ? category.usageAgainstPlanRatio
+                    : category.paidRecordedRatio,
+                color: AppTheme.sage
+            )
+            .frame(height: 5)
+        }
+        .padding(14)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        }
+    }
+
+    private func reportMetaChip(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(AppFont.regular(10))
+                .foregroundStyle(AppTheme.ink.opacity(0.4))
+            Text(value)
+                .font(AppFont.medium(12))
+                .foregroundStyle(AppTheme.ink.opacity(0.75))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func reportMetricCard(
+        title: String,
+        amount: Double,
+        subtitle: String?,
+        tint: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(AppFont.regular(11))
+                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .lineLimit(1)
+
+            Text(CurrencyFormatter.rupiah(amount))
+                .font(AppFont.medium(15))
+                .foregroundStyle(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            if let subtitle {
+                Text(subtitle)
+                    .font(AppFont.regular(10))
+                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .lineLimit(1)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(AppTheme.lightSage.opacity(0.35), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var shareBar: some View {
+        Group {
+            if let reportFileURL {
+                ShareLink(item: reportFileURL) {
+                    Label(L10n.Budget.downloadShareReport, systemImage: "square.and.arrow.up")
+                        .font(AppFont.medium(15))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .padding(.bottom, 16)
+                .background(.ultraThinMaterial)
+            }
+        }
+    }
+
+    private func writeReportFile() -> URL? {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd"
+        let fileName = "Laporan-Budget-\(formatter.string(from: Date())).txt"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        do {
+            if FileManager.default.fileExists(atPath: url.path) {
+                try FileManager.default.removeItem(at: url)
+            }
+            try reportText.write(to: url, atomically: true, encoding: .utf8)
+            return url
+        } catch {
+            return nil
         }
     }
 }

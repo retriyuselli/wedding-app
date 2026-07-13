@@ -12,6 +12,7 @@ class Guest extends Model
 
     protected $fillable = [
         'user_id',
+        'no',
         'name',
         'phone',
         'email',
@@ -27,8 +28,8 @@ class Guest extends Model
     ];
 
     public static array $rsvpOptions = [
-        'menunggu'    => 'Menunggu',
-        'hadir'       => 'Hadir',
+        'menunggu' => 'Menunggu',
+        'hadir' => 'Hadir',
         'tidak_hadir' => 'Tidak Hadir',
     ];
 

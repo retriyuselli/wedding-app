@@ -4,6 +4,7 @@ namespace App\Filament\Resources\MessageThreads\RelationManagers;
 
 use App\Enums\SupportMessageTopic;
 use App\Models\Message;
+use App\Models\User;
 use App\Services\SupportMessageReplyService;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Textarea;
@@ -11,6 +12,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class MessagesRelationManager extends RelationManager
 {
@@ -72,6 +74,8 @@ class MessagesRelationManager extends RelationManager
                     ->modalHeading('Balas Pesan Support')
                     ->modalSubmitActionLabel('Kirim Balasan')
                     ->successNotificationTitle('Balasan terkirim')
+                    ->visible(fn (): bool => $this->viewerIsSuperAdmin())
+                    ->authorize(fn (): bool => $this->viewerIsSuperAdmin())
                     ->using(function (array $data): Message {
                         return app(SupportMessageReplyService::class)->reply(
                             $this->getOwnerRecord(),
@@ -80,6 +84,17 @@ class MessagesRelationManager extends RelationManager
                     }),
             ])
             ->emptyStateHeading('Belum ada pesan')
-            ->emptyStateDescription('Kirim balasan pertama menggunakan tombol di atas setelah pengantin menghubungi support.');
+            ->emptyStateDescription(
+                $this->viewerIsSuperAdmin()
+                    ? 'Kirim balasan pertama menggunakan tombol di atas setelah pengantin menghubungi support.'
+                    : 'Hanya super admin yang dapat mengirim balasan support.'
+            );
+    }
+
+    private function viewerIsSuperAdmin(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->isSuperAdmin();
     }
 }

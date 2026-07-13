@@ -7,6 +7,8 @@ final class SessionStore: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published private(set) var authRevision = 0
+    @Published var pendingTwoFactorToken: String?
+    @Published var pendingTwoFactorMessage: String?
 
     private var restoreGeneration = 0
     private var loginTask: Task<Void, Never>?
@@ -106,7 +108,7 @@ final class SessionStore: ObservableObject {
                 path: "auth/google",
                 json: ["id_token": idToken, "device_name": deviceName]
             )
-            completeAuthentication(with: response)
+            handleLoginAPIResponse(response)
         } catch GoogleSignInError.cancelled {
             isLoading = false
         } catch {
@@ -135,13 +137,30 @@ final class SessionStore: ObservableObject {
             }
 
             let response = try await Self.socialLoginRequest(path: "auth/apple", json: json)
-            completeAuthentication(with: response)
+            handleLoginAPIResponse(response)
         } catch AppleSignInError.cancelled {
             isLoading = false
         } catch {
             isLoading = false
             await handleAuthenticationFailure(error)
         }
+    }
+
+    private func handleLoginAPIResponse(_ response: LoginAPIResponse) {
+        if let challenge = response.challenge {
+            pendingTwoFactorToken = challenge.twoFactorToken
+            pendingTwoFactorMessage = challenge.message
+            isLoading = false
+            return
+        }
+
+        guard let auth = response.authResponse else {
+            isLoading = false
+            errorMessage = "Respons login tidak valid."
+            return
+        }
+
+        completeAuthentication(with: auth)
     }
 
     func register(name: String, email: String, password: String, passwordConfirmation: String) {
@@ -188,6 +207,8 @@ final class SessionStore: ObservableObject {
     func resetTransientUIState() {
         isLoading = false
         errorMessage = nil
+        pendingTwoFactorToken = nil
+        pendingTwoFactorMessage = nil
     }
 
     func updateCurrentUser(_ user: User) {
@@ -200,7 +221,7 @@ final class SessionStore: ObservableObject {
     }
 
     private func performAuthentication(
-        _ request: @Sendable () async throws -> AuthResponse
+        _ request: @Sendable () async throws -> LoginAPIResponse
     ) async {
         guard !Task.isCancelled else {
             return
@@ -216,7 +237,20 @@ final class SessionStore: ObservableObject {
                 return
             }
 
-            completeAuthentication(with: response)
+            if let challenge = response.challenge {
+                pendingTwoFactorToken = challenge.twoFactorToken
+                pendingTwoFactorMessage = challenge.message
+                isLoading = false
+                return
+            }
+
+            guard let auth = response.authResponse else {
+                isLoading = false
+                errorMessage = "Respons login tidak valid."
+                return
+            }
+
+            completeAuthentication(with: auth)
         } catch is CancellationError {
             isLoading = false
         } catch GoogleSignInError.cancelled {
@@ -227,6 +261,27 @@ final class SessionStore: ObservableObject {
             isLoading = false
             await handleAuthenticationFailure(error)
         }
+    }
+
+    func verifyTwoFactor(code: String) async {
+        guard let token = pendingTwoFactorToken else { return }
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let response = try await PrivacyRepository().completeTwoFactorLogin(token: token, code: code)
+            pendingTwoFactorToken = nil
+            pendingTwoFactorMessage = nil
+            completeAuthentication(with: response)
+        } catch {
+            isLoading = false
+            await handleAuthenticationFailure(error)
+        }
+    }
+
+    func cancelTwoFactorChallenge() {
+        pendingTwoFactorToken = nil
+        pendingTwoFactorMessage = nil
     }
 
     private func handleAuthenticationFailure(_ error: Error) async {
@@ -271,7 +326,7 @@ final class SessionStore: ObservableObject {
         email: String,
         password: String,
         deviceName: String
-    ) async throws -> AuthResponse {
+    ) async throws -> LoginAPIResponse {
         try await APIClient.shared.request(
             "auth/login",
             method: "POST",
@@ -285,8 +340,8 @@ final class SessionStore: ObservableObject {
         password: String,
         passwordConfirmation: String,
         deviceName: String
-    ) async throws -> AuthResponse {
-        try await APIClient.shared.request(
+    ) async throws -> LoginAPIResponse {
+        let auth: AuthResponse = try await APIClient.shared.request(
             "auth/register",
             method: "POST",
             json: [
@@ -297,12 +352,19 @@ final class SessionStore: ObservableObject {
                 "device_name": deviceName,
             ]
         )
+        return LoginAPIResponse(
+            user: auth.user,
+            token: auth.token,
+            requiresTwoFactor: nil,
+            twoFactorToken: nil,
+            message: nil
+        )
     }
 
     private nonisolated static func socialLoginRequest(
         path: String,
         json: [String: Any]
-    ) async throws -> AuthResponse {
+    ) async throws -> LoginAPIResponse {
         try await APIClient.shared.request(path, method: "POST", json: json)
     }
 }

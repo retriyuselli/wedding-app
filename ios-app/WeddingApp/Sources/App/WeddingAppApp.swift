@@ -44,6 +44,7 @@ struct WeddingAppApp: App {
             RootView(session: session)
                 .environmentObject(session)
                 .modifier(AppLanguageModifier())
+                .modifier(AppAppearanceModifier())
                 .onAppear {
                     GoogleSignInService.shared.configureIfNeeded()
                 }
@@ -85,5 +86,15 @@ private struct AppLanguageModifier: ViewModifier {
             content
                 .environment(\.locale, Locale(identifier: "id_ID"))
         }
+    }
+}
+
+private struct AppAppearanceModifier: ViewModifier {
+    @ObservedObject private var appearance = AppearanceStore.shared
+
+    func body(content: Content) -> some View {
+        content
+            .preferredColorScheme(appearance.theme.preferredColorScheme)
+            .id("appearance-\(appearance.colorPalette.rawValue)-\(appearance.theme.rawValue)-\(appearance.textSize.rawValue)")
     }
 }

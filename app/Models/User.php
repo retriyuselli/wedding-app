@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,9 +17,21 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'google_id', 'apple_id', 'avatar_url', 'whatsapp', 'notification_settings'])]
+#[Fillable([
+    'name',
+    'email',
+    'password',
+    'google_id',
+    'apple_id',
+    'avatar_url',
+    'whatsapp',
+    'notification_settings',
+    'privacy_settings',
+    'two_factor_enabled',
+    'password_changed_at',
+])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
@@ -27,7 +42,31 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'notification_settings' => 'array',
+            'privacy_settings' => 'array',
+            'two_factor_enabled' => 'boolean',
+            'password_changed_at' => 'datetime',
         ];
+    }
+
+    public function trustedDevices(): HasMany
+    {
+        return $this->hasMany(TrustedDevice::class)->orderByDesc('last_used_at');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() !== 'admin') {
+            return false;
+        }
+
+        return $this->isSuperAdmin()
+            || $this->hasRole('admin')
+            || $this->hasRole(config('filament-shield.panel_user.name', 'panel_user'));
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatarUrl();
     }
 
     public function avatarUrl(): ?string
@@ -96,6 +135,16 @@ class User extends Authenticatable
     public function guests(): HasMany
     {
         return $this->hasMany(Guest::class);
+    }
+
+    public function documentFolders(): HasMany
+    {
+        return $this->hasMany(DocumentFolder::class)->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function weddingDocuments(): HasMany
+    {
+        return $this->hasMany(WeddingDocument::class)->latest();
     }
 
     public function customerNotifications(): HasMany

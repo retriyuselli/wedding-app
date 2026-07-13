@@ -8,11 +8,13 @@ use App\Filament\Resources\CustomerNotifications\Pages\ListCustomerNotifications
 use App\Filament\Resources\CustomerNotifications\Schemas\CustomerNotificationForm;
 use App\Filament\Resources\CustomerNotifications\Tables\CustomerNotificationsTable;
 use App\Models\CustomerNotification;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class CustomerNotificationResource extends Resource
@@ -28,6 +30,13 @@ class CustomerNotificationResource extends Resource
     protected static ?string $modelLabel = 'Notifikasi Customer';
 
     protected static ?string $pluralModelLabel = 'Notifikasi Customer';
+
+    public static function canCreate(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->isSuperAdmin();
+    }
 
     public static function form(Schema $schema): Schema
     {

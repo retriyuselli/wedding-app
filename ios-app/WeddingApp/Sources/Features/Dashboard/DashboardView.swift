@@ -61,6 +61,7 @@ private enum DashboardTab: String, CaseIterable {
 private struct HomeDashboardView: View {
     let selectTab: (DashboardTab) -> Void
 
+    @EnvironmentObject private var session: SessionStore
     @ObservedObject private var categoriesStore = BudgetCategoriesStore.shared
     @State private var info = WeddingInfo(id: nil, groomName: "", brideName: "", budaya: "", songlist: [])
     @State private var budget = WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
@@ -75,6 +76,7 @@ private struct HomeDashboardView: View {
     @State private var showInspiration = false
     @State private var showMessages = false
     @State private var showNotifications = false
+    @State private var unreadNotificationCount = 0
 
     private var displayQuotes: [WeddingQuote] {
         quotes.isEmpty ? WeddingQuote.fallback : quotes
@@ -161,7 +163,10 @@ private struct HomeDashboardView: View {
                 MessagesView()
             }
             .sheet(isPresented: $showNotifications) {
-                NotificationsSheet()
+                NotificationsSheet { count in
+                    unreadNotificationCount = count
+                }
+                .environmentObject(session)
             }
         }
     }
@@ -205,14 +210,16 @@ private struct HomeDashboardView: View {
                         .background(.white.opacity(0.86), in: Circle())
                         .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 16, y: 8)
 
-                    Circle()
-                        .fill(AppTheme.gold)
-                        .frame(width: 12, height: 12)
-                        .overlay {
-                            Circle()
-                                .stroke(.white, lineWidth: 2)
-                        }
-                        .offset(x: 1, y: -1)
+                    if unreadNotificationCount > 0 {
+                        Circle()
+                            .fill(AppTheme.gold)
+                            .frame(width: 12, height: 12)
+                            .overlay {
+                                Circle()
+                                    .stroke(.white, lineWidth: 2)
+                            }
+                            .offset(x: 1, y: -1)
+                    }
                 }
             }
             .accessibilityLabel(L10n.Dashboard.notifications)
@@ -500,6 +507,16 @@ private struct HomeDashboardView: View {
             quotes = []
         }
 
+        do {
+            let notificationEnvelope: Envelope<[CustomerNotification]> = try await APIClient.shared.request(
+                "customer-notifications",
+                queryItems: [URLQueryItem(name: "unread_only", value: "1")]
+            )
+            unreadNotificationCount = notificationEnvelope.data.count
+        } catch {
+            // Keep the last known badge count if the inbox request fails.
+        }
+
         if let firstQuote = displayQuotes.first {
             quoteIndex = firstQuote.id
         }
@@ -643,45 +660,6 @@ private struct QuickActionButton: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
-    }
-}
-
-private struct NotificationsSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                LuxuryWeddingBackground()
-
-                VStack(spacing: 20) {
-                    Image(systemName: "bell.slash")
-                        .font(.system(size: 48, weight: .light))
-                        .foregroundStyle(AppTheme.sageDark.opacity(0.4))
-
-                    VStack(spacing: 6) {
-                        Text(L10n.Dashboard.noNotifications)
-                            .font(.system(size: 20, weight: .semibold, design: .serif))
-                            .foregroundStyle(AppTheme.sageDark)
-
-                        Text(L10n.Dashboard.noNotificationsSub)
-                            .font(AppFont.regular(13))
-                            .foregroundStyle(AppTheme.ink.opacity(0.5))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(3)
-                    }
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(L10n.Common.close) { dismiss() }
-                        .font(AppFont.medium(15))
-                        .foregroundStyle(AppTheme.sageDark)
-                }
-            }
-            .navigationTitle(L10n.Dashboard.notifications)
-            .navigationBarTitleDisplayMode(.inline)
-        }
     }
 }
 

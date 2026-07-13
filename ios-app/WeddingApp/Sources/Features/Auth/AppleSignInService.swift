@@ -9,11 +9,11 @@ enum AppleSignInError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingIdentityToken:
-            return "Token Apple tidak tersedia. Coba lagi."
+            return L10n.Auth.appleTokenMissing
         case .cancelled:
-            return "Login Apple dibatalkan."
+            return L10n.Auth.appleCancelled
         case .failed:
-            return "Tidak dapat menyelesaikan login dengan Apple."
+            return L10n.Auth.appleFailed
         }
     }
 }

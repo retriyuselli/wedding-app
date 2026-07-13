@@ -31,7 +31,7 @@ class ListVipGuests extends ListRecords
                 ->label('Upload Excel')
                 ->icon(Heroicon::OutlinedArrowUpTray)
                 ->modalHeading('Import Tamu VIP dari Excel')
-                ->modalDescription('Gunakan template Excel agar kolom sesuai. File yang didukung: .xlsx')
+                ->modalDescription('Gunakan template Excel agar kolom sesuai. File yang didukung: .xlsx (maks. 5MB)')
                 ->schema([
                     Select::make('user_id')
                         ->label('Pengantin')
@@ -45,7 +45,7 @@ class ListVipGuests extends ListRecords
                         ->acceptedFileTypes([
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         ])
-                        ->maxSize(10240)
+                        ->maxSize(5120)
                         ->required()
                         ->disk('local')
                         ->directory('imports/vip-guests')

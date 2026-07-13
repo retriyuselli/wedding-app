@@ -152,7 +152,7 @@ private struct RegisterFormSheet: View {
                     .offset(y: -5)
 
                 HStack(spacing: 8) {
-                    Text("Buat akun baru")
+                    Text(L10n.Auth.createAccount)
                         .font(AppFont.semibold(27))
                         .foregroundStyle(LoginPalette.green)
 

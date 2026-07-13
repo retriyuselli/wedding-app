@@ -161,53 +161,39 @@ struct WeddingDetailView: View {
     // MARK: - Summary Card
 
     private var summaryCard: some View {
-        ZStack(alignment: .trailing) {
-            HStack(spacing: 14) {
-                Image("CouplePortrait")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 72, height: 72)
-                    .clipShape(Circle())
-                    .overlay { Circle().stroke(AppTheme.gold.opacity(0.45), lineWidth: 1.2) }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(coupleName)
-                        .font(AppFont.semibold(20))
-                        .foregroundStyle(AppTheme.sageDark)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.75)
-
-                    Label(
-                        weddingDate.map { DateFormatter.displayLocaleDate($0) } ?? L10n.WeddingDetail.defaultDate,
-                        systemImage: "calendar"
-                    )
-                    .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
-
-                    Label(primaryLocation, systemImage: "mappin")
-                        .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.5))
-                        .lineLimit(2)
-                }
-
-                Spacer(minLength: 0)
-            }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-
-            Image("FloralHeader")
+        HStack(spacing: 14) {
+            Image("CouplePortrait")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: 110, height: 110)
-                .clipped()
-                .opacity(0.35)
-                .mask {
-                    LinearGradient(colors: [.clear, .white], startPoint: .leading, endPoint: .trailing)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .allowsHitTesting(false)
+                .frame(width: 72, height: 72)
+                .clipShape(Circle())
+                .overlay { Circle().stroke(AppTheme.gold.opacity(0.45), lineWidth: 1.2) }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(coupleName)
+                    .font(AppFont.semibold(20))
+                    .foregroundStyle(AppTheme.sageDark)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.75)
+
+                Label(
+                    weddingDate.map { DateFormatter.displayLocaleDate($0) } ?? L10n.WeddingDetail.defaultDate,
+                    systemImage: "calendar"
+                )
+                .font(AppFont.regular(12))
+                .foregroundStyle(AppTheme.ink.opacity(0.5))
+
+                Label(primaryLocation, systemImage: "mappin")
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 0)
         }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)

@@ -16,6 +16,9 @@ struct BudgetView: View {
     @State private var showReport = false
     @State private var showSummaryDetail = false
     @State private var showIncomingPayments = false
+    @State private var showExpenseFilter = false
+    @State private var expenseStatusFilter: String? = nil
+    @State private var draftExpenseStatusFilter: String? = nil
     @State private var selectedCategory: BudgetCategory?
     @State private var searchText = ""
     @State private var isSearching = false
@@ -83,20 +86,20 @@ struct BudgetView: View {
 
     private var totalBudgetCaption: String {
         if budget.totalBudget <= 0 {
-            return "Ketuk untuk atur total budget"
+            return L10n.Budget.tapToSetTotal
         }
 
         if let planPercent = summary?.planCoveragePercent {
-            return "Alokasi \(planPercent)% dari rencana"
+            return L10n.Budget.allocationOfPlan(planPercent)
         }
 
         let plannedTotal = categoryAllocations.reduce(0) { $0 + $1.allocatedAmount }
         if plannedTotal > 0 {
             let percent = Int(min(100, round(plannedTotal / budget.totalBudget * 100)))
-            return "Alokasi \(percent)% dari rencana"
+            return L10n.Budget.allocationOfPlan(percent)
         }
 
-        return "Total rencana pernikahan"
+        return L10n.Budget.totalPlan
     }
 
     private var recentIncomingPayments: [IncomingPayment] {
@@ -129,6 +132,9 @@ struct BudgetView: View {
                         } else {
                             totalCard
                             statsRow
+                            if expenseStatusFilter != nil {
+                                activeExpenseFilterChip
+                            }
                             incomingPaymentsCard
                             summaryHeader
                             summarySection
@@ -175,7 +181,25 @@ struct BudgetView: View {
             }
             .sheet(isPresented: $showReport) {
                 BudgetReportShareView(
-                    reportText: metrics.reportText(categories: categories, incomingTotal: incomingTotal)
+                    metrics: metrics,
+                    categories: categories,
+                    incomingTotal: incomingTotal
+                )
+            }
+            .sheet(isPresented: $showExpenseFilter) {
+                BudgetExpenseFilterSheet(
+                    selection: $draftExpenseStatusFilter,
+                    onApply: {
+                        expenseStatusFilter = draftExpenseStatusFilter
+                        showExpenseFilter = false
+                        Task { await load() }
+                    },
+                    onReset: {
+                        draftExpenseStatusFilter = nil
+                        expenseStatusFilter = nil
+                        showExpenseFilter = false
+                        Task { await load() }
+                    }
                 )
             }
             .navigationDestination(isPresented: $showIncomingPayments) {
@@ -244,8 +268,9 @@ struct BudgetView: View {
                 }
                 .buttonStyle(.plain)
 
-                circleButton("slider.horizontal.3") {
-                    showEditBudget = true
+                circleButton("slider.horizontal.3", isActive: expenseStatusFilter != nil) {
+                    draftExpenseStatusFilter = expenseStatusFilter
+                    showExpenseFilter = true
                 }
             }
             .padding(.top, 4)
@@ -280,7 +305,7 @@ struct BudgetView: View {
                     .font(.system(size: 15))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
 
-                TextField("Cari expense, vendor, kategori...", text: $searchText)
+                TextField(L10n.Budget.searchPlaceholder, text: $searchText)
                     .font(AppFont.regular(15))
                     .foregroundStyle(AppTheme.ink)
                     .autocorrectionDisabled()
@@ -312,7 +337,7 @@ struct BudgetView: View {
                     isSearchFocused = false
                 }
             } label: {
-                Text("Batal")
+                Text(L10n.Common.cancel)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.sageDark)
             }
@@ -327,10 +352,10 @@ struct BudgetView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 28))
                     .foregroundStyle(AppTheme.sage.opacity(0.5))
-                Text("Cari di budget")
+                Text(L10n.Budget.searchEmptyTitle)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.sageDark)
-                Text("Ketik nama expense, vendor, kategori, atau pengirim uang masuk.")
+                Text(L10n.Budget.searchEmptySub)
                     .font(AppFont.regular(12))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -341,9 +366,9 @@ struct BudgetView: View {
             .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         } else if !hasSearchResults {
             ContentUnavailableView(
-                "Tidak ditemukan",
+                L10n.Budget.searchNotFound,
                 systemImage: "magnifyingglass",
-                description: Text("Tidak ada hasil untuk \"\(trimmedSearchQuery)\".")
+                description: Text(L10n.Budget.searchNoResults(trimmedSearchQuery))
             )
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
@@ -351,7 +376,7 @@ struct BudgetView: View {
             VStack(alignment: .leading, spacing: 16) {
                 if !filteredSchedules.isEmpty {
                     searchSectionHeader(
-                        title: "Pengeluaran",
+                        title: L10n.Budget.expenses,
                         count: filteredSchedules.count
                     )
 
@@ -369,7 +394,7 @@ struct BudgetView: View {
 
                 if !filteredCategories.isEmpty {
                     searchSectionHeader(
-                        title: "Kategori",
+                        title: L10n.Budget.categories,
                         count: filteredCategories.count
                     )
 
@@ -387,7 +412,7 @@ struct BudgetView: View {
 
                 if !filteredIncomingPayments.isEmpty {
                     searchSectionHeader(
-                        title: "Uang Masuk",
+                        title: L10n.Budget.incoming,
                         count: filteredIncomingPayments.count
                     )
 
@@ -586,6 +611,56 @@ struct BudgetView: View {
         .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 5)
     }
 
+    private var activeExpenseFilterChip: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                .font(.system(size: 14))
+                .foregroundStyle(AppTheme.sageDark)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n.Budget.filterActive)
+                    .font(AppFont.medium(12))
+                    .foregroundStyle(AppTheme.sageDark)
+                Text(expenseStatusFilterLabel)
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+            }
+
+            Spacer(minLength: 8)
+
+            Button {
+                expenseStatusFilter = nil
+                draftExpenseStatusFilter = nil
+                Task { await load() }
+            } label: {
+                Text(L10n.Budget.clearFilter)
+                    .font(AppFont.medium(12))
+                    .foregroundStyle(AppTheme.sageDark)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(AppTheme.lightSage.opacity(0.65), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(AppTheme.sage.opacity(0.18), lineWidth: 1)
+        }
+    }
+
+    private var expenseStatusFilterLabel: String {
+        switch expenseStatusFilter {
+        case "paid":
+            return L10n.Budget.paid
+        case "pending":
+            return L10n.Budget.unpaid
+        case "overdue":
+            return L10n.Budget.overdue
+        default:
+            return L10n.Common.all
+        }
+    }
+
     private var incomingPaymentsCard: some View {
         Button {
             showIncomingPayments = true
@@ -603,11 +678,11 @@ struct BudgetView: View {
             showSummaryDetail = true
         } label: {
             HStack {
-                Text("Ringkasan Anggaran")
+                Text(L10n.Budget.summary)
                     .font(AppFont.medium(16))
                     .foregroundStyle(AppTheme.sageDark)
                 Spacer()
-                Label("Lihat detail", systemImage: "chevron.right")
+                Label(L10n.Common.seeDetail, systemImage: "chevron.right")
                     .font(AppFont.regular(12))
                     .labelStyle(.titleAndIcon)
                     .foregroundStyle(.secondary)
@@ -624,10 +699,10 @@ struct BudgetView: View {
                 Image(systemName: "chart.pie")
                     .font(.system(size: 28))
                     .foregroundStyle(AppTheme.sage.opacity(0.5))
-                Text("Belum ada pengeluaran")
+                Text(L10n.Budget.noExpenses)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.sageDark)
-                Text("Tambahkan expense pertama untuk melihat ringkasan per kategori.")
+                Text(L10n.Budget.noExpensesSub)
                     .font(AppFont.regular(12))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -655,7 +730,7 @@ struct BudgetView: View {
             Button {
                 showAddExpense = true
             } label: {
-                actionItem(icon: "plus", title: "Tambah Expense", sub: "Catat pengeluaran baru")
+                actionItem(icon: "plus", title: L10n.Budget.addExpense, sub: L10n.Budget.addExpenseSub)
             }
             .buttonStyle(.plain)
 
@@ -664,7 +739,7 @@ struct BudgetView: View {
             Button {
                 showCategories = true
             } label: {
-                actionItem(icon: "square.grid.2x2", title: "Kategori Budget", sub: "Kelola kategori anggaran")
+                actionItem(icon: "square.grid.2x2", title: L10n.Budget.categoriesAction, sub: L10n.Budget.categoriesActionSub)
             }
             .buttonStyle(.plain)
 
@@ -673,7 +748,7 @@ struct BudgetView: View {
             Button {
                 showReport = true
             } label: {
-                actionItem(icon: "chart.bar", title: "Laporan Budget", sub: "Unduh laporan lengkap")
+                actionItem(icon: "chart.bar", title: L10n.Budget.report, sub: L10n.Budget.reportSub)
             }
             .buttonStyle(.plain)
         }
@@ -716,7 +791,11 @@ struct BudgetView: View {
             await categoriesStore.loadIfNeeded()
 
             async let budgetEnvelope: NullableEnvelope<WeddingBudget> = APIClient.shared.request("wedding-budget")
-            async let scheduleEnvelope: Envelope<[PaymentSchedule]> = APIClient.shared.request("wedding-payment-schedules")
+            let scheduleQueryItems = expenseStatusFilter.map { [URLQueryItem(name: "status", value: $0)] }
+            async let scheduleEnvelope: Envelope<[PaymentSchedule]> = APIClient.shared.request(
+                "wedding-payment-schedules",
+                queryItems: scheduleQueryItems
+            )
 
             let budgetResult = try await budgetEnvelope.data
             budget = budgetResult ?? WeddingBudget(
@@ -756,5 +835,92 @@ struct BudgetView: View {
         } catch {
             incomingPayments = []
         }
+    }
+}
+
+private struct BudgetExpenseFilterSheet: View {
+    @Binding var selection: String?
+    let onApply: () -> Void
+    let onReset: () -> Void
+
+    private let options: [(id: String?, label: String)] = [
+        (nil, L10n.Common.all),
+        ("paid", L10n.Budget.paid),
+        ("pending", L10n.Budget.unpaid),
+        ("overdue", L10n.Budget.overdue),
+    ]
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                LuxuryWeddingBackground()
+
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(L10n.Budget.filterExpenses)
+                        .font(AppFont.regular(13))
+                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .padding(.horizontal, 4)
+
+                    VStack(spacing: 0) {
+                        ForEach(Array(options.enumerated()), id: \.offset) { index, option in
+                            Button {
+                                selection = option.id
+                            } label: {
+                                HStack {
+                                    Text(option.label)
+                                        .font(AppFont.medium(15))
+                                        .foregroundStyle(AppTheme.ink)
+                                    Spacer()
+                                    if selection == option.id {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(AppTheme.sageDark)
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                            }
+                            .buttonStyle(.plain)
+
+                            if index < options.count - 1 {
+                                Divider().opacity(0.35)
+                            }
+                        }
+                    }
+                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 12) {
+                        Button(action: onReset) {
+                            Text(L10n.Common.reset)
+                                .font(AppFont.medium(15))
+                                .foregroundStyle(AppTheme.sageDark)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(AppTheme.lightSage, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+
+                        Button(action: onApply) {
+                            Text(L10n.Common.apply)
+                                .font(AppFont.medium(15))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(20)
+            }
+            .navigationTitle(L10n.Common.filter)
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .presentationDetents([.medium])
     }
 }

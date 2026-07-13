@@ -45,6 +45,8 @@ struct AddExpenseView: View {
     @State private var showPaymentMethodPicker = false
     @State private var showProofViewer = false
     @State private var showProofPicker = false
+    @State private var showProofSourceDialog = false
+    @State private var showProofFileImporter = false
 
     @State private var isLoading = false
     @State private var isLoadingMethods = false
@@ -55,13 +57,13 @@ struct AddExpenseView: View {
     private var isEditing: Bool { schedule != nil }
 
     private var selectedCategoryLabel: String {
-        category.isEmpty ? "Pilih kategori expense" : categoriesStore.label(for: category)
+        category.isEmpty ? L10n.Budget.pickCategory : categoriesStore.label(for: category)
     }
 
     private var selectedPaymentMethodLabel: String {
         guard let selectedPaymentMethodId,
               let method = paymentMethods.first(where: { $0.id == selectedPaymentMethodId }) else {
-            return "Pilih metode pembayaran"
+            return L10n.Budget.pickPaymentMethod
         }
         return method.displayLabel
     }
@@ -69,7 +71,7 @@ struct AddExpenseView: View {
     private var selectedEventLabel: String {
         guard let selectedWeddingEventId,
               let event = weddingEvents.first(where: { $0.id == selectedWeddingEventId }) else {
-            return "Tidak terkait acara (opsional)"
+            return L10n.Budget.noEventOptional
         }
 
         return event.jenisLabel ?? event.jenisAcara.capitalized
@@ -123,19 +125,19 @@ struct AddExpenseView: View {
                     }
 
                     inputRow(icon: "doc.text") {
-                        TextField("Contoh: DP Venue, Catering, Dekorasi", text: $title)
+                        TextField(L10n.Budget.expenseTitlePlaceholder, text: $title)
                             .font(AppFont.regular(14))
                             .foregroundStyle(AppTheme.ink)
                     }
 
                     inputRow(icon: "building.2") {
-                        TextField("Nama vendor (opsional)", text: $vendorName)
+                        TextField(L10n.Budget.vendorOptional, text: $vendorName)
                             .font(AppFont.regular(14))
                             .foregroundStyle(AppTheme.ink)
                     }
 
                     inputRow(icon: "banknote") {
-                        TextField("Masukkan jumlah", text: $amountText)
+                        TextField(L10n.Budget.enterAmount, text: $amountText)
                             .font(AppFont.regular(14))
                             .foregroundStyle(AppTheme.ink)
                             .keyboardType(.numberPad)
@@ -174,7 +176,7 @@ struct AddExpenseView: View {
                         Button(role: .destructive) {
                             Task { await deleteExpense() }
                         } label: {
-                            Label("Hapus Expense", systemImage: "trash")
+                            Label(L10n.Budget.deleteExpense, systemImage: "trash")
                                 .font(AppFont.medium(14))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
@@ -216,25 +218,44 @@ struct AddExpenseView: View {
         }
         .navigationDestination(isPresented: $showPaymentMethodPicker) {
             ExpensePaymentMethodPickerView(
-                methods: paymentMethods,
+                methods: $paymentMethods,
                 selection: $selectedPaymentMethodId,
-                isLoading: isLoadingMethods
+                isLoading: isLoadingMethods,
+                onReload: { await loadPaymentMethods() }
             )
         }
         .onChange(of: selectedProofItem) { _, item in
             Task { await loadProofPreview(from: item) }
         }
         .photosPicker(isPresented: $showProofPicker, selection: $selectedProofItem, matching: proofPickerMatching)
+        .fileImporter(
+            isPresented: $showProofFileImporter,
+            allowedContentTypes: [.jpeg, .png, .pdf],
+            allowsMultipleSelection: false
+        ) { result in
+            Task { @MainActor in
+                handleProofFileImport(result)
+            }
+        }
+        .confirmationDialog(L10n.Budget.chooseProofSource, isPresented: $showProofSourceDialog) {
+            Button(L10n.Budget.choosePhoto) {
+                showProofPicker = true
+            }
+            Button(L10n.Budget.chooseFile) {
+                showProofFileImporter = true
+            }
+            Button(L10n.Common.cancel, role: .cancel) {}
+        }
         .sheet(isPresented: $showProofViewer) {
             ExpenseProofViewer(
                 image: proofPreview,
                 remoteURL: proofRemoteUrl.flatMap(URL.init(string:))
             )
         }
-        .alert("Ukuran File Terlalu Besar", isPresented: $showProofSizeAlert) {
-            Button("OK", role: .cancel) {}
+        .alert(L10n.Budget.fileTooLarge, isPresented: $showProofSizeAlert) {
+            Button(L10n.Common.ok, role: .cancel) {}
         } message: {
-            Text(proofSizeError ?? "File melebihi batas maksimal 1 MB.")
+            Text(proofSizeError ?? L10n.Budget.fileTooLargeDefault)
         }
     }
 
@@ -255,10 +276,10 @@ struct AddExpenseView: View {
             Spacer()
 
             VStack(spacing: 4) {
-                Text(isEditing ? "Edit Expense" : "Tambah Expense")
+                Text(isEditing ? L10n.Budget.editExpense : L10n.Budget.addExpense)
                     .font(AppFont.medium(18))
                     .foregroundStyle(AppTheme.sageDark)
-                Text(isEditing ? "Perbarui pengeluaran Anda" : "Catat pengeluaran baru Anda")
+                Text(isEditing ? L10n.Budget.editExpenseFormSub : L10n.Budget.addExpenseFormSub)
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
                     .multilineTextAlignment(.center)
@@ -276,7 +297,7 @@ struct AddExpenseView: View {
             HStack(spacing: 12) {
                 fieldIcon("note.text")
 
-                TextField("Tulis catatan tambahan", text: $notes, axis: .vertical)
+                TextField(L10n.Budget.notesPlaceholder, text: $notes, axis: .vertical)
                     .font(AppFont.regular(14))
                     .foregroundStyle(AppTheme.ink)
                     .lineLimit(3...5)
@@ -301,29 +322,29 @@ struct AddExpenseView: View {
             HStack(spacing: 12) {
                 fieldIcon("checkmark.circle")
 
-                Text("Status Pembayaran")
+                Text(L10n.Budget.paymentStatus)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.ink)
 
                 Spacer()
             }
 
-            Picker("Status Pembayaran", selection: $isMarkedPaid) {
-                Text("Belum Bayar").tag(false)
-                Text("Sudah Bayar").tag(true)
+            Picker(L10n.Budget.paymentStatus, selection: $isMarkedPaid) {
+                Text(L10n.Budget.unpaid).tag(false)
+                Text(L10n.Budget.paid).tag(true)
             }
             .pickerStyle(.segmented)
 
             if isMarkedPaid {
-                Text("Dicatat sebagai sudah dibayar. Upload bukti pembayaran tetap opsional.")
+                Text(L10n.Budget.statusHintPaid)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
             } else if isOverdueUnpaid {
-                Text("Jatuh tempo sudah lewat — ditandai terlambat di anggaran.")
+                Text(L10n.Budget.statusHintOverdue)
                     .font(AppFont.regular(11))
                     .foregroundStyle(Color.orange.opacity(0.85))
             } else {
-                Text("Masuk ke komitmen anggaran sampai ditandai lunas.")
+                Text(L10n.Budget.statusHintPending)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
             }
@@ -346,7 +367,7 @@ struct AddExpenseView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 fieldIcon("photo.on.rectangle")
-                Text("Bukti Pembayaran (Opsional)")
+                Text(L10n.Budget.proofOptional)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.ink)
 
@@ -356,7 +377,7 @@ struct AddExpenseView: View {
                     Button {
                         showProofViewer = true
                     } label: {
-                        Label("Lihat", systemImage: "eye")
+                        Label(L10n.Budget.view, systemImage: "eye")
                             .font(AppFont.medium(12))
                             .foregroundStyle(AppTheme.sageDark)
                             .padding(.horizontal, 12)
@@ -380,9 +401,9 @@ struct AddExpenseView: View {
                 .buttonStyle(.plain)
 
                 Button {
-                    showProofPicker = true
+                    showProofSourceDialog = true
                 } label: {
-                    Label("Ganti Bukti", systemImage: "arrow.triangle.2.circlepath")
+                    Label(L10n.Budget.replaceProof, systemImage: "arrow.triangle.2.circlepath")
                         .font(AppFont.medium(12))
                         .foregroundStyle(AppTheme.sageDark)
                         .frame(maxWidth: .infinity)
@@ -391,13 +412,15 @@ struct AddExpenseView: View {
                 }
                 .buttonStyle(.plain)
             } else {
-                PhotosPicker(selection: $selectedProofItem, matching: proofPickerMatching) {
+                Button {
+                    showProofSourceDialog = true
+                } label: {
                     proofUploadContent
                 }
                 .buttonStyle(.plain)
             }
 
-            Text("Maks. 1MB (JPG, PNG, PDF)")
+            Text(L10n.Budget.proofMaxSize)
                 .font(AppFont.regular(11))
                 .foregroundStyle(proofSizeError == nil ? AppTheme.ink.opacity(0.35) : .red.opacity(0.75))
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -441,7 +464,7 @@ struct AddExpenseView: View {
                     Image(systemName: "doc.richtext")
                         .font(.system(size: 28))
                         .foregroundStyle(AppTheme.sageDark)
-                    Text("Ketuk Lihat untuk membuka bukti")
+                    Text(L10n.Budget.tapToOpenProof)
                         .font(AppFont.regular(13))
                         .foregroundStyle(AppTheme.ink.opacity(0.55))
                 }
@@ -475,7 +498,7 @@ struct AddExpenseView: View {
                         .frame(width: 44, height: 44)
                         .background(AppTheme.lightSage, in: Circle())
 
-                    Text("Tambah foto atau upload bukti pembayaran")
+                    Text(L10n.Budget.addProof)
                         .font(AppFont.regular(13))
                         .foregroundStyle(AppTheme.ink.opacity(0.55))
                         .multilineTextAlignment(.center)
@@ -495,7 +518,7 @@ struct AddExpenseView: View {
             HStack(spacing: 8) {
                 Image(systemName: "square.and.arrow.down")
                     .font(.system(size: 16, weight: .semibold))
-                Text(isEditing ? "Simpan Perubahan" : "Simpan Expense")
+                Text(isEditing ? L10n.Budget.saveChanges : L10n.Budget.saveExpense)
                     .font(AppFont.medium(16))
             }
             .foregroundStyle(.white)
@@ -650,7 +673,7 @@ struct AddExpenseView: View {
 
         guard let pickedFile = try? await item.loadTransferable(type: PickedProofFile.self) else {
             rejectProofFile(
-                message: "Gagal membaca file bukti pembayaran. Coba pilih file lain."
+                message: L10n.Budget.proofReadError
             )
             return
         }
@@ -659,7 +682,7 @@ struct AddExpenseView: View {
 
         if data.count > maxProofFileSize {
             rejectProofFile(
-                message: "Ukuran file \(Self.formatFileSize(data.count)) melebihi batas maksimal 1 MB. Silakan pilih file yang lebih kecil."
+                message: L10n.Budget.fileTooLargeDetail(Self.formatFileSize(data.count))
             )
             return
         }
@@ -676,6 +699,55 @@ struct AddExpenseView: View {
             proofPreview = image
         } else {
             proofPreview = nil
+        }
+    }
+
+    @MainActor
+    private func handleProofFileImport(_ result: Result<[URL], Error>) {
+        switch result {
+        case .failure:
+            rejectProofFile(message: L10n.Budget.proofReadError)
+        case .success(let urls):
+            guard let url = urls.first else { return }
+
+            let accessed = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessed {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            guard let data = try? Data(contentsOf: url) else {
+                rejectProofFile(message: L10n.Budget.proofReadError)
+                return
+            }
+
+            if data.count > maxProofFileSize {
+                rejectProofFile(
+                    message: L10n.Budget.fileTooLargeDetail(Self.formatFileSize(data.count))
+                )
+                return
+            }
+
+            let fileName = url.lastPathComponent.isEmpty ? "proof" : url.lastPathComponent
+            let mimeType = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType
+                ?? "application/octet-stream"
+
+            proofSizeError = nil
+            showProofSizeAlert = false
+            proofFileData = data
+            proofFileName = fileName
+            proofMimeType = mimeType
+            proofRemoteUrl = nil
+            isMarkedPaid = true
+            suppressProofSelectionReset = true
+            selectedProofItem = nil
+
+            if mimeType.hasPrefix("image/"), let image = UIImage(data: data) {
+                proofPreview = image
+            } else {
+                proofPreview = nil
+            }
         }
     }
 
@@ -742,7 +814,7 @@ struct AddExpenseView: View {
 
         if let proofFileData, proofFileData.count > maxProofFileSize {
             rejectProofFile(
-                message: "Ukuran file \(Self.formatFileSize(proofFileData.count)) melebihi batas maksimal 1 MB. Silakan pilih file yang lebih kecil."
+                message: L10n.Budget.fileTooLargeDetail(Self.formatFileSize(proofFileData.count))
             )
             return
         }
@@ -857,11 +929,11 @@ private struct ExpenseProofViewer: View {
                             .font(.system(size: 48))
                             .foregroundStyle(AppTheme.sageDark)
 
-                        Text("Bukti pembayaran dalam format PDF")
+                        Text(L10n.Budget.pdfProof)
                             .font(AppFont.medium(15))
                             .foregroundStyle(AppTheme.ink)
 
-                        Button("Buka Dokumen") {
+                        Button(L10n.Budget.openDocument) {
                             openURL(remoteURL)
                         }
                         .font(AppFont.medium(14))
@@ -881,9 +953,9 @@ private struct ExpenseProofViewer: View {
                                     .scaledToFit()
                             case .failure:
                                 ContentUnavailableView(
-                                    "Gagal memuat bukti",
+                                    L10n.Budget.proofLoadError,
                                     systemImage: "photo",
-                                    description: Text("Periksa koneksi internet Anda.")
+                                    description: Text(L10n.Budget.proofLoadErrorSub)
                                 )
                             case .empty:
                                 ProgressView()
@@ -897,17 +969,17 @@ private struct ExpenseProofViewer: View {
                     }
                 } else {
                     ContentUnavailableView(
-                        "Bukti tidak tersedia",
+                        L10n.Budget.proofUnavailable,
                         systemImage: "photo",
-                        description: Text("Belum ada file bukti pembayaran.")
+                        description: Text(L10n.Budget.proofNoFile)
                     )
                 }
             }
-            .navigationTitle("Bukti Pembayaran")
+            .navigationTitle(L10n.Budget.proof)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Tutup") { dismiss() }
+                    Button(L10n.Common.close) { dismiss() }
                 }
             }
         }
@@ -953,7 +1025,7 @@ struct ExpenseCategoryPickerView: View {
             .scrollContentBackground(.hidden)
         }
         .statusBarBlur()
-        .navigationTitle("Pilih Kategori")
+        .navigationTitle(L10n.Budget.pickCategoryTitle)
         .navigationBarTitleDisplayMode(.large)
         .task {
             await categoriesStore.loadIfNeeded()
@@ -976,7 +1048,7 @@ struct ExpenseDatePickerView: View {
                     .padding(.horizontal, 12)
                     .padding(.top, 8)
 
-                Button("Selesai") { dismiss() }
+                Button(L10n.Common.done) { dismiss() }
                     .font(AppFont.medium(15))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -987,7 +1059,7 @@ struct ExpenseDatePickerView: View {
             }
         }
         .statusBarBlur()
-        .navigationTitle("Pilih Tanggal")
+        .navigationTitle(L10n.Budget.pickDate)
         .navigationBarTitleDisplayMode(.large)
     }
 }
@@ -1007,7 +1079,7 @@ struct ExpenseWeddingEventPickerView: View {
                     dismiss()
                 } label: {
                     HStack {
-                        Text("Tidak terkait acara")
+                        Text(L10n.Budget.noEvent)
                             .font(AppFont.regular(15))
                             .foregroundStyle(AppTheme.ink)
                         Spacer()
@@ -1051,16 +1123,19 @@ struct ExpenseWeddingEventPickerView: View {
             .scrollContentBackground(.hidden)
         }
         .statusBarBlur()
-        .navigationTitle("Pilih Acara")
+        .navigationTitle(L10n.Budget.pickEvent)
         .navigationBarTitleDisplayMode(.large)
     }
 }
 
 struct ExpensePaymentMethodPickerView: View {
     @Environment(\.dismiss) private var dismiss
-    let methods: [CustomerPaymentMethod]
+    @Binding var methods: [CustomerPaymentMethod]
     @Binding var selection: Int?
     let isLoading: Bool
+    var onReload: (() async -> Void)? = nil
+
+    @State private var showAddPaymentMethod = false
 
     var body: some View {
         ZStack {
@@ -1071,11 +1146,25 @@ struct ExpensePaymentMethodPickerView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if methods.isEmpty {
-                    ContentUnavailableView(
-                        "Belum ada metode pembayaran",
-                        systemImage: "wallet.pass",
-                        description: Text("Tambahkan metode pembayaran di admin terlebih dahulu.")
-                    )
+                    VStack(spacing: 20) {
+                        ContentUnavailableView(
+                            L10n.Budget.noPaymentMethods,
+                            systemImage: "wallet.pass",
+                            description: Text(L10n.Budget.noPaymentMethodsSub)
+                        )
+
+                        Button {
+                            showAddPaymentMethod = true
+                        } label: {
+                            Label(L10n.Budget.addPaymentMethod, systemImage: "plus")
+                                .font(AppFont.medium(14))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(AppTheme.sageDark, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
                 } else {
                     List {
                         ForEach(methods) { method in
@@ -1109,8 +1198,27 @@ struct ExpensePaymentMethodPickerView: View {
             }
         }
         .statusBarBlur()
-        .navigationTitle("Metode Pembayaran")
+        .navigationTitle(L10n.Budget.paymentMethodTitle)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showAddPaymentMethod = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .navigationDestination(isPresented: $showAddPaymentMethod) {
+            AddPaymentMethodView { method in
+                if let onReload {
+                    await onReload()
+                } else if !methods.contains(where: { $0.id == method.id }) {
+                    methods.append(method)
+                }
+                selection = method.id
+            }
+        }
     }
 }
 

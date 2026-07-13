@@ -2,10 +2,9 @@ import SwiftUI
 
 struct PrivacySecurityView: View {
     @EnvironmentObject private var session: SessionStore
+    @StateObject private var viewModel = PrivacySecurityViewModel()
 
-    @State private var showComingSoon = false
     @State private var showSocialLoginPasswordAlert = false
-    @State private var twoFactorEnabled = true
 
     private var usesSocialLogin: Bool {
         session.currentUser?.hasSocialLogin ?? false
@@ -16,7 +15,7 @@ struct PrivacySecurityView: View {
             return L10n.Privacy.loginViaSocial
         }
 
-        if let updatedAt = session.currentUser?.updatedAt,
+        if let updatedAt = session.currentUser?.passwordChangedAt ?? session.currentUser?.updatedAt,
            let formatted = displayDate(fromISO: updatedAt) {
             return L10n.Privacy.passwordLastChanged(formatted)
         }
@@ -35,14 +34,23 @@ struct PrivacySecurityView: View {
                         subtitle: L10n.Privacy.subtitle
                     )
 
+                    if let errorMessage = viewModel.errorMessage, viewModel.summary == nil {
+                        VStack(spacing: 8) {
+                            Text(errorMessage)
+                                .font(AppFont.regular(13))
+                                .foregroundStyle(.red)
+                            Button("Coba lagi") {
+                                Task { await viewModel.retry() }
+                            }
+                            .font(AppFont.medium(13))
+                            .foregroundStyle(AppTheme.sageDark)
+                        }
+                    }
+
                     summaryCard
-
                     privacySettingsSection
-
                     accountSecuritySection
-
                     privacyPolicyCard
-
                     helpRow
                 }
                 .padding(.horizontal, 20)
@@ -52,11 +60,8 @@ struct PrivacySecurityView: View {
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
-        .alert(L10n.Common.comingSoon, isPresented: $showComingSoon) {
-            Button(L10n.Common.ok, role: .cancel) {}
-        } message: {
-            Text(L10n.Common.comingSoonMessage)
-        }
+        .task { await viewModel.load() }
+        .refreshable { await viewModel.retry() }
         .alert(L10n.Common.notAvailable, isPresented: $showSocialLoginPasswordAlert) {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
@@ -64,11 +69,9 @@ struct PrivacySecurityView: View {
         }
     }
 
-    // MARK: - Summary
-
     private var summaryCard: some View {
-        Button {
-            showComingSoon = true
+        NavigationLink {
+            SecuritySummaryView()
         } label: {
             HStack(spacing: 14) {
                 Image(systemName: "checkmark.shield.fill")
@@ -78,10 +81,10 @@ struct PrivacySecurityView: View {
                     .background(AppTheme.lightSage, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n.Privacy.accountSafe)
+                    Text(viewModel.summary?.title ?? L10n.Privacy.accountSafe)
                         .font(AppFont.medium(15))
                         .foregroundStyle(AppTheme.sageDark)
-                    Text(L10n.Privacy.accountSafeSub)
+                    Text(viewModel.summary?.message ?? L10n.Privacy.accountSafeSub)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.5))
                         .fixedSize(horizontal: false, vertical: true)
@@ -89,9 +92,13 @@ struct PrivacySecurityView: View {
 
                 Spacer(minLength: 8)
 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.28))
+                if viewModel.isLoading {
+                    ProgressView()
+                } else {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(AppTheme.ink.opacity(0.28))
+                }
             }
             .padding(16)
             .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -103,15 +110,21 @@ struct PrivacySecurityView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Privacy Settings
-
     private var privacySettingsSection: some View {
         section(title: L10n.Privacy.privacySettings) {
-            settingRow(
-                icon: "lock",
-                title: L10n.Privacy.dataVisibility,
-                subtitle: L10n.Privacy.dataVisibilitySub
-            )
+            NavigationLink {
+                DataVisibilityView()
+            } label: {
+                rowContent(
+                    icon: "lock",
+                    title: L10n.Privacy.dataVisibility,
+                    subtitle: L10n.Privacy.dataVisibilitySub
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             divider
             NavigationLink {
                 RemindersPreferencesView()
@@ -127,17 +140,33 @@ struct PrivacySecurityView: View {
             }
             .buttonStyle(.plain)
             divider
-            settingRow(
-                icon: "chart.bar",
-                title: L10n.Privacy.permissions,
-                subtitle: L10n.Privacy.permissionsSub
-            )
+            NavigationLink {
+                AppPermissionsView()
+            } label: {
+                rowContent(
+                    icon: "chart.bar",
+                    title: L10n.Privacy.permissions,
+                    subtitle: L10n.Privacy.permissionsSub
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             divider
-            settingRow(
-                icon: "arrow.down.to.line",
-                title: L10n.Privacy.downloadData,
-                subtitle: L10n.Privacy.downloadDataSub
-            )
+            NavigationLink {
+                DataExportView()
+            } label: {
+                rowContent(
+                    icon: "arrow.down.to.line",
+                    title: L10n.Privacy.downloadData,
+                    subtitle: L10n.Privacy.downloadDataSub
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             divider
             NavigationLink {
                 DeleteAccountView()
@@ -155,8 +184,6 @@ struct PrivacySecurityView: View {
             .buttonStyle(.plain)
         }
     }
-
-    // MARK: - Account Security
 
     private var accountSecuritySection: some View {
         section(title: L10n.Privacy.accountSecurity) {
@@ -192,18 +219,36 @@ struct PrivacySecurityView: View {
                 }
             }
             divider
-            settingRow(
-                icon: "iphone",
-                title: L10n.Privacy.trustedDevices,
-                subtitle: L10n.Privacy.trustedDevicesSub
-            )
+            NavigationLink {
+                TrustedDevicesView()
+            } label: {
+                rowContent(
+                    icon: "iphone",
+                    title: L10n.Privacy.trustedDevices,
+                    subtitle: L10n.Privacy.trustedDevicesSub
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             divider
-            settingRow(
-                icon: "checkmark.shield",
-                title: L10n.Privacy.twoFactor,
-                subtitle: L10n.Privacy.twoFactorSub,
-                trailingText: twoFactorEnabled ? L10n.Privacy.twoFactorActive : L10n.Privacy.twoFactorInactive
-            )
+            NavigationLink {
+                TwoFactorSettingsView()
+            } label: {
+                rowContent(
+                    icon: "checkmark.shield",
+                    title: L10n.Privacy.twoFactor,
+                    subtitle: L10n.Privacy.twoFactorSub,
+                    trailingText: viewModel.twoFactorEnabled
+                        ? L10n.Privacy.twoFactorActive
+                        : L10n.Privacy.twoFactorInactive
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             divider
             NavigationLink {
                 ActiveSessionsView()
@@ -221,8 +266,6 @@ struct PrivacySecurityView: View {
         }
     }
 
-    // MARK: - Privacy Policy
-
     private var privacyPolicyCard: some View {
         HStack(spacing: 14) {
             Image(systemName: "checkmark.shield")
@@ -235,7 +278,19 @@ struct PrivacySecurityView: View {
                     .foregroundStyle(AppTheme.ink.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
 
-                policyLink
+                NavigationLink {
+                    PrivacyPolicyView()
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(L10n.Privacy.privacyPolicy)
+                            .font(AppFont.medium(12))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundStyle(AppTheme.sageDark)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(16)
@@ -246,26 +301,9 @@ struct PrivacySecurityView: View {
         }
     }
 
-    @ViewBuilder
-    private var policyLink: some View {
-        NavigationLink {
-            PrivacyPolicyView()
-        } label: {
-            HStack(spacing: 4) {
-                Text(L10n.Privacy.privacyPolicy)
-                    .font(AppFont.medium(12))
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
-            }
-            .foregroundStyle(AppTheme.sageDark)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-        }
-        .buttonStyle(.plain)
-    }
-
     private var helpRow: some View {
-        Button {
-            showComingSoon = true
+        NavigationLink {
+            HelpCenterAPIView()
         } label: {
             rowContent(
                 icon: "questionmark.circle",
@@ -281,8 +319,6 @@ struct PrivacySecurityView: View {
         }
         .buttonStyle(.plain)
     }
-
-    // MARK: - Building Blocks
 
     private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -305,30 +341,6 @@ struct PrivacySecurityView: View {
     private var divider: some View {
         Divider()
             .padding(.leading, 62)
-    }
-
-    private func settingRow(
-        icon: String,
-        title: String,
-        subtitle: String,
-        trailingText: String? = nil,
-        isDestructive: Bool = false
-    ) -> some View {
-        Button {
-            showComingSoon = true
-        } label: {
-            rowContent(
-                icon: icon,
-                title: title,
-                subtitle: subtitle,
-                trailingText: trailingText,
-                isDestructive: isDestructive
-            )
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 
     private func rowContent(

@@ -33,7 +33,7 @@ struct BudgetCategoryRow: View {
 
                 if category.hasPlannedAllocation {
                     HStack(spacing: 6) {
-                        Text("Alokasi \(CurrencyFormatter.rupiah(category.plannedAllocation))")
+                        Text(L10n.Budget.allocationAmount(CurrencyFormatter.rupiah(category.plannedAllocation)))
                         Text("|")
                             .foregroundStyle(AppTheme.ink.opacity(0.25))
                         Text("\(planPercentOfTotal)%")
@@ -41,7 +41,7 @@ struct BudgetCategoryRow: View {
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
                 } else {
-                    Text("Belum diatur · \(CurrencyFormatter.rupiah(category.totalRecorded)) tercatat")
+                    Text(L10n.Budget.notSetRecorded(CurrencyFormatter.rupiah(category.totalRecorded)))
                         .font(AppFont.regular(11))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
                 }
@@ -61,14 +61,14 @@ struct BudgetCategoryRow: View {
                     .minimumScaleFactor(0.7)
 
                 if category.commitment > 0 {
-                    Text("\(CurrencyFormatter.rupiah(category.commitment)) komitmen")
+                    Text(L10n.Budget.commitmentAmount(CurrencyFormatter.rupiah(category.commitment)))
                         .font(AppFont.regular(10))
                         .foregroundStyle(AppTheme.gold.opacity(0.85))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
 
-                Text(category.hasPlannedAllocation ? "\(usagePercent)% terpakai" : "\(usagePercent)% dibayar")
+                Text(category.hasPlannedAllocation ? L10n.Budget.percentUsed(usagePercent) : L10n.Budget.percentPaid(usagePercent))
                     .font(AppFont.regular(10))
                     .foregroundStyle(AppTheme.ink.opacity(0.4))
             }
@@ -112,13 +112,13 @@ struct BudgetCategorySummaryCard: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Terpakai")
+                    Text(L10n.Budget.spent)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.5))
                     Text(CurrencyFormatter.rupiah(category.spent))
                         .font(AppFont.medium(20))
                         .foregroundStyle(AppTheme.sageDark)
-                    Text("\(spentPercentOfBudget)% dari total anggaran")
+                    Text(L10n.Budget.percentOfTotal(spentPercentOfBudget))
                         .font(AppFont.regular(11))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
                 }
@@ -127,25 +127,25 @@ struct BudgetCategorySummaryCard: View {
 
                 if category.hasPlannedAllocation {
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text("Alokasi")
+                        Text(L10n.Budget.allocation)
                             .font(AppFont.regular(12))
                             .foregroundStyle(AppTheme.ink.opacity(0.5))
                         Text(CurrencyFormatter.rupiah(category.plannedAllocation))
                             .font(AppFont.medium(16))
                             .foregroundStyle(AppTheme.sageDark)
-                        Text("Rencana kategori")
+                        Text(L10n.Budget.categoryPlan)
                             .font(AppFont.regular(11))
                             .foregroundStyle(AppTheme.ink.opacity(0.45))
                     }
                 } else if category.commitment > 0 {
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text("Komitmen")
+                        Text(L10n.Budget.commitment)
                             .font(AppFont.regular(12))
                             .foregroundStyle(AppTheme.ink.opacity(0.5))
                         Text(CurrencyFormatter.rupiah(category.commitment))
                             .font(AppFont.medium(16))
                             .foregroundStyle(AppTheme.gold)
-                        Text("Menunggu bayar")
+                        Text(L10n.Budget.awaitingPayment)
                             .font(AppFont.regular(11))
                             .foregroundStyle(AppTheme.ink.opacity(0.45))
                     }
@@ -157,7 +157,7 @@ struct BudgetCategorySummaryCard: View {
 
             Text(
                 category.hasPlannedAllocation
-                    ? "\(spentPercentOfPlan)% terpakai dari alokasi \(CurrencyFormatter.rupiah(category.plannedAllocation))"
+                    ? L10n.Budget.spentOfAllocation(spentPercentOfPlan, CurrencyFormatter.rupiah(category.plannedAllocation))
                     : footerRecordedPaymentText
             )
                 .font(AppFont.regular(11))
@@ -176,14 +176,14 @@ struct BudgetCategorySummaryCard: View {
         let paid = CurrencyFormatter.rupiah(category.spent)
 
         if category.totalRecorded == 0 {
-            return "Belum ada expense tercatat"
+            return L10n.Budget.noExpenseRecorded
         }
 
         if category.commitment > 0, category.spent == 0 {
-            return "\(paid) sudah dibayar dari \(recorded) tercatat · sisanya menunggu bayar"
+            return L10n.Budget.paidFromRecordedWaiting(paid, recorded)
         }
 
-        return "\(paidPercentOfRecorded)% sudah dibayar dari \(recorded) tercatat"
+        return L10n.Budget.paidPercentFromRecorded(paidPercentOfRecorded, recorded)
     }
 }
 
@@ -269,7 +269,15 @@ struct BudgetSummaryMetrics {
     let spent: Double
     let commitment: Double
 
-    var remaining: Double { max(totalBudget - spent - commitment, 0) }
+    /// Floored at zero for progress UI (donut / bars).
+    var remaining: Double { max(balance, 0) }
+
+    /// Signed balance: negative means over budget.
+    var balance: Double { totalBudget - spent - commitment }
+
+    var isOverBudget: Bool { balance < 0 }
+
+    var overspend: Double { max(-balance, 0) }
 
     func percent(_ value: Double) -> Int {
         totalBudget == 0 ? 0 : Int((value / totalBudget * 100).rounded())
@@ -334,25 +342,41 @@ struct BudgetSummaryMetrics {
 
     func reportText(categories: [BudgetCategory], incomingTotal: Double) -> String {
         var lines = [
-            "Laporan Budget Pernikahan",
+            L10n.Budget.reportTitleFull,
             "========================",
             "",
-            "Total Anggaran: \(CurrencyFormatter.rupiah(totalBudget))",
-            "Terpakai: \(CurrencyFormatter.rupiah(spent)) (\(percent(spent))%)",
-            "Komitmen: \(CurrencyFormatter.rupiah(commitment)) (\(percent(commitment))%)",
-            "Sisa Anggaran: \(CurrencyFormatter.rupiah(remaining)) (\(percent(remaining))%)",
-            "Uang Masuk: \(CurrencyFormatter.rupiah(incomingTotal))",
-            "",
-            "Ringkasan per Kategori:",
+            L10n.Budget.reportTotalBudget(CurrencyFormatter.rupiah(totalBudget)),
+            L10n.Budget.reportSpent(CurrencyFormatter.rupiah(spent), percent(spent)),
+            L10n.Budget.reportCommitment(CurrencyFormatter.rupiah(commitment), percent(commitment)),
         ]
 
+        if isOverBudget {
+            lines.append(L10n.Budget.reportOverBudget(CurrencyFormatter.rupiah(overspend), percent(overspend)))
+        } else {
+            lines.append(L10n.Budget.reportRemaining(CurrencyFormatter.rupiah(remaining), percent(remaining)))
+        }
+
+        lines.append(L10n.Budget.reportIncoming(CurrencyFormatter.rupiah(incomingTotal)))
+        lines.append("")
+        lines.append(L10n.Budget.reportPerCategory)
+
         for category in categories {
-            lines.append("- \(category.name): \(CurrencyFormatter.rupiah(category.spent)) terpakai / \(CurrencyFormatter.rupiah(category.totalRecorded)) tercatat")
+            lines.append(
+                L10n.Budget.reportCategoryLine(
+                    category.name,
+                    CurrencyFormatter.rupiah(category.spent),
+                    CurrencyFormatter.rupiah(category.totalRecorded)
+                )
+            )
+
             if category.hasPlannedAllocation {
-                lines.append("  Alokasi: \(CurrencyFormatter.rupiah(category.plannedAllocation))")
+                lines.append(L10n.Budget.reportAllocationLine(CurrencyFormatter.rupiah(category.plannedAllocation)))
+            } else {
+                lines.append(L10n.Budget.reportAllocationNotSet)
             }
+
             if category.commitment > 0 {
-                lines.append("  Komitmen: \(CurrencyFormatter.rupiah(category.commitment))")
+                lines.append(L10n.Budget.reportCommitmentLine(CurrencyFormatter.rupiah(category.commitment)))
             }
         }
 

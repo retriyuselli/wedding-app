@@ -1,22 +1,33 @@
 import SwiftUI
+import UIKit
 
 enum AppTheme {
-    static let navy = Color(red: 0.03, green: 0.10, blue: 0.21)
-    static let cardBackground = Color(red: 0.97, green: 0.97, blue: 0.96)
-    static let peach = Color(red: 0.93, green: 0.66, blue: 0.55)
-    static let peachDark = Color(red: 0.74, green: 0.39, blue: 0.29)
-    static let softPeach = Color(red: 0.97, green: 0.90, blue: 0.87)
-    static let background = Color(red: 0.97, green: 0.95, blue: 0.90)
-    static let surface = Color(red: 1.00, green: 0.98, blue: 0.93)
-    static let ink = Color(red: 0.14, green: 0.18, blue: 0.18)
-    static let mist = Color(red: 0.91, green: 0.90, blue: 0.86)
-    static let plum = Color(red: 0.43, green: 0.55, blue: 0.45)
-    static let sage = Color(red: 0.54, green: 0.65, blue: 0.54)
-    static let lightSage = Color(red: 0.91, green: 0.93, blue: 0.90)
-    static let sageDark = Color(red: 0.22, green: 0.34, blue: 0.27)
-    static let gold = Color(red: 0.76, green: 0.59, blue: 0.28)
-    static let goldDark = Color(red: 0.59, green: 0.42, blue: 0.14)
-    static let green = Color(red: 0.43, green: 0.55, blue: 0.45)
-    static let brown = Color(red: 0.59, green: 0.45, blue: 0.30)
-    static let cream = Color(red: 0.88, green: 0.80, blue: 0.62)
+    static var navy: Color { color(\.navy) }
+    static var cardBackground: Color { color(\.cardBackground) }
+    static var peach: Color { color(\.peach) }
+    static var peachDark: Color { color(\.peachDark) }
+    static var softPeach: Color { color(\.softPeach) }
+    static var background: Color { color(\.background) }
+    static var surface: Color { color(\.surface) }
+    static var ink: Color { color(\.ink) }
+    static var mist: Color { color(\.mist) }
+    static var plum: Color { color(\.plum) }
+    static var sage: Color { color(\.sage) }
+    static var lightSage: Color { color(\.lightSage) }
+    static var sageDark: Color { color(\.sageDark) }
+    static var gold: Color { color(\.gold) }
+    static var goldDark: Color { color(\.goldDark) }
+    static var green: Color { color(\.green) }
+    static var brown: Color { color(\.brown) }
+    static var cream: Color { color(\.cream) }
+
+    private static func color(_ keyPath: KeyPath<ColorPaletteTokens, ThemeRGB>) -> Color {
+        Color(
+            uiColor: UIColor { traits in
+                let token = AppearanceStore.currentPalette.definition[keyPath: keyPath]
+                let rgb = traits.userInterfaceStyle == .dark ? token.dark : token.light
+                return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+            }
+        )
+    }
 }

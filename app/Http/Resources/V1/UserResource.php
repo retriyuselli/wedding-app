@@ -21,7 +21,10 @@ class UserResource extends JsonResource
             'avatar_url' => $this->avatarUrl(),
             'whatsapp' => $this->whatsapp,
             'notification_settings' => $this->notification_settings,
+            'privacy_settings' => $this->privacy_settings,
+            'two_factor_enabled' => (bool) $this->two_factor_enabled,
             'has_social_login' => $this->usesSocialLogin(),
+            'password_changed_at' => $this->password_changed_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

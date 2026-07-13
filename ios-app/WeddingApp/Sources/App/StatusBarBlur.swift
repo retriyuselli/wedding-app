@@ -1,22 +1,46 @@
 import SwiftUI
 
 private struct StatusBarBlur: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var wash: Color { AppTheme.background }
+
     func body(content: Content) -> some View {
         content.overlay(alignment: .top) {
             GeometryReader { proxy in
                 let topInset = proxy.safeAreaInsets.top
                 VStack(spacing: 0) {
                     ZStack {
-                        Color(red: 0.97, green: 0.96, blue: 0.95).opacity(0.82)
-                        Rectangle().fill(.ultraThinMaterial)
+                        wash.opacity(0.98)
+                        Rectangle().fill(.thickMaterial)
+                        Rectangle().fill(.regularMaterial)
+                        wash.opacity(0.55)
                     }
                     .frame(height: topInset)
-                    LinearGradient(
-                        colors: [.white.opacity(0.48), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 14)
+
+                    ZStack(alignment: .top) {
+                        Rectangle()
+                            .fill(.thinMaterial)
+                            .mask(
+                                LinearGradient(
+                                    colors: [.white, .white.opacity(0.35), .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+
+                        LinearGradient(
+                            colors: [
+                                wash.opacity(0.9),
+                                wash.opacity(0.45),
+                                wash.opacity(0.12),
+                                .clear,
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                    .frame(height: 32)
                 }
                 .frame(maxWidth: .infinity)
             }

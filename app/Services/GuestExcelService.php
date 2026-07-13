@@ -17,6 +17,7 @@ class GuestExcelService
      * @var list<string>
      */
     public const TEMPLATE_HEADERS = [
+        'No',
         'Nama Lengkap',
         'Telepon',
         'Email',
@@ -31,8 +32,9 @@ class GuestExcelService
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Daftar Tamu');
         $sheet->fromArray(self::TEMPLATE_HEADERS, null, 'A1');
-        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
         $sheet->fromArray([
+            1,
             'Bapak Contoh Nama',
             '081234567890',
             'contoh@email.com',
@@ -41,7 +43,7 @@ class GuestExcelService
             'Contoh baris data. Hapus sebelum upload.',
         ], null, 'A2');
 
-        foreach (range('A', 'F') as $column) {
+        foreach (range('A', 'G') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
@@ -49,6 +51,7 @@ class GuestExcelService
         $guideSheet->setTitle('Petunjuk');
         $guideSheet->fromArray([
             ['Kolom', 'Wajib', 'Keterangan'],
+            ['No', 'Tidak', 'Nomor urut tampilan. Jika kosong, diisi otomatis berurutan.'],
             ['Nama Lengkap', 'Ya', 'Nama tamu undangan.'],
             ['Telepon', 'Tidak', 'Nomor telepon atau WhatsApp.'],
             ['Email', 'Tidak', 'Alamat email tamu.'],
@@ -63,7 +66,7 @@ class GuestExcelService
                 ->all(),
         ], null, 'A1');
         $guideSheet->getStyle('A1:C1')->getFont()->setBold(true);
-        $guideSheet->getStyle('A10:B10')->getFont()->setBold(true);
+        $guideSheet->getStyle('A11:B11')->getFont()->setBold(true);
 
         foreach (range('A', 'C') as $column) {
             $guideSheet->getColumnDimension($column)->setAutoSize(true);
@@ -115,12 +118,13 @@ class GuestExcelService
         $imported = 0;
         $skipped = 0;
         $errors = [];
+        $nextNumber = ((int) $user->guests()->max('no')) + 1;
 
         foreach ($rows as $rowNumber => $row) {
             $lineNumber = is_int($rowNumber) ? $rowNumber : (int) $rowNumber;
 
             try {
-                $payload = $this->mapRowToPayload($row, $columnMap);
+                $payload = $this->mapRowToPayload($row, $columnMap, $nextNumber);
 
                 if ($payload === null) {
                     continue;
@@ -134,6 +138,12 @@ class GuestExcelService
 
                 $user->guests()->create($payload);
                 $imported++;
+
+                if ($payload['no'] !== null) {
+                    $nextNumber = max($nextNumber, ((int) $payload['no']) + 1);
+                } else {
+                    $nextNumber++;
+                }
             } catch (Throwable $exception) {
                 $skipped++;
                 $errors[] = "Baris {$lineNumber}: {$exception->getMessage()}";
@@ -150,6 +160,7 @@ class GuestExcelService
     private function resolveColumnMap(array $headerRow): array
     {
         $aliases = [
+            'no' => ['no', 'nomor', 'nomor urut'],
             'name' => ['nama lengkap', 'nama', 'name'],
             'phone' => ['telepon', 'phone', 'whatsapp', 'no hp', 'no. hp'],
             'email' => ['email', 'e-mail', 'alamat email'],
@@ -181,6 +192,7 @@ class GuestExcelService
      * @param  array<int|string, mixed>  $row
      * @param  array<int|string, string>  $columnMap
      * @return array{
+     *     no: int,
      *     name: string,
      *     phone: ?string,
      *     email: ?string,
@@ -189,7 +201,7 @@ class GuestExcelService
      *     catatan: ?string
      * }|null
      */
-    private function mapRowToPayload(array $row, array $columnMap): ?array
+    private function mapRowToPayload(array $row, array $columnMap, int $fallbackNumber): ?array
     {
         $values = [];
 
@@ -207,7 +219,10 @@ class GuestExcelService
             throw new \InvalidArgumentException("Email \"{$email}\" tidak valid.");
         }
 
+        $no = $values['no'] ?? '';
+
         return [
+            'no' => $no !== '' && is_numeric($no) ? (int) $no : $fallbackNumber,
             'name' => $values['name'],
             'phone' => ($values['phone'] ?? '') !== '' ? $values['phone'] : null,
             'email' => $email,
@@ -219,6 +234,7 @@ class GuestExcelService
 
     /**
      * @param  array{
+     *     no: int,
      *     name: string,
      *     phone: ?string,
      *     email: ?string,

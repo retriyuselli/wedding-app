@@ -67,15 +67,15 @@ struct IncomingPayment: Codable, Identifiable, Hashable {
         }
 
         switch normalizedStatus {
-        case "confirmed": return "Dikonfirmasi"
-        case "rejected": return "Ditolak"
-        default: return "Menunggu"
+        case "confirmed": return L10n.Budget.confirmed
+        case "rejected": return L10n.Budget.statusRejected
+        default: return L10n.Budget.statusPending
         }
     }
 
     var displaySenderName: String {
         guard let senderName, !senderName.isEmpty else {
-            return "Tanpa nama"
+            return L10n.Budget.unnamedSender
         }
 
         return senderName
@@ -175,10 +175,10 @@ enum IncomingPaymentFilter: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .all: return "Semua"
-        case .menunggu: return "Menunggu"
-        case .confirmed: return "Dikonfirmasi"
-        case .rejected: return "Ditolak"
+        case .all: return L10n.Common.all
+        case .menunggu: return L10n.Budget.statusPending
+        case .confirmed: return L10n.Budget.confirmed
+        case .rejected: return L10n.Budget.statusRejected
         }
     }
 

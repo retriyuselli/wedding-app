@@ -113,7 +113,7 @@ struct LoginHeroBrand: View {
             LoginHeartLogo()
                 .frame(width: 54, height: 54)
 
-            Text("Wedding App")
+            Text(L10n.Auth.appName)
                 .font(AppFont.semibold(25))
                 .foregroundStyle(LoginPalette.green)
                 .lineLimit(1)
@@ -133,7 +133,7 @@ struct LoginHeroBrand: View {
                     .frame(width: 40, height: 1.1)
             }
 
-            Text("Rencanakan hari bahagiamu\ndengan mudah dan terorganisir")
+            Text(L10n.Auth.heroTagline)
                 .font(AppFont.regular(11))
                 .foregroundStyle(LoginPalette.textSecondary)
                 .multilineTextAlignment(.center)
@@ -543,6 +543,6 @@ struct AuthLoginBackButton: View {
                 }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Kembali")
+        .accessibilityLabel(L10n.Auth.back)
     }
 }

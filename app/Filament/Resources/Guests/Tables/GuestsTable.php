@@ -15,7 +15,11 @@ class GuestsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('no')
             ->columns([
+                TextColumn::make('no')
+                    ->label('No')
+                    ->sortable(),
                 TextColumn::make('user.name')
                     ->label('Customer')
                     ->searchable(),

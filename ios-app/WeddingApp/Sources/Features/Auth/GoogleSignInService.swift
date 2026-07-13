@@ -10,13 +10,13 @@ enum GoogleSignInError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return "Google Sign-In belum dikonfigurasi. Isi GIDClientID di Info.plist."
+            return L10n.Auth.googleNotConfigured
         case .missingPresenter:
-            return "Tidak dapat membuka layar login Google."
+            return L10n.Auth.googleCannotOpen
         case .missingIdToken:
-            return "Token Google tidak tersedia. Coba lagi."
+            return L10n.Auth.googleTokenMissing
         case .cancelled:
-            return "Login Google dibatalkan."
+            return L10n.Auth.googleCancelled
         }
     }
 }

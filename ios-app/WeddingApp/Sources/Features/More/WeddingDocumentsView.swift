@@ -1,20 +1,6 @@
 import SwiftUI
-
-struct WeddingDocumentItem: Identifiable, Hashable {
-    let id: String
-    let taskTitle: String
-    let attachment: PreparationTaskAttachment
-
-    init(taskTitle: String, attachment: PreparationTaskAttachment) {
-        self.taskTitle = taskTitle
-        self.attachment = attachment
-        id = "\(taskTitle)-\(attachment.id)"
-    }
-
-    var category: DocumentCategory {
-        DocumentCategory.match(taskTitle: taskTitle, fileName: attachment.fileName)
-    }
-}
+import UIKit
+import UniformTypeIdentifiers
 
 enum DocumentCategory: String, CaseIterable, Identifiable {
     case all
@@ -45,45 +31,61 @@ enum DocumentCategory: String, CaseIterable, Identifiable {
         }
     }
 
-    private var keywords: [String] {
-        switch self {
-        case .all: return []
-        case .akad: return ["akad", "nikah", "ijab", "khutbah", "mahar", "gaun", "busana"]
-        case .resepsi: return ["resepsi", "dekorasi", "ballroom", "desain", "undangan", "souvenir", "dokumentasi"]
-        case .vendor: return ["vendor", "invoice", "catering", "mua", "wedding organizer", "wo", "kontrak"]
-        case .keuangan: return ["anggaran", "budget", "keuangan", "biaya", "pembayaran", "kwitansi", "rincian"]
-        }
+    var apiValue: String? {
+        self == .all ? nil : rawValue
     }
+}
 
-    static func match(taskTitle: String, fileName: String) -> DocumentCategory {
-        let haystack = "\(taskTitle) \(fileName)".lowercased()
+enum DocumentSortOption: String, CaseIterable, Identifiable {
+    case latest
+    case oldest
+    case name
+    case nameDesc = "name_desc"
 
-        for category in [DocumentCategory.akad, .resepsi, .vendor, .keuangan] {
-            if category.keywords.contains(where: { haystack.contains($0) }) {
-                return category
-            }
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .latest: return "Terbaru"
+        case .oldest: return "Terlama"
+        case .name: return "Nama A–Z"
+        case .nameDesc: return "Nama Z–A"
         }
-
-        if fileName.lowercased().hasSuffix(".xls") || fileName.lowercased().hasSuffix(".xlsx") {
-            return .keuangan
-        }
-
-        return .vendor
     }
 }
 
 struct WeddingDocumentsView: View {
     @State private var documents: [WeddingDocumentItem] = []
+    @State private var folders: [DocumentFolderItem] = []
+    @State private var summary: WeddingDocumentSummary?
     @State private var isLoading = false
+    @State private var isUploading = false
     @State private var errorMessage: String?
     @State private var searchText = ""
     @State private var selectedCategory: DocumentCategory = .all
-    @State private var showComingSoon = false
+    @State private var selectedFolderId: Int?
+    @State private var sortOption: DocumentSortOption = .latest
+    @State private var showFileImporter = false
+    @State private var showNewFolderAlert = false
+    @State private var newFolderName = ""
+    @State private var showFilterSheet = false
+    @State private var showCategorySheet = false
+    @State private var statusTitle = ""
+    @State private var statusMessage: String?
+    @State private var showStatus = false
+    @State private var uploadCategory: DocumentCategory = .vendor
+    @State private var uploadFolderId: Int?
+    @State private var searchReloadTask: Task<Void, Never>?
+    @State private var isDownloading = false
+    @State private var downloadShareURL: URL?
+    @State private var showDownloadShare = false
 
-    private let storageQuotaMB: Double = 500
+    private var storageQuotaMB: Double {
+        Double(summary?.quotaBytes ?? (500 * 1024 * 1024)) / 1_048_576
+    }
 
     private var usedStorageBytes: Int {
-        documents.reduce(0) { $0 + ($1.attachment.fileSize ?? 0) }
+        summary?.usedBytes ?? documents.reduce(0) { $0 + ($1.fileSize ?? 0) }
     }
 
     private var usedStorageMB: Double {
@@ -91,25 +93,17 @@ struct WeddingDocumentsView: View {
     }
 
     private var storageFraction: Double {
-        min(usedStorageMB / storageQuotaMB, 1)
-    }
-
-    private var filteredDocuments: [WeddingDocumentItem] {
-        documents.filter { document in
-            let matchesCategory = selectedCategory == .all || document.category == selectedCategory
-            let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            let matchesSearch = query.isEmpty
-                || document.attachment.fileName.lowercased().contains(query)
-                || document.taskTitle.lowercased().contains(query)
-            return matchesCategory && matchesSearch
-        }
+        min(usedStorageMB / max(storageQuotaMB, 1), 1)
     }
 
     private func count(for category: DocumentCategory) -> Int {
+        if let counts = summary?.counts {
+            return counts[category.rawValue] ?? (category == .all ? (counts["all"] ?? 0) : 0)
+        }
         if category == .all {
             return documents.count
         }
-        return documents.filter { $0.category == category }.count
+        return documents.filter { $0.categoryKind == category }.count
     }
 
     var body: some View {
@@ -124,11 +118,8 @@ struct WeddingDocumentsView: View {
                     )
 
                     searchBar
-
                     storageCard
-
                     uploadRow
-
                     categorySection
 
                     if let errorMessage {
@@ -138,7 +129,6 @@ struct WeddingDocumentsView: View {
                     }
 
                     recentSection
-
                     securityNote
                 }
                 .padding(.horizontal, 20)
@@ -150,10 +140,91 @@ struct WeddingDocumentsView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task { await load() }
         .refreshable { await load() }
-        .alert(L10n.Common.comingSoon, isPresented: $showComingSoon) {
+        .fileImporter(
+            isPresented: $showFileImporter,
+            allowedContentTypes: [.pdf, .jpeg, .png, .image],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                guard let url = urls.first else { return }
+                Task { await upload(from: url) }
+            case .failure(let error):
+                statusTitle = L10n.Common.warning
+                statusMessage = error.localizedDescription
+                showStatus = true
+            }
+        }
+        .sheet(isPresented: $showFilterSheet) {
+            filterSheet
+        }
+        .sheet(isPresented: $showCategorySheet) {
+            categorySheet
+        }
+        .sheet(isPresented: $showDownloadShare) {
+            if let downloadShareURL {
+                NavigationStack {
+                    VStack(spacing: 20) {
+                        Image(systemName: "doc.richtext")
+                            .font(.system(size: 40))
+                            .foregroundStyle(AppTheme.sageDark)
+                        Text("Dokumen siap dibuka")
+                            .font(AppFont.medium(16))
+                            .foregroundStyle(AppTheme.ink)
+                        Text(downloadShareURL.lastPathComponent)
+                            .font(AppFont.regular(13))
+                            .foregroundStyle(AppTheme.ink.opacity(0.55))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+
+                        ShareLink(item: downloadShareURL) {
+                            Label("Buka / Bagikan", systemImage: "square.and.arrow.up")
+                                .font(AppFont.medium(15))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .foregroundStyle(.white)
+                        }
+                        .padding(.horizontal, 24)
+                    }
+                    .padding(.top, 28)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(L10n.Common.close) { showDownloadShare = false }
+                        }
+                    }
+                }
+                .presentationDetents([.medium])
+            }
+        }
+        .alert("Buat Folder Baru", isPresented: $showNewFolderAlert) {
+            TextField("Nama folder", text: $newFolderName)
+            Button(L10n.Common.cancel, role: .cancel) {
+                newFolderName = ""
+            }
+            Button(L10n.Common.save) {
+                let name = newFolderName
+                Task { await createFolder(named: name) }
+            }
+        } message: {
+            Text("Masukkan nama folder untuk mengelompokkan dokumen.")
+        }
+        .alert(statusTitle, isPresented: $showStatus) {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
-            Text(L10n.Common.comingSoonMessage)
+            Text(statusMessage ?? "")
+        }
+        .onChange(of: selectedCategory) { _, _ in
+            Task { await loadDocuments() }
+        }
+        .onChange(of: selectedFolderId) { _, _ in
+            Task { await loadDocuments() }
+        }
+        .onChange(of: sortOption) { _, _ in
+            Task { await loadDocuments() }
+        }
+        .onChange(of: searchText) { _, _ in
+            Task { await loadDocumentsDebounced() }
         }
     }
 
@@ -178,7 +249,7 @@ struct WeddingDocumentsView: View {
             }
 
             Button {
-                showComingSoon = true
+                showFilterSheet = true
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "line.3.horizontal.decrease")
@@ -228,7 +299,7 @@ struct WeddingDocumentsView: View {
                 .frame(height: 7)
             }
 
-            Text(String(format: "%.1f%%", storageFraction * 100))
+            Text(String(format: "%.1f%%", (summary?.usedPercent ?? storageFraction * 100)))
                 .font(AppFont.semibold(13))
                 .foregroundStyle(AppTheme.sageDark)
         }
@@ -243,14 +314,22 @@ struct WeddingDocumentsView: View {
     private var uploadRow: some View {
         HStack(spacing: 12) {
             Button {
-                showComingSoon = true
+                uploadCategory = selectedCategory == .all ? .vendor : selectedCategory
+                uploadFolderId = selectedFolderId
+                showFileImporter = true
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "arrow.up.doc")
-                        .font(.system(size: 22, weight: .light))
-                        .foregroundStyle(AppTheme.sageDark)
-                        .frame(width: 46, height: 46)
-                        .background(AppTheme.lightSage.opacity(0.7), in: Circle())
+                    Group {
+                        if isUploading {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "arrow.up.doc")
+                                .font(.system(size: 22, weight: .light))
+                        }
+                    }
+                    .foregroundStyle(AppTheme.sageDark)
+                    .frame(width: 46, height: 46)
+                    .background(AppTheme.lightSage.opacity(0.7), in: Circle())
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(L10n.Documents.upload)
@@ -269,10 +348,7 @@ struct WeddingDocumentsView: View {
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(AppTheme.surface)
-                )
+                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .strokeBorder(
@@ -282,9 +358,11 @@ struct WeddingDocumentsView: View {
                 }
             }
             .buttonStyle(.plain)
+            .disabled(isUploading)
 
             Button {
-                showComingSoon = true
+                newFolderName = ""
+                showNewFolderAlert = true
             } label: {
                 VStack(spacing: 8) {
                     Image(systemName: "folder.badge.plus")
@@ -318,7 +396,7 @@ struct WeddingDocumentsView: View {
                     .foregroundStyle(AppTheme.ink)
                 Spacer()
                 Button {
-                    showComingSoon = true
+                    showCategorySheet = true
                 } label: {
                     HStack(spacing: 3) {
                         Text(L10n.Common.seeAll)
@@ -339,6 +417,17 @@ struct WeddingDocumentsView: View {
                 }
                 .padding(.horizontal, 2)
             }
+
+            if !folders.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        folderChip(id: nil, title: "Semua folder")
+                        ForEach(folders) { folder in
+                            folderChip(id: folder.id, title: folder.name)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -353,6 +442,8 @@ struct WeddingDocumentsView: View {
                     .font(.system(size: 18, weight: .regular))
                 Text(category.label)
                     .font(AppFont.medium(11))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Text("\(count(for: category))")
                     .font(AppFont.regular(11))
                     .foregroundStyle(isSelected ? .white.opacity(0.85) : AppTheme.ink.opacity(0.4))
@@ -371,6 +462,25 @@ struct WeddingDocumentsView: View {
         .buttonStyle(.plain)
     }
 
+    private func folderChip(id: Int?, title: String) -> some View {
+        let isSelected = selectedFolderId == id
+
+        return Button {
+            selectedFolderId = id
+        } label: {
+            Text(title)
+                .font(AppFont.medium(12))
+                .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    isSelected ? AppTheme.sageDark : AppTheme.lightSage,
+                    in: Capsule()
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -378,8 +488,18 @@ struct WeddingDocumentsView: View {
                     .font(AppFont.medium(15))
                     .foregroundStyle(AppTheme.ink)
                 Spacer()
-                Button {
-                    showComingSoon = true
+                Menu {
+                    ForEach(DocumentSortOption.allCases) { option in
+                        Button {
+                            sortOption = option
+                        } label: {
+                            if sortOption == option {
+                                Label(option.label, systemImage: "checkmark")
+                            } else {
+                                Text(option.label)
+                            }
+                        }
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Text(L10n.Common.sort)
@@ -389,24 +509,25 @@ struct WeddingDocumentsView: View {
                     }
                     .foregroundStyle(AppTheme.sageDark.opacity(0.75))
                 }
-                .buttonStyle(.plain)
             }
 
             if isLoading && documents.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 40)
-            } else if filteredDocuments.isEmpty {
+            } else if documents.isEmpty {
                 MoreEmptyState(
                     icon: "folder",
-                    title: documents.isEmpty ? L10n.Documents.empty : "Tidak ada dokumen",
-                    message: documents.isEmpty
+                    title: searchText.isEmpty && selectedCategory == .all && selectedFolderId == nil
+                        ? L10n.Documents.empty
+                        : "Tidak ada dokumen",
+                    message: searchText.isEmpty && selectedCategory == .all && selectedFolderId == nil
                         ? L10n.Documents.emptySub
                         : "Tidak ada dokumen yang cocok dengan pencarian atau kategori ini."
                 )
             } else {
                 VStack(spacing: 10) {
-                    ForEach(filteredDocuments) { document in
+                    ForEach(documents) { document in
                         documentRow(document)
                     }
                 }
@@ -416,10 +537,10 @@ struct WeddingDocumentsView: View {
 
     private func documentRow(_ document: WeddingDocumentItem) -> some View {
         HStack(spacing: 12) {
-            fileBadge(for: document.attachment)
+            fileBadge(for: document)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(document.attachment.fileName)
+                Text(document.fileName)
                     .font(AppFont.medium(13))
                     .foregroundStyle(AppTheme.ink)
                     .lineLimit(1)
@@ -433,18 +554,21 @@ struct WeddingDocumentsView: View {
             Spacer(minLength: 8)
 
             Menu {
-                if let urlString = document.attachment.url, let url = URL(string: urlString) {
-                    Link(destination: url) {
-                        Label("Buka / Unduh", systemImage: "arrow.down.to.line")
-                    }
-                    ShareLink(item: url) {
-                        Label(L10n.Common.share, systemImage: "square.and.arrow.up")
-                    }
-                } else {
-                    Button {
-                        showComingSoon = true
+                Button {
+                    Task { await downloadOrOpen(document) }
+                } label: {
+                    Label(
+                        isDownloading ? "Mengunduh…" : "Buka / Unduh",
+                        systemImage: "arrow.down.to.line"
+                    )
+                }
+                .disabled(isDownloading)
+
+                if document.isUploaded {
+                    Button(role: .destructive) {
+                        Task { await deleteDocument(document) }
                     } label: {
-                        Label(L10n.Common.share, systemImage: "square.and.arrow.up")
+                        Label(L10n.Common.delete, systemImage: "trash")
                     }
                 }
             } label: {
@@ -463,27 +587,113 @@ struct WeddingDocumentsView: View {
         }
     }
 
-    private func fileBadge(for attachment: PreparationTaskAttachment) -> some View {
-        let ext = fileExtension(for: attachment)
-        let color = badgeColor(for: ext)
+    private var filterSheet: some View {
+        NavigationStack {
+            List {
+                Section("Kategori") {
+                    ForEach(DocumentCategory.allCases) { category in
+                        Button {
+                            selectedCategory = category
+                        } label: {
+                            HStack {
+                                Text(category.label)
+                                Spacer()
+                                if selectedCategory == category {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(AppTheme.sageDark)
+                                }
+                            }
+                        }
+                    }
+                }
 
-        return VStack(spacing: 2) {
-            Image(systemName: "doc.fill")
-                .font(.system(size: 16))
-                .foregroundStyle(color)
-            Text(ext)
-                .font(AppFont.semibold(8))
-                .foregroundStyle(color)
+                Section("Folder") {
+                    Button {
+                        selectedFolderId = nil
+                    } label: {
+                        HStack {
+                            Text("Semua folder")
+                            Spacer()
+                            if selectedFolderId == nil {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(AppTheme.sageDark)
+                            }
+                        }
+                    }
+
+                    ForEach(folders) { folder in
+                        Button {
+                            selectedFolderId = folder.id
+                        } label: {
+                            HStack {
+                                Text(folder.name)
+                                Spacer()
+                                if selectedFolderId == folder.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(AppTheme.sageDark)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle(L10n.Common.filter)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(L10n.Common.done) { showFilterSheet = false }
+                }
+            }
         }
-        .frame(width: 44, height: 44)
-        .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .presentationDetents([.medium, .large])
     }
 
-    private func metaLine(_ document: WeddingDocumentItem) -> String {
-        let category = document.category.label
-        let size = formatFileSize(document.attachment.fileSize ?? 0)
-        let uploaded = displayDate(fromISO: document.attachment.createdAt) ?? "Tanggal tidak diketahui"
-        return "\(category) · \(size) · \(uploaded)"
+    private var categorySheet: some View {
+        NavigationStack {
+            List {
+                Section("Kategori") {
+                    ForEach(DocumentCategory.allCases) { category in
+                        Button {
+                            selectedCategory = category
+                            selectedFolderId = nil
+                            showCategorySheet = false
+                        } label: {
+                            HStack {
+                                Label(category.label, systemImage: category.icon)
+                                Spacer()
+                                Text("\(count(for: category))")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
+                if !folders.isEmpty {
+                    Section("Folder") {
+                        ForEach(folders) { folder in
+                            Button {
+                                selectedFolderId = folder.id
+                                selectedCategory = .all
+                                showCategorySheet = false
+                            } label: {
+                                HStack {
+                                    Label(folder.name, systemImage: "folder")
+                                    Spacer()
+                                    Text("\(folder.documentsCount ?? 0)")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle(L10n.Common.category)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(L10n.Common.done) { showCategorySheet = false }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 
     private var securityNote: some View {
@@ -506,38 +716,237 @@ struct WeddingDocumentsView: View {
         .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
+    private func fileBadge(for document: WeddingDocumentItem) -> some View {
+        let ext = fileExtension(for: document)
+        let color = badgeColor(for: ext)
+
+        return VStack(spacing: 2) {
+            Image(systemName: "doc.fill")
+                .font(.system(size: 16))
+                .foregroundStyle(color)
+            Text(ext)
+                .font(AppFont.semibold(8))
+                .foregroundStyle(color)
+        }
+        .frame(width: 44, height: 44)
+        .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func metaLine(_ document: WeddingDocumentItem) -> String {
+        let category = document.categoryKind.label
+        let size = formatFileSize(document.fileSize ?? 0)
+        let uploaded = displayDate(fromISO: document.createdAt) ?? "Tanggal tidak diketahui"
+        let folder = document.folderName.map { " · \($0)" } ?? ""
+        return "\(category)\(folder) · \(size) · \(uploaded)"
+    }
+
     private func load() async {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
+        async let documentsTask: Void = loadDocuments()
+        async let foldersTask: Void = loadFolders()
+        async let summaryTask: Void = loadSummary()
+        _ = await (documentsTask, foldersTask, summaryTask)
+    }
+
+    private func loadDocuments() async {
         do {
-            let envelope: Envelope<[PreparationTask]> = try await APIClient.shared.request("customer-preparation-tasks")
-            documents = envelope.data.flatMap { task in
-                (task.attachments ?? []).map { attachment in
-                    WeddingDocumentItem(taskTitle: task.title, attachment: attachment)
-                }
+            var queryItems: [URLQueryItem] = [
+                URLQueryItem(name: "sort", value: sortOption.rawValue),
+            ]
+            if let category = selectedCategory.apiValue {
+                queryItems.append(URLQueryItem(name: "category", value: category))
             }
-            .sorted { lhs, rhs in
-                let lhsDate = lhs.attachment.createdAt ?? ""
-                let rhsDate = rhs.attachment.createdAt ?? ""
-                return lhsDate > rhsDate
+            if let selectedFolderId {
+                queryItems.append(URLQueryItem(name: "folder_id", value: String(selectedFolderId)))
             }
+            let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                queryItems.append(URLQueryItem(name: "q", value: trimmed))
+            }
+
+            let envelope: Envelope<[WeddingDocumentItem]> = try await APIClient.shared.request(
+                "wedding-documents",
+                queryItems: queryItems
+            )
+            documents = envelope.data
         } catch {
+            guard !error.isRequestCancelled else { return }
             errorMessage = error.userFacingMessage
             documents = []
         }
     }
 
-    private func fileExtension(for attachment: PreparationTaskAttachment) -> String {
-        if let dotRange = attachment.fileName.range(of: ".", options: .backwards) {
-            let ext = String(attachment.fileName[dotRange.upperBound...]).uppercased()
+    private func loadDocumentsDebounced() async {
+        searchReloadTask?.cancel()
+        let task = Task {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard !Task.isCancelled else { return }
+            await loadDocuments()
+        }
+        searchReloadTask = task
+        await task.value
+    }
+
+    private func loadFolders() async {
+        do {
+            let envelope: Envelope<[DocumentFolderItem]> = try await APIClient.shared.request("document-folders")
+            folders = envelope.data
+        } catch {
+            guard !error.isRequestCancelled else { return }
+        }
+    }
+
+    private func loadSummary() async {
+        do {
+            let envelope: Envelope<WeddingDocumentSummary> = try await APIClient.shared.request("wedding-documents/summary")
+            summary = envelope.data
+        } catch {
+            guard !error.isRequestCancelled else { return }
+        }
+    }
+
+    private func createFolder(named rawName: String) async {
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            statusTitle = L10n.Common.warning
+            statusMessage = "Nama folder tidak boleh kosong."
+            showStatus = true
+            return
+        }
+
+        do {
+            let envelope: Envelope<DocumentFolderItem> = try await APIClient.shared.request(
+                "document-folders",
+                method: "POST",
+                json: ["name": name]
+            )
+            folders.append(envelope.data)
+            folders.sort { ($0.sortOrder ?? 0, $0.name) < ($1.sortOrder ?? 0, $1.name) }
+            selectedFolderId = envelope.data.id
+            newFolderName = ""
+            statusTitle = "Folder dibuat"
+            statusMessage = "Folder \"\(envelope.data.name)\" siap dipakai."
+            showStatus = true
+        } catch {
+            statusTitle = L10n.Common.warning
+            statusMessage = error.userFacingMessage
+            showStatus = true
+        }
+    }
+
+    private func upload(from url: URL) async {
+        isUploading = true
+        defer { isUploading = false }
+
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessed {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            if data.count > 10 * 1024 * 1024 {
+                statusTitle = L10n.Common.warning
+                statusMessage = L10n.Documents.uploadLimit
+                showStatus = true
+                return
+            }
+
+            let fileName = url.lastPathComponent.isEmpty ? "document.pdf" : url.lastPathComponent
+            let mimeType = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
+
+            var fields: [String: String] = [
+                "category": uploadCategory == .all ? DocumentCategory.vendor.rawValue : uploadCategory.rawValue,
+            ]
+            if let uploadFolderId {
+                fields["document_folder_id"] = String(uploadFolderId)
+            }
+
+            let _: Envelope<WeddingDocumentItem> = try await APIClient.shared.uploadMultipart(
+                "wedding-documents",
+                fields: fields,
+                fileFieldName: "file",
+                fileName: fileName,
+                mimeType: mimeType,
+                fileData: data
+            )
+
+            await load()
+            statusTitle = "Berhasil diunggah"
+            statusMessage = "Dokumen \"\(fileName)\" sudah tersimpan."
+            showStatus = true
+        } catch {
+            guard !error.isRequestCancelled else { return }
+            statusTitle = L10n.Common.warning
+            statusMessage = error.userFacingMessage
+            showStatus = true
+        }
+    }
+
+    private func deleteDocument(_ document: WeddingDocumentItem) async {
+        guard document.isUploaded else { return }
+
+        do {
+            try await APIClient.shared.requestNoContent("wedding-documents/\(document.id)", method: "DELETE")
+            await load()
+        } catch {
+            statusTitle = L10n.Common.warning
+            statusMessage = error.userFacingMessage
+            showStatus = true
+        }
+    }
+
+    @MainActor
+    private func downloadOrOpen(_ document: WeddingDocumentItem) async {
+        if document.isUploaded {
+            isDownloading = true
+            defer { isDownloading = false }
+
+            do {
+                let downloaded = try await APIClient.shared.downloadFile(
+                    "wedding-documents/\(document.id)/download",
+                    fallbackFileName: document.fileName
+                )
+                let url = FileManager.default.temporaryDirectory.appendingPathComponent(downloaded.fileName)
+                if FileManager.default.fileExists(atPath: url.path) {
+                    try FileManager.default.removeItem(at: url)
+                }
+                try downloaded.data.write(to: url, options: .atomic)
+                downloadShareURL = url
+                showDownloadShare = true
+            } catch {
+                guard !error.isRequestCancelled else { return }
+                statusTitle = L10n.Common.warning
+                statusMessage = error.userFacingMessage
+                showStatus = true
+            }
+            return
+        }
+
+        guard let urlString = document.url, let url = URL(string: urlString) else {
+            statusTitle = L10n.Common.warning
+            statusMessage = "Tautan dokumen tidak tersedia."
+            showStatus = true
+            return
+        }
+
+        await UIApplication.shared.open(url)
+    }
+
+    private func fileExtension(for document: WeddingDocumentItem) -> String {
+        if let dotRange = document.fileName.range(of: ".", options: .backwards) {
+            let ext = String(document.fileName[dotRange.upperBound...]).uppercased()
             if !ext.isEmpty, ext.count <= 4 {
                 return ext
             }
         }
 
-        let mime = attachment.mimeType?.lowercased() ?? ""
+        let mime = document.mimeType?.lowercased() ?? ""
         if mime.contains("pdf") { return "PDF" }
         if mime.contains("png") { return "PNG" }
         if mime.contains("jpeg") || mime.contains("jpg") { return "JPG" }
@@ -580,7 +989,9 @@ struct WeddingDocumentsView: View {
         guard let raw else { return nil }
 
         let parsers = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ",
             "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
             "yyyy-MM-dd'T'HH:mm:ss'Z'",
             "yyyy-MM-dd",
         ]

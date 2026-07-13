@@ -8,6 +8,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class CustomerNotificationForm
@@ -17,16 +18,25 @@ class CustomerNotificationForm
         return $schema
             ->columns(1)
             ->components([
-                Section::make('Customer')
-                    ->description('Pilih pengantin yang menerima notifikasi ini.')
+                Section::make('Penerima')
+                    ->description('Pilih satu pengantin, atau kirim ke semua user sekaligus (hanya saat membuat).')
                     ->schema([
+                        Toggle::make('send_to_all')
+                            ->label('Kirim ke semua user')
+                            ->helperText('Setiap akun akan menerima salinan notifikasi yang sama di inbox aplikasi.')
+                            ->default(false)
+                            ->live()
+                            ->visibleOn('create')
+                            ->inline(false),
                         Select::make('user_id')
                             ->label('Pengantin')
                             ->relationship('user', 'name')
                             ->searchable()
                             ->preload()
-                            ->required()
                             ->native(false)
+                            ->required(fn (Get $get): bool => ! (bool) $get('send_to_all'))
+                            ->visible(fn (Get $get, string $operation): bool => $operation === 'edit' || ! (bool) $get('send_to_all'))
+                            ->helperText('Wajib dipilih jika tidak mengirim ke semua user.')
                             ->columnSpanFull(),
                     ]),
 

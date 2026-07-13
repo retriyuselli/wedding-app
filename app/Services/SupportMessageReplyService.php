@@ -6,12 +6,21 @@ use App\Jobs\SendSupportReplyPushNotification;
 use App\Models\CustomerNotification;
 use App\Models\Message;
 use App\Models\MessageThread;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
 
 class SupportMessageReplyService
 {
     public function reply(MessageThread $thread, string $body): Message
     {
+        $actor = Auth::user();
+
+        if (! $actor instanceof User || ! $actor->isSuperAdmin()) {
+            throw new AuthorizationException('Hanya super admin yang dapat mengirim balasan support dan notifikasi.');
+        }
+
         if ($thread->category !== 'support') {
             throw new InvalidArgumentException('Balasan admin hanya dapat dikirim pada thread support.');
         }

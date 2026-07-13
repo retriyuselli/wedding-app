@@ -174,7 +174,7 @@ struct MoreView: View {
 
     private var accountItems: [MoreItem] {
         [
-            MoreItem(icon: "gearshape", title: L10n.More.settings, subtitle: L10n.More.settingsSub, destination: nil),
+            MoreItem(icon: "gearshape", title: L10n.More.settings, subtitle: L10n.More.settingsSub, destination: .settings),
             MoreItem(icon: "lock", title: L10n.More.privacy, subtitle: L10n.More.privacySub, destination: .privacySecurity),
             MoreItem(icon: "bell", title: L10n.More.reminders, subtitle: L10n.More.remindersSub, destination: .reminders),
             MoreItem(
@@ -266,6 +266,7 @@ private struct MoreItem: Identifiable {
         case savedInspiration
         case documents
         case events
+        case settings
         case privacySecurity
         case reminders
         case language
@@ -294,6 +295,7 @@ private struct MoreRow: View {
                 case .savedInspiration: InspirationView()
                 case .documents: WeddingDocumentsView()
                 case .events: EventListView()
+                case .settings: SettingsView()
                 case .privacySecurity: PrivacySecurityView()
                 case .reminders: RemindersPreferencesView()
                 case .language: LanguageSettingsView()

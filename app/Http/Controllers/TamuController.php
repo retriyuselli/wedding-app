@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class TamuController extends Controller
@@ -231,12 +232,14 @@ class TamuController extends Controller
     {
         $guests = Guest::query()
             ->where('user_id', $userId)
+            ->orderBy('no')
             ->orderBy('name')
             ->get()
             ->map(fn (Guest $guest): array => $this->normalizeRecord($guest, 'umum', 'Tamu Umum', 'Regular', 'regular'));
 
         $family = FamilyMember::query()
             ->where('user_id', $userId)
+            ->orderBy('no')
             ->orderBy('name')
             ->get()
             ->map(fn (FamilyMember $member): array => $this->normalizeRecord(
@@ -249,6 +252,7 @@ class TamuController extends Controller
 
         $vip = VipGuest::query()
             ->where('user_id', $userId)
+            ->orderBy('no')
             ->orderBy('name')
             ->get()
             ->map(fn (VipGuest $guest): array => $this->normalizeRecord(
@@ -259,7 +263,12 @@ class TamuController extends Controller
                 $guest->kategori,
             ));
 
-        return $guests->merge($family)->merge($vip)->sortBy('name')->values();
+        return $guests->merge($family)->merge($vip)
+            ->sortBy([
+                fn (array $guest): int => (int) ($guest['no'] ?? PHP_INT_MAX),
+                fn (array $guest): string => Str::lower($guest['name']),
+            ])
+            ->values();
     }
 
     /**
@@ -294,6 +303,7 @@ class TamuController extends Controller
 
         return [
             'id' => $record->id,
+            'no' => $record->no ?? null,
             'tab' => $tab,
             'name' => $record->name,
             'initials' => $this->initials($record->name),

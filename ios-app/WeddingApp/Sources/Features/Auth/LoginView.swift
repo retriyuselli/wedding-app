@@ -6,6 +6,7 @@ struct LoginView: View {
     @State private var password = ""
     @State private var showRegister = false
     @State private var showForgotPassword = false
+    @State private var twoFactorCode = ""
     @FocusState private var focusedField: AuthFormField?
 
     var body: some View {
@@ -53,6 +54,54 @@ struct LoginView: View {
                 ForgotPasswordSheet(initialEmail: email)
                     .presentationDetents([.height(390), .medium])
                     .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: Binding(
+                get: { session.pendingTwoFactorToken != nil },
+                set: { if !$0 { session.cancelTwoFactorChallenge(); twoFactorCode = "" } }
+            )) {
+                NavigationStack {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Verifikasi dua langkah")
+                            .font(AppFont.medium(18))
+                        Text(session.pendingTwoFactorMessage ?? "Masukkan kode 6 digit yang dikirim ke email Anda.")
+                            .font(AppFont.regular(13))
+                            .foregroundStyle(.secondary)
+
+                        TextField("Kode 6 digit", text: $twoFactorCode)
+                            .keyboardType(.numberPad)
+                            .font(AppFont.regular(16))
+                            .padding(14)
+                            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+
+                        if let errorMessage = session.errorMessage {
+                            Text(errorMessage)
+                                .font(AppFont.regular(13))
+                                .foregroundStyle(.red)
+                        }
+
+                        Button {
+                            Task { await session.verifyTwoFactor(code: twoFactorCode) }
+                        } label: {
+                            Text(session.isLoading ? "Memverifikasi…" : "Verifikasi")
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(twoFactorCode.count != 6 || session.isLoading)
+
+                        Spacer()
+                    }
+                    .padding(20)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(L10n.Common.cancel) {
+                                session.cancelTwoFactorChallenge()
+                                twoFactorCode = ""
+                            }
+                        }
+                    }
+                }
+                .presentationDetents([.medium])
             }
             .onAppear {
                 session.resetTransientUIState()
@@ -128,12 +177,12 @@ private struct ForgotPasswordSheet: View {
                     .frame(width: 58, height: 58)
                     .background(LoginPalette.greenLight.opacity(0.26), in: Circle())
 
-                Text("Atur ulang kata sandi")
+                Text(L10n.Auth.forgotTitle)
                     .font(AppFont.semibold(22))
                     .foregroundStyle(LoginPalette.green)
                     .multilineTextAlignment(.center)
 
-                Text("Masukkan email akun Anda. Kami akan mengirim instruksi untuk membuat kata sandi baru.")
+                Text(L10n.Auth.forgotSubtitle)
                     .font(AppFont.regular(13))
                     .foregroundStyle(LoginPalette.textSecondary)
                     .multilineTextAlignment(.center)
@@ -144,7 +193,7 @@ private struct ForgotPasswordSheet: View {
             VStack(spacing: 12) {
                 LoginInputField(
                     icon: "envelope",
-                    placeholder: "Masukkan email Anda",
+                    placeholder: L10n.Auth.emailPlaceholder,
                     text: $email,
                     keyboardType: .emailAddress,
                     textContentType: .emailAddress,
@@ -163,7 +212,7 @@ private struct ForgotPasswordSheet: View {
                 }
 
                 LoginPrimaryButton(
-                    title: didSendRequest ? "Kirim ulang instruksi" : "Kirim instruksi reset",
+                    title: didSendRequest ? L10n.Auth.forgotResend : L10n.Auth.forgotSend,
                     isLoading: isSubmitting,
                     isDisabled: !canSubmit,
                     action: submitForgotPassword
@@ -174,7 +223,7 @@ private struct ForgotPasswordSheet: View {
             Button {
                 dismiss()
             } label: {
-                Text("Kembali ke login")
+                Text(L10n.Auth.forgotBackToLogin)
                     .font(AppFont.medium(14))
                     .foregroundStyle(LoginPalette.green)
                     .frame(maxWidth: .infinity)
@@ -209,7 +258,7 @@ private struct ForgotPasswordSheet: View {
     private func submitForgotPassword() {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedEmail.isEmpty else {
-            statusMessage = "Email wajib diisi."
+            statusMessage = L10n.Auth.emailRequired
             return
         }
         guard !isEmailFormatInvalid else {
@@ -233,7 +282,7 @@ private struct ForgotPasswordSheet: View {
                 )
                 await MainActor.run {
                     didSendRequest = true
-                    statusMessage = "Jika email terdaftar, instruksi reset kata sandi sudah dikirim."
+                    statusMessage = L10n.Auth.forgotSent
                     isSubmitting = false
                 }
             } catch {
@@ -272,7 +321,7 @@ private struct LoginFormSheet: View {
                     .padding(.bottom, 0)
 
                 HStack(spacing: 8) {
-                    Text("Selamat datang!")
+                    Text(L10n.Auth.welcome)
                         .font(AppFont.semibold(27))
                         .foregroundStyle(LoginPalette.green)
 
@@ -284,7 +333,7 @@ private struct LoginFormSheet: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
 
-                Text("Masuk untuk melanjutkan persiapan pernikahanmu")
+                Text(L10n.Auth.loginSubtitle)
                     .font(AppFont.regular(12))
                     .foregroundStyle(LoginPalette.textSecondary)
                     .multilineTextAlignment(.center)
@@ -294,7 +343,7 @@ private struct LoginFormSheet: View {
                 VStack(spacing: 9) {
                     LoginInputField(
                         icon: "envelope",
-                        placeholder: "Masukkan email Anda",
+                        placeholder: L10n.Auth.emailPlaceholder,
                         text: $email,
                         keyboardType: .emailAddress,
                         textContentType: .username,
@@ -305,7 +354,7 @@ private struct LoginFormSheet: View {
                     )
 
                     LoginPasswordField(
-                        placeholder: "Masukkan kata sandi",
+                        placeholder: L10n.Auth.passwordPlaceholder,
                         text: $password,
                         submitLabel: .go,
                         fieldFocus: .password,
@@ -320,7 +369,7 @@ private struct LoginFormSheet: View {
                 }
 
                 Button(action: onForgotPassword) {
-                    Text("Lupa kata sandi?")
+                    Text(L10n.Auth.forgotPassword)
                         .font(AppFont.medium(15))
                         .foregroundStyle(LoginPalette.green)
                         .frame(maxWidth: .infinity, alignment: .trailing)
@@ -338,14 +387,14 @@ private struct LoginFormSheet: View {
                 }
 
                 LoginPrimaryButton(
-                    title: "Masuk ke akun saya",
+                    title: L10n.Auth.loginCta,
                     isLoading: isLoading,
                     isDisabled: email.isEmpty || password.isEmpty || isEmailFormatInvalid,
                     action: onLogin
                 )
                 .padding(.top, 14)
 
-                LoginDivider(text: "atau")
+                LoginDivider(text: L10n.Auth.or)
                     .padding(.top, 16)
                     .padding(.bottom, 10)
 
@@ -356,11 +405,11 @@ private struct LoginFormSheet: View {
 
                 Button(action: onRegister) {
                     HStack(spacing: 8) {
-                        Text("Belum punya akun?")
+                        Text(L10n.Auth.noAccount)
                             .font(AppFont.regular(13))
                             .foregroundStyle(LoginPalette.textSecondary)
 
-                        Text("Daftar sekarang")
+                        Text(L10n.Auth.registerNow)
                             .font(AppFont.semibold(13))
                             .foregroundStyle(LoginPalette.green)
 

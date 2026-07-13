@@ -20,6 +20,12 @@ class GuestForm
                     ->searchable()
                     ->preload()
                     ->required(),
+                TextInput::make('no')
+                    ->label('Nomor Urut')
+                    ->numeric()
+                    ->minValue(1)
+                    ->placeholder('1, 2, 3, ...')
+                    ->helperText('Opsional. Urutan tampil di daftar tamu.'),
                 TextInput::make('name')
                     ->required(),
                 TextInput::make('phone')

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\ActiveSessionResource;
 use App\Http\Resources\V1\UserResource;
 use App\Models\User;
+use App\Services\Privacy\TwoFactorAuthService;
 use App\Services\SocialAuthenticationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class AuthController extends Controller
 {
     public function __construct(
         private SocialAuthenticationService $socialAuthenticationService,
+        private TwoFactorAuthService $twoFactorAuthService,
     ) {}
 
     public function register(Request $request): JsonResponse
@@ -58,6 +60,10 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($this->twoFactorAuthService->isEnabled($user)) {
+            return response()->json($this->twoFactorAuthService->beginLoginChallenge($user));
+        }
+
         $token = $user->createToken($data['device_name'])->plainTextToken;
 
         return response()->json([
@@ -90,6 +96,10 @@ class AuthController extends Controller
 
         $user = $this->socialAuthenticationService->userFromGoogleIdToken($data['id_token']);
 
+        if ($this->twoFactorAuthService->isEnabled($user)) {
+            return response()->json($this->twoFactorAuthService->beginLoginChallenge($user));
+        }
+
         $token = $user->createToken($data['device_name'])->plainTextToken;
 
         return response()->json([
@@ -112,6 +122,10 @@ class AuthController extends Controller
             $data['full_name'] ?? null,
             $data['email'] ?? null,
         );
+
+        if ($this->twoFactorAuthService->isEnabled($user)) {
+            return response()->json($this->twoFactorAuthService->beginLoginChallenge($user));
+        }
 
         $token = $user->createToken($data['device_name'])->plainTextToken;
 
@@ -176,6 +190,7 @@ class AuthController extends Controller
 
         $user->update([
             'password' => $data['password'],
+            'password_changed_at' => now(),
         ]);
 
         $currentTokenId = $user->currentAccessToken()?->id;

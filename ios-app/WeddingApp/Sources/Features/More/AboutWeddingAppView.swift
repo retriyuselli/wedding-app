@@ -94,13 +94,6 @@ struct AboutWeddingAppView: View {
                             style: .continuous
                         )
                     )
-
-                Image("AuthFloralCorner")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 72, height: 72)
-                    .offset(x: 8, y: 10)
-                    .allowsHitTesting(false)
             }
             .padding(.top, 8)
         }

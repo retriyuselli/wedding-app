@@ -124,6 +124,48 @@ final class APIClient {
         }
     }
 
+    /// Downloads a binary file (e.g. Excel template) and returns its bytes plus a suggested file name.
+    func downloadFile(
+        _ path: String,
+        method: String = "GET",
+        fallbackFileName: String
+    ) async throws -> (data: Data, fileName: String) {
+        let (data, httpResponse) = try await send(path: path, method: method)
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw errorFromResponse(path: path, statusCode: httpResponse.statusCode, data: data)
+        }
+
+        let fileName = Self.fileName(from: httpResponse) ?? fallbackFileName
+        return (data, fileName)
+    }
+
+    private static func fileName(from response: HTTPURLResponse) -> String? {
+        guard let header = response.value(forHTTPHeaderField: "Content-Disposition") else {
+            return nil
+        }
+
+        if let starredRange = header.range(of: "filename*=UTF-8''", options: .caseInsensitive) {
+            let rest = header[starredRange.upperBound...]
+            let end = rest.firstIndex(of: ";") ?? rest.endIndex
+            let encoded = String(rest[..<end]).trimmingCharacters(in: .whitespacesAndNewlines)
+            return encoded.removingPercentEncoding ?? encoded
+        }
+
+        guard let range = header.range(of: "filename=", options: .caseInsensitive) else {
+            return nil
+        }
+
+        var value = String(header[range.upperBound...])
+        if let semicolon = value.firstIndex(of: ";") {
+            value = String(value[..<semicolon])
+        }
+
+        return value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+    }
+
     private func send(
         path: String,
         method: String,
@@ -134,12 +176,15 @@ final class APIClient {
     ) async throws -> (Data, HTTPURLResponse) {
         await APIResolver.resolveIfNeeded()
 
-        var url = APIConfig.baseURL
-        url.append(path: path)
+        let (cleanPath, embeddedQueryItems) = Self.splitPathAndQuery(path)
+        let mergedQueryItems = Self.mergeQueryItems(embeddedQueryItems, queryItems)
 
-        if let queryItems, !queryItems.isEmpty {
+        var url = APIConfig.baseURL
+        url.append(path: cleanPath)
+
+        if !mergedQueryItems.isEmpty {
             var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-            components?.queryItems = queryItems
+            components?.queryItems = mergedQueryItems
             if let composedURL = components?.url {
                 url = composedURL
             }
@@ -149,7 +194,7 @@ final class APIClient {
         urlRequest.httpMethod = method
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        if shouldAttachAuthorization(for: path), let token = KeychainStore.loadToken() {
+        if shouldAttachAuthorization(for: cleanPath), let token = KeychainStore.loadToken() {
             urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
@@ -180,6 +225,31 @@ final class APIClient {
         return (data, httpResponse)
     }
 
+    private static func splitPathAndQuery(_ path: String) -> (String, [URLQueryItem]) {
+        guard let questionMark = path.firstIndex(of: "?") else {
+            return (path, [])
+        }
+
+        let cleanPath = String(path[..<questionMark])
+        let query = String(path[path.index(after: questionMark)...])
+        guard let components = URLComponents(string: "https://local.invalid?\(query)") else {
+            return (cleanPath, [])
+        }
+
+        return (cleanPath, components.queryItems ?? [])
+    }
+
+    private static func mergeQueryItems(
+        _ lhs: [URLQueryItem],
+        _ rhs: [URLQueryItem]?
+    ) -> [URLQueryItem] {
+        var merged = lhs
+        if let rhs {
+            merged.append(contentsOf: rhs)
+        }
+        return merged
+    }
+
     private func errorFromResponse(path: String, statusCode: Int, data: Data) -> APIError {
         if statusCode == 401 {
             if shouldBroadcastSessionExpired(for: path) {
@@ -194,7 +264,25 @@ final class APIClient {
             return .server(detail ?? errorResponse.message)
         }
 
-        return .unknown
+        let body = String(data: data, encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if statusCode == 413 || body.localizedCaseInsensitiveContains("Content-Length")
+            || body.localizedCaseInsensitiveContains("post_max_size")
+            || body.localizedCaseInsensitiveContains("exceeds the limit") {
+            return .server("File terlalu besar untuk diunggah. Maksimal 10MB (batas server saat ini mungkin lebih kecil).")
+        }
+
+        if !body.isEmpty {
+            let plain = body
+                .replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+                .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let preview = plain.count > 160 ? String(plain.prefix(160)) + "…" : plain
+            return .server(preview.isEmpty ? "HTTP \(statusCode)" : preview)
+        }
+
+        return .server("HTTP \(statusCode). Pastikan backend Laravel berjalan dan route terbaru sudah aktif.")
     }
 
     private func shouldAttachAuthorization(for path: String) -> Bool {

@@ -19,15 +19,16 @@ class GuestFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'               => User::factory(),
-            'name'                  => fake()->name(),
-            'phone'                 => fake()->phoneNumber(),
-            'email'                 => fake()->optional()->safeEmail(),
-            'table_number'          => (string) fake()->numberBetween(1, 30),
-            'rsvp_status'           => fake()->randomElement(array_keys(Guest::$rsvpOptions)),
-            'rsvp_updated_by_name'  => null,
-            'rsvp_updated_at'       => null,
-            'catatan'               => fake()->optional()->sentence(),
+            'user_id' => User::factory(),
+            'no' => fake()->optional()->numberBetween(1, 100),
+            'name' => fake()->name(),
+            'phone' => fake()->phoneNumber(),
+            'email' => fake()->optional()->safeEmail(),
+            'table_number' => (string) fake()->numberBetween(1, 30),
+            'rsvp_status' => fake()->randomElement(array_keys(Guest::$rsvpOptions)),
+            'rsvp_updated_by_name' => null,
+            'rsvp_updated_at' => null,
+            'catatan' => fake()->optional()->sentence(),
         ];
     }
 }

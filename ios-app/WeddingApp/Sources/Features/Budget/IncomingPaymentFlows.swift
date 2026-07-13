@@ -8,7 +8,7 @@ struct IncomingPaymentsSummaryCard: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Label("Uang Masuk", systemImage: "arrow.down.circle.fill")
+                    Label(L10n.Budget.incoming, systemImage: "arrow.down.circle.fill")
                         .font(AppFont.medium(14))
                         .foregroundStyle(.white.opacity(0.92))
                         .labelStyle(.titleAndIcon)
@@ -19,11 +19,11 @@ struct IncomingPaymentsSummaryCard: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
 
-                    Text("Total tercatat")
+                    Text(L10n.Budget.incomingTotalRecorded)
                         .font(AppFont.regular(11))
                         .foregroundStyle(.white.opacity(0.75))
 
-                    Text("Tidak mengurangi sisa anggaran pengeluaran")
+                    Text(L10n.Budget.incomingNotAffectRemaining)
                         .font(AppFont.regular(10))
                         .foregroundStyle(.white.opacity(0.68))
                 }
@@ -32,7 +32,7 @@ struct IncomingPaymentsSummaryCard: View {
 
                 VStack(alignment: .trailing, spacing: 8) {
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text("Dikonfirmasi")
+                        Text(L10n.Budget.confirmed)
                             .font(AppFont.regular(10))
                             .foregroundStyle(.white.opacity(0.75))
                         Text(CurrencyFormatter.rupiah(metrics.totalConfirmed))
@@ -46,7 +46,7 @@ struct IncomingPaymentsSummaryCard: View {
                     .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                     if metrics.pendingCount > 0 {
-                        Text("\(metrics.pendingCount) menunggu")
+                        Text(L10n.Budget.pendingCount(metrics.pendingCount))
                             .font(AppFont.regular(10))
                             .foregroundStyle(.white.opacity(0.8))
                             .padding(.horizontal, 8)
@@ -92,14 +92,14 @@ struct IncomingPaymentsSummaryCard: View {
                     }
                 }
             } else {
-                Text("Belum ada uang masuk tercatat")
+                Text(L10n.Budget.noIncoming)
                     .font(AppFont.regular(12))
                     .foregroundStyle(.white.opacity(0.78))
             }
 
             HStack {
                 Spacer()
-                Label("Lihat semua", systemImage: "chevron.right")
+                Label(L10n.Common.seeAll, systemImage: "chevron.right")
                     .font(AppFont.regular(12))
                     .foregroundStyle(.white.opacity(0.9))
             }
@@ -171,7 +171,7 @@ struct IncomingPaymentsView: View {
                             .padding(.vertical, 40)
                     } else if filteredPayments.isEmpty {
                         ContentUnavailableView(
-                            "Belum ada data",
+                            L10n.Budget.incomingEmpty,
                             systemImage: "arrow.down.circle",
                             description: Text(emptyDescription)
                         )
@@ -190,7 +190,7 @@ struct IncomingPaymentsView: View {
                                     Button(role: .destructive) {
                                         Task { await delete(payment) }
                                     } label: {
-                                        Label("Hapus", systemImage: "trash")
+                                        Label(L10n.Common.delete, systemImage: "trash")
                                     }
                                 }
                             }
@@ -203,7 +203,7 @@ struct IncomingPaymentsView: View {
                 .padding(.vertical, 12)
             }
         }
-        .navigationTitle("Uang Masuk")
+        .navigationTitle(L10n.Budget.incoming)
         .navigationBarTitleDisplayMode(.large)
         .task { await load() }
         .refreshable { await load() }
@@ -224,20 +224,20 @@ struct IncomingPaymentsView: View {
     private var emptyDescription: String {
         switch selectedFilter {
         case .all:
-            return "Tambahkan uang masuk dari tamu atau keluarga."
+            return L10n.Budget.incomingEmptyAllSub
         case .menunggu:
-            return "Tidak ada pembayaran yang menunggu konfirmasi."
+            return L10n.Budget.incomingEmptyPending
         case .confirmed:
-            return "Belum ada pembayaran yang dikonfirmasi."
+            return L10n.Budget.incomingEmptyConfirmed
         case .rejected:
-            return "Tidak ada pembayaran yang ditolak."
+            return L10n.Budget.incomingEmptyRejected
         }
     }
 
     private var summaryStrip: some View {
         HStack(spacing: 10) {
-            summaryMetric(title: "Total", amount: metrics.totalAll, tint: AppTheme.sageDark)
-            summaryMetric(title: "Dikonfirmasi", amount: metrics.totalConfirmed, tint: AppTheme.gold)
+            summaryMetric(title: L10n.Budget.total, amount: metrics.totalAll, tint: AppTheme.sageDark)
+            summaryMetric(title: L10n.Budget.confirmed, amount: metrics.totalConfirmed, tint: AppTheme.gold)
         }
     }
 
@@ -288,7 +288,7 @@ struct IncomingPaymentsView: View {
         Button {
             showAddPayment = true
         } label: {
-            Label("Tambah Uang Masuk", systemImage: "plus")
+            Label(L10n.Budget.addIncoming, systemImage: "plus")
                 .font(AppFont.medium(14))
                 .foregroundStyle(AppTheme.sageDark)
                 .frame(maxWidth: .infinity)
@@ -373,7 +373,7 @@ struct IncomingPaymentRow: View {
                     .foregroundStyle(AppTheme.sageDark)
 
                 if let referenceNumber = payment.referenceNumber, !referenceNumber.isEmpty {
-                    Text("Ref: \(referenceNumber)")
+                    Text(L10n.Budget.ref(referenceNumber))
                         .font(AppFont.regular(10))
                         .foregroundStyle(AppTheme.ink.opacity(0.4))
                 }
@@ -439,42 +439,42 @@ struct AddIncomingPaymentView: View {
 
                     incomingStatusSection
 
-                    formSection(title: "Pengirim") {
-                        formField(icon: "person.fill", placeholder: "Nama pengirim", text: $senderName)
+                    formSection(title: L10n.Budget.sender) {
+                        formField(icon: "person.fill", placeholder: L10n.Budget.senderPlaceholder, text: $senderName)
                     }
 
-                    formSection(title: "Nominal") {
+                    formSection(title: L10n.Budget.amount) {
                         HStack(spacing: 12) {
                             Image(systemName: "banknote")
                                 .font(.system(size: 15))
                                 .foregroundStyle(AppTheme.sageDark)
                                 .frame(width: 24)
-                            TextField("Jumlah uang masuk", text: $amountText)
+                            TextField(L10n.Budget.amountPlaceholder, text: $amountText)
                                 .font(AppFont.regular(14))
                                 .foregroundStyle(AppTheme.ink)
                                 .keyboardType(.numberPad)
                         }
                     }
 
-                    formSection(title: "Tanggal Transfer") {
+                    formSection(title: L10n.Budget.transferDate) {
                         DatePicker("", selection: $transferDate, displayedComponents: .date)
                             .datePickerStyle(.graphical)
                             .labelsHidden()
                             .padding(.horizontal, 4)
                     }
 
-                    formSection(title: "Detail Opsional") {
-                        formField(icon: "building.columns", placeholder: "Nama bank", text: $bankName)
-                        formField(icon: "text.alignleft", placeholder: "Keterangan", text: $descriptionText)
-                        formField(icon: "number", placeholder: "No. referensi", text: $referenceNumber)
-                        formField(icon: "note.text", placeholder: "Catatan", text: $notes, axis: .vertical)
+                    formSection(title: L10n.Budget.optionalDetail) {
+                        formField(icon: "building.columns", placeholder: L10n.Budget.bankPlaceholder, text: $bankName)
+                        formField(icon: "text.alignleft", placeholder: L10n.Budget.descriptionPlaceholder, text: $descriptionText)
+                        formField(icon: "number", placeholder: L10n.Budget.referencePlaceholder, text: $referenceNumber)
+                        formField(icon: "note.text", placeholder: L10n.Common.notes, text: $notes, axis: .vertical)
                     }
 
                     if isEditing {
                         Button(role: .destructive) {
                             Task { await deletePayment() }
                         } label: {
-                            Label("Hapus", systemImage: "trash")
+                            Label(L10n.Common.delete, systemImage: "trash")
                                 .font(AppFont.medium(14))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
@@ -487,7 +487,7 @@ struct AddIncomingPaymentView: View {
                 .padding(.vertical, 12)
             }
         }
-        .navigationTitle(isEditing ? "Edit Uang Masuk" : "Tambah Uang Masuk")
+        .navigationTitle(isEditing ? L10n.Budget.editIncoming : L10n.Budget.addIncoming)
         .navigationBarTitleDisplayMode(.large)
         .safeAreaInset(edge: .bottom) { saveButton }
         .task {
@@ -500,11 +500,11 @@ struct AddIncomingPaymentView: View {
     }
 
     private var incomingStatusSection: some View {
-        formSection(title: "Status Penerimaan") {
-            Picker("Status", selection: $status) {
-                Text("Menunggu").tag("menunggu")
-                Text("Dikonfirmasi").tag("confirmed")
-                Text("Ditolak").tag("rejected")
+        formSection(title: L10n.Budget.receiveStatus) {
+            Picker(L10n.Budget.status, selection: $status) {
+                Text(L10n.Budget.statusPending).tag("menunggu")
+                Text(L10n.Budget.confirmed).tag("confirmed")
+                Text(L10n.Budget.statusRejected).tag("rejected")
             }
             .pickerStyle(.segmented)
 
@@ -517,11 +517,11 @@ struct AddIncomingPaymentView: View {
     private var incomingStatusHint: String {
         switch status {
         case "confirmed":
-            return "Uang masuk sudah Anda terima dan dicatat sebagai dikonfirmasi."
+            return L10n.Budget.incomingStatusHintConfirmed
         case "rejected":
-            return "Tandai jika transfer tidak valid atau perlu ditolak."
+            return L10n.Budget.incomingStatusHintRejected
         default:
-            return "Belum dikonfirmasi — masih menunggu verifikasi Anda."
+            return L10n.Budget.incomingStatusHintPending
         }
     }
 
@@ -566,7 +566,7 @@ struct AddIncomingPaymentView: View {
         Button {
             Task { await save() }
         } label: {
-            Text(isEditing ? "Simpan Perubahan" : "Simpan Uang Masuk")
+            Text(isEditing ? L10n.Budget.saveChanges : L10n.Budget.saveIncoming)
                 .font(AppFont.medium(15))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
