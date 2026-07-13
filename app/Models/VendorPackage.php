@@ -67,6 +67,11 @@ class VendorPackage extends Model
         return $this->inclusions ?? [];
     }
 
+    public function itemHtml(): ?string
+    {
+        return null;
+    }
+
     protected static function booted(): void
     {
         static::creating(function (VendorPackage $package): void {

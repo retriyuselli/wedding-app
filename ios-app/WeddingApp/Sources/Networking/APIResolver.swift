@@ -12,7 +12,7 @@ enum APIResolver {
     private(set) static var source: Source = .production
 
     private static var resolveTask: Task<Void, Never>?
-    private static let probeTimeout: TimeInterval = 0.75
+    private static let probeTimeout: TimeInterval = 1.5
     private static let lastGoodURLKey = "APIResolver.lastGoodBaseURL"
 
     static func resolveIfNeeded() async {
@@ -54,19 +54,26 @@ enum APIResolver {
             return
         }
 
-        if let cachedURL = cachedBaseURL(), await isAPIReachable(at: cachedURL) {
-            resolvedBaseURL = cachedURL
-            source = .cached
-            logSelection()
+        // Prefer local backend first so Debug always uses the running artisan serve
+        // (and new fields like item_html), instead of racing production.
+        for localURL in APIConfig.localCandidateBaseURLs {
+            if await isAPIReachable(at: localURL) {
+                applySelection(localURL, source: .local)
+                return
+            }
+        }
+
+        if let cachedURL = cachedBaseURL(),
+           cachedURL != APIConfig.productionURL,
+           await isAPIReachable(at: cachedURL) {
+            applySelection(cachedURL, source: .cached)
             return
         }
 
         clearCachedBaseURL()
 
-        let candidates = APIConfig.localCandidateBaseURLs + [APIConfig.productionURL]
-
-        if let reachableURL = await firstReachableURL(from: candidates) {
-            applySelection(reachableURL)
+        if await isAPIReachable(at: APIConfig.productionURL) {
+            applySelection(APIConfig.productionURL, source: .production)
             return
         }
 
@@ -87,9 +94,9 @@ enum APIResolver {
     }
 
     #if DEBUG
-    private static func applySelection(_ url: URL) {
+    private static func applySelection(_ url: URL, source newSource: Source) {
         resolvedBaseURL = url
-        source = url == APIConfig.productionURL ? .production : .local
+        source = newSource
         cacheBaseURL(url)
         logSelection()
     }
@@ -110,25 +117,6 @@ enum APIResolver {
         UserDefaults.standard.set(url.absoluteString, forKey: lastGoodURLKey)
     }
     #endif
-
-    private static func firstReachableURL(from candidates: [URL]) async -> URL? {
-        await withTaskGroup(of: URL?.self) { group in
-            for candidate in candidates {
-                group.addTask {
-                    await isAPIReachable(at: candidate) ? candidate : nil
-                }
-            }
-
-            for await result in group {
-                if let url = result {
-                    group.cancelAll()
-                    return url
-                }
-            }
-
-            return nil
-        }
-    }
 
     private static func isAPIReachable(at baseURL: URL) async -> Bool {
         guard let healthURL = healthCheckURL(for: baseURL) else {

@@ -29,6 +29,7 @@ struct VendorPackage: Decodable, Identifiable, Hashable {
     let durationHours: Int?
     let inclusions: [String]
     let facilitySections: [VendorFacilitySection]?
+    let itemHtml: String?
     let exclusions: [String]?
     let coverImageUrl: String?
     let isFeatured: Bool
@@ -43,6 +44,7 @@ struct VendorPackage: Decodable, Identifiable, Hashable {
         case durationHours
         case inclusions
         case facilitySections
+        case itemHtml
         case exclusions
         case coverImageUrl
         case isFeatured
@@ -64,6 +66,7 @@ struct VendorPackage: Decodable, Identifiable, Hashable {
         durationHours = try container.decodeIfPresent(Int.self, forKey: .durationHours)
         inclusions = try container.decodeIfPresent([String].self, forKey: .inclusions) ?? []
         facilitySections = try container.decodeIfPresent([VendorFacilitySection].self, forKey: .facilitySections)
+        itemHtml = try container.decodeIfPresent(String.self, forKey: .itemHtml)
         exclusions = try container.decodeIfPresent([String].self, forKey: .exclusions)
         coverImageUrl = try container.decodeIfPresent(String.self, forKey: .coverImageUrl)
         isFeatured = try container.decodeIfPresent(Bool.self, forKey: .isFeatured) ?? false
@@ -96,14 +99,32 @@ struct VendorPackage: Decodable, Identifiable, Hashable {
 
     var displaySections: [VendorFacilitySection] {
         if let facilitySections, !facilitySections.isEmpty {
-            return facilitySections
+            let cleaned = facilitySections.compactMap { section -> VendorFacilitySection? in
+                let title = section.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                let items = section.items
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+
+                guard !items.isEmpty else { return nil }
+                return VendorFacilitySection(
+                    title: title.isEmpty ? "Fasilitas" : title,
+                    items: items
+                )
+            }
+
+            if !cleaned.isEmpty {
+                return cleaned
+            }
         }
 
-        if inclusions.isEmpty {
-            return []
-        }
+        // Fallback only: never guess section headers from flat inclusion text
+        // (items like "… by Vendor" used to be wrongly promoted to titles).
+        let items = inclusions
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
 
-        return [VendorFacilitySection(title: "Fasilitas", items: inclusions)]
+        guard !items.isEmpty else { return [] }
+        return [VendorFacilitySection(title: "Fasilitas", items: items)]
     }
 
     var displayExclusions: [String] {

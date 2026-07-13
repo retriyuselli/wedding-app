@@ -3,6 +3,7 @@
 namespace App\Models\Paket;
 
 use App\Models\VendorPackagePriceType;
+use App\Support\RichEditorFacilityParser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -70,10 +71,19 @@ class VendorPackage extends Model
         return $this->flattenedInclusions();
     }
 
+    /**
+     * Prefer RichEditor `item` HTML (Filament), then JSON facilities column.
+     *
+     * @return list<array{title: string, items: list<string>}>
+     */
     public function getFacilitySectionsAttribute(): array
     {
-        $facilities = $this->facilities;
+        $fromItem = RichEditorFacilityParser::toSections($this->attributes['item'] ?? null);
+        if ($fromItem !== []) {
+            return $fromItem;
+        }
 
+        $facilities = $this->facilities;
         if (is_array($facilities) && $facilities !== []) {
             return [[
                 'title' => 'Fasilitas',
@@ -115,8 +125,15 @@ class VendorPackage extends Model
     }
 
     /**
-     * Final package price after discount (compatible with wedding-app starting_price).
+     * Raw Filament RichEditor HTML from paketpernikahan `item` column.
      */
+    public function itemHtml(): ?string
+    {
+        $html = $this->attributes['item'] ?? null;
+
+        return is_string($html) && trim($html) !== '' ? $html : null;
+    }
+
     public function getFinalPriceAttribute(): float
     {
         return max(0, (float) ($this->attributes['price'] ?? 0) - (float) ($this->attributes['discount'] ?? 0));
@@ -127,30 +144,10 @@ class VendorPackage extends Model
      */
     public function flattenedInclusions(): array
     {
-        $sections = $this->facility_sections;
-        if ($sections !== []) {
-            return collect($sections)
-                ->flatMap(fn (array $section): array => $section['items'] ?? [])
-                ->values()
-                ->all();
-        }
-
-        $itemHtml = $this->attributes['item'] ?? null;
-        if (! is_string($itemHtml) || trim($itemHtml) === '') {
-            return [];
-        }
-
-        if (preg_match_all('/<li[^>]*>(.*?)<\/li>/is', $itemHtml, $matches)) {
-            return collect($matches[1])
-                ->map(fn (string $text): string => trim(html_entity_decode(strip_tags($text))))
-                ->filter()
-                ->values()
-                ->all();
-        }
-
-        $plain = trim(html_entity_decode(strip_tags($itemHtml)));
-
-        return $plain !== '' ? [$plain] : [];
+        return collect($this->facility_sections)
+            ->flatMap(fn (array $section): array => $section['items'] ?? [])
+            ->values()
+            ->all();
     }
 
     public function coverImageUrl(): ?string
