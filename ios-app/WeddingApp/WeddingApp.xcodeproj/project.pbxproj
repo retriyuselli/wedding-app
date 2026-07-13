@@ -90,6 +90,7 @@
 		8E8BD989EEDD88CB0F7BCE4D /* BudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EF1EF74D6E80C28D3DF8CEC /* BudgetCategory.swift */; };
 		8F029C1BBBADF2050AA7169D /* VendorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AF956B4117204E2C03178F /* VendorDetailView.swift */; };
 		901BBA272B9F947BA7939342 /* SavedVendorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D2428C547A82B0A49FA89F /* SavedVendorsView.swift */; };
+		90A735AFE7FAEF924C2A4FE7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 971FF8A8171E9D972A3A746E /* LaunchScreen.storyboard */; };
 		90CA1E052C314E520C791A8F /* AppearanceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD6DC7A8E527EA104DB3FE7 /* AppearanceStore.swift */; };
 		91CC10CB78BBA17F0D2745A5 /* BudgetPaymentFlows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7419D2082AB21BE0E69718B6 /* BudgetPaymentFlows.swift */; };
 		930E0BC7C68B50C5E0F52A95 /* MoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0999072473E2F9FD2AD577D0 /* MoreView.swift */; };
@@ -178,14 +179,14 @@
 		3D802C9898428DA65375E7E3 /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
 		3F2E1E70A6F0FBC009D57C52 /* DataExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportView.swift; sourceTree = "<group>"; };
 		463B7B02EAA92D28939FF73E /* PrivacySecurityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySecurityView.swift; sourceTree = "<group>"; };
-		46D8AD39291CE696AD47C739 /* WeddingApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WeddingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		46D8AD39291CE696AD47C739 /* WeddingApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WeddingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E57979FBEA0C155CE8EDFA9 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		4F8C255E3C4744D9A51D5A3F /* AboutWeddingAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWeddingAppView.swift; sourceTree = "<group>"; };
 		50F98766A9F27330C7919FAF /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		52660BF241E3B193D7DC01A8 /* IncomingPaymentFlows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncomingPaymentFlows.swift; sourceTree = "<group>"; };
 		52DE810C73DE1D501791D578 /* CoupleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoupleView.swift; sourceTree = "<group>"; };
 		533FF60D7EC9C432A96F0682 /* GuestContactLinker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestContactLinker.swift; sourceTree = "<group>"; };
-		534C089B07685E8E3EEBC243 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		534C089B07685E8E3EEBC243 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		572F06071E523ED69487AB40 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		574EE7BB43BCF0266A4905EA /* TwoFactorSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoFactorSettingsView.swift; sourceTree = "<group>"; };
 		593CDE1B148ACE38C2CD2AEB /* CoupleAvatarImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoupleAvatarImage.swift; sourceTree = "<group>"; };
@@ -213,6 +214,7 @@
 		8EF1EF74D6E80C28D3DF8CEC /* BudgetCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCategory.swift; sourceTree = "<group>"; };
 		8F2D4C1A64170E6382C4D9D8 /* BudgetPaymentCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetPaymentCategory.swift; sourceTree = "<group>"; };
 		90831799F7F7B3032F1F9B8F /* CormorantGaramond.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = CormorantGaramond.ttf; sourceTree = "<group>"; };
+		971FF8A8171E9D972A3A746E /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9A6958BA2413CA45DF2D3FD6 /* AppleSignInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInService.swift; sourceTree = "<group>"; };
 		9B0F41CBEC05C304B6987CE6 /* HelpTopicArticlesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpTopicArticlesView.swift; sourceTree = "<group>"; };
 		9E0839892BE330809B179C97 /* AddPaymentMethodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPaymentMethodView.swift; sourceTree = "<group>"; };
@@ -347,6 +349,7 @@
 			isa = PBXGroup;
 			children = (
 				572F06071E523ED69487AB40 /* Assets.xcassets */,
+				971FF8A8171E9D972A3A746E /* LaunchScreen.storyboard */,
 				534C089B07685E8E3EEBC243 /* PrivacyInfo.xcprivacy */,
 				8CFAEB7E9152CFA035F83142 /* Fonts */,
 			);
@@ -703,6 +706,7 @@
 			files = (
 				6B4F02E9BACF09F01A80CB08 /* Assets.xcassets in Resources */,
 				969666756A35079C4E8C30AA /* CormorantGaramond.ttf in Resources */,
+				90A735AFE7FAEF924C2A4FE7 /* LaunchScreen.storyboard in Resources */,
 				46673404CAC27EA6B10C2BBB /* Localizable.strings in Resources */,
 				6097B6059B2D7441EE99E827 /* Poppins-Bold.ttf in Resources */,
 				5E50C8E32B2CB4CE86A09ABC /* Poppins-Medium.ttf in Resources */,
@@ -874,8 +878,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Wedding App";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -965,8 +970,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Wedding App";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = NO;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

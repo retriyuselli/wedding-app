@@ -31,4 +31,18 @@ return [
         'support_whatsapp' => env('WEDDING_SUPPORT_WHATSAPP', '+62 812 3456 7890'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Vendor catalog source
+    |--------------------------------------------------------------------------
+    |
+    | local = wedding-app vendors table
+    | paket = read-only from paketpernikahan.co.id DB (mysql_paket connection)
+    |
+    */
+    'vendors' => [
+        'source' => env('VENDORS_SOURCE', 'local'),
+        'paket_public_url' => env('PAKET_PUBLIC_URL', 'https://paketpernikahan.co.id'),
+    ],
+
 ];

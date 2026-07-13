@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vendor;
+use App\Support\VendorCatalog;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -11,22 +12,6 @@ use Illuminate\View\View;
 
 class VendorController extends Controller
 {
-    /**
-     * @var list<array{key: string, label: string, slugs: list<string>}>
-     */
-    private array $categoryTabs = [
-        ['key' => 'all', 'label' => 'Semua', 'slugs' => []],
-        ['key' => 'venue', 'label' => 'Venue', 'slugs' => ['venue']],
-        ['key' => 'catering', 'label' => 'Catering', 'slugs' => ['catering']],
-        ['key' => 'dekorasi', 'label' => 'Dekorasi', 'slugs' => ['dekorasi', 'florist']],
-        ['key' => 'foto-video', 'label' => 'Fotografi & Video', 'slugs' => ['fotografi', 'videografi', 'prewedding', 'photo-booth']],
-        ['key' => 'mua', 'label' => 'MUA', 'slugs' => ['mua']],
-        ['key' => 'busana', 'label' => 'Busana', 'slugs' => ['busana']],
-        ['key' => 'entertainment', 'label' => 'Entertainment', 'slugs' => ['entertainment', 'mc', 'sound-lighting']],
-        ['key' => 'souvenir', 'label' => 'Souvenir', 'slugs' => ['souvenir', 'undangan', 'kue']],
-        ['key' => 'lainnya', 'label' => 'Lainnya', 'slugs' => ['wedding-organizer', 'perhiasan', 'transportasi', 'akomodasi', 'hantaran', 'rental', 'legal', 'honeymoon']],
-    ];
-
     public function index(Request $request): View
     {
         $user = Auth::user();
@@ -42,17 +27,17 @@ class VendorController extends Controller
         $perPage = in_array($perPage, [12, 24, 48], true) ? $perPage : 12;
 
         $favoriteIds = $this->favoriteIds($request);
+        $categoryTabs = VendorCatalog::categoryTabs();
 
-        $query = Vendor::query()
-            ->with('category')
+        $query = VendorCatalog::queryWithCategory()
             ->where('is_active', true)
             ->withCount('activePackages')
             ->withMin('activePackages', 'price');
 
-        $activeTab = collect($this->categoryTabs)->firstWhere('key', $category) ?? $this->categoryTabs[0];
+        $activeTab = collect($categoryTabs)->firstWhere('key', $category) ?? $categoryTabs[0];
 
         if ($activeTab['key'] !== 'all' && $activeTab['slugs'] !== []) {
-            $query->whereHas('category', fn ($categoryQuery) => $categoryQuery->whereIn('slug', $activeTab['slugs']));
+            VendorCatalog::applyCategorySlugs($query, $activeTab['slugs']);
         }
 
         if ($search !== '') {
@@ -71,17 +56,19 @@ class VendorController extends Controller
 
         match ($sort) {
             'nama' => $query->orderBy('name'),
-            'rating' => $query->orderByDesc('is_featured')->orderBy('sort_order'),
+            'rating' => VendorCatalog::usingPaket()
+                ? $query->orderByDesc('rating')->orderByDesc('likes')
+                : $query->orderByDesc('is_featured')->orderBy('sort_order'),
             default => $query->orderByDesc('created_at'),
         };
 
         $vendors = $query->paginate($perPage)->withQueryString();
 
-        $allVendors = Vendor::query()->where('is_active', true)->with('category')->get();
+        $allVendors = VendorCatalog::queryWithCategory()->where('is_active', true)->get();
         $summary = $this->buildSummary($allVendors, $favoriteIds);
         $ratingDistribution = $this->buildRatingDistribution($allVendors);
         $averageRating = $allVendors->isNotEmpty()
-            ? round($allVendors->avg(fn (Vendor $vendor): float => $vendor->displayRating()), 1)
+            ? round($allVendors->avg(fn (Model $vendor): float => $vendor->displayRating()), 1)
             : 0.0;
 
         $favoriteVendors = $allVendors
@@ -89,7 +76,7 @@ class VendorController extends Controller
             ->take(4)
             ->values();
 
-        $locations = Vendor::query()
+        $locations = VendorCatalog::query()
             ->where('is_active', true)
             ->select('city')
             ->whereNotNull('city')
@@ -108,7 +95,7 @@ class VendorController extends Controller
 
         return view('vendor.index', [
             'vendors' => $vendors,
-            'categoryTabs' => $this->categoryTabs,
+            'categoryTabs' => $categoryTabs,
             'activeCategory' => $category,
             'search' => $search,
             'activeLocation' => $location,
@@ -129,7 +116,7 @@ class VendorController extends Controller
 
     public function toggleFavorite(Request $request, int $vendor): RedirectResponse
     {
-        $vendorId = Vendor::query()->where('is_active', true)->whereKey($vendor)->value('id');
+        $vendorId = VendorCatalog::query()->where('is_active', true)->whereKey($vendor)->value('id');
 
         if ($vendorId === null) {
             abort(404);
@@ -157,7 +144,7 @@ class VendorController extends Controller
     }
 
     /**
-     * @param  Collection<int, Vendor>  $vendors
+     * @param  Collection<int, Model>  $vendors
      * @param  list<int>  $favoriteIds
      * @return array{total: int, active: int, favorites: int, akan_dihubungi: int}
      */
@@ -169,14 +156,14 @@ class VendorController extends Controller
             'favorites' => count($favoriteIds),
             'akan_dihubungi' => $vendors
                 ->whereNotIn('id', $favoriteIds)
-                ->where(fn (Vendor $vendor): bool => (bool) $vendor->phone)
+                ->where(fn (Model $vendor): bool => (bool) $vendor->phone)
                 ->take(5)
                 ->count(),
         ];
     }
 
     /**
-     * @param  Collection<int, Vendor>  $vendors
+     * @param  Collection<int, Model>  $vendors
      * @return Collection<int, array{stars: int, percent: int}>
      */
     private function buildRatingDistribution(Collection $vendors): Collection

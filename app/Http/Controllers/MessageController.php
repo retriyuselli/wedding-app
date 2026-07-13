@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Message;
 use App\Models\MessageThread;
-use App\Models\Vendor;
 use App\Models\WeddingEvent;
 use App\Models\WeddingInfo;
+use App\Support\VendorCatalog;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -179,14 +180,14 @@ class MessageController extends Controller
         return array_values(array_map('intval', $request->session()->get('favorite_threads', [])));
     }
 
-    private function resolveVendorProfile(MessageThread $thread): ?Vendor
+    private function resolveVendorProfile(MessageThread $thread): ?Model
     {
         if ($thread->category !== 'vendor') {
             return null;
         }
 
-        return Vendor::query()
-            ->with('category')
+        return VendorCatalog::query()
+            ->with(VendorCatalog::categoryRelation())
             ->where(function ($query) use ($thread): void {
                 $query->where('name', 'like', '%'.$thread->name.'%')
                     ->orWhere('name', $thread->name);

@@ -335,7 +335,7 @@
                     @foreach($displayVendors as $vendor)
                         @php
                             $vendorName = is_array($vendor) ? $vendor['name'] : $vendor->name;
-                            $vendorCategory = is_array($vendor) ? $vendor['category'] : ($vendor->category?->name ?? 'Vendor');
+                            $vendorCategory = is_array($vendor) ? $vendor['category'] : $vendor->displayCategoryName();
                         @endphp
                         <div class="w-[150px] shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white">
                             <div class="relative aspect-[4/3] bg-sage-100">

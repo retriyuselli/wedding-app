@@ -11,7 +11,7 @@
     <div class="relative">
         <img src="{{ $vendor->coverImageUrl() }}" alt="{{ $vendor->name }}" class="h-36 w-full object-cover">
         <span class="absolute bottom-2 left-2 rounded-md bg-white/90 px-2 py-1 text-[10px] font-semibold text-sage-700 backdrop-blur">
-            {{ $vendor->category?->name ?? 'Vendor' }}
+            {{ $vendor->displayCategoryName() }}
         </span>
         <form method="POST" action="{{ route('vendor.favorite', $vendor->id) }}" class="absolute right-2 top-2">
             @csrf

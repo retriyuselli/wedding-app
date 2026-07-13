@@ -12,15 +12,17 @@ class VendorResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $startingPrice = $this->resolveStartingPrice();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
             'logo' => $this->logo,
-            'logo_url' => $this->logo ? asset('storage/'.$this->logo) : null,
-            'cover_image' => $this->cover_image,
-            'cover_image_url' => $this->cover_image ? asset('storage/'.$this->cover_image) : null,
+            'logo_url' => $this->logoUrl(),
+            'cover_image' => is_array($this->cover_image) ? ($this->cover_image[0] ?? null) : $this->cover_image,
+            'cover_image_url' => $this->resolvedCoverUrl(),
             'province' => $this->province,
             'city' => $this->city,
             'address' => $this->address,
@@ -28,25 +30,58 @@ class VendorResource extends JsonResource
             'email' => $this->email,
             'website' => $this->website,
             'instagram' => $this->instagram,
-            'is_verified' => $this->is_verified,
-            'is_featured' => $this->is_featured,
-            'category' => $this->whenLoaded('category', fn () => [
-                'id' => $this->category->id,
-                'name' => $this->category->name,
-                'slug' => $this->category->slug,
-                'icon' => $this->category->icon,
-            ]),
+            'is_verified' => (bool) $this->is_verified,
+            'is_featured' => (bool) $this->is_featured,
+            'category' => ($category = $this->resolveCategory()) ? [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'icon' => $category->icon ?? null,
+            ] : null,
             'packages_count' => $this->when(
                 isset($this->active_packages_count),
                 fn () => $this->active_packages_count,
             ),
             'starting_price' => $this->when(
-                $this->active_packages_min_price !== null,
-                fn () => number_format((float) $this->active_packages_min_price, 2, '.', ''),
+                $startingPrice !== null,
+                fn () => number_format((float) $startingPrice, 2, '.', ''),
             ),
             'packages' => VendorPackageResource::collection($this->whenLoaded('activePackages')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+    }
+
+    private function resolveCategory(): mixed
+    {
+        if ($this->relationLoaded('categoryVendor')) {
+            return $this->categoryVendor;
+        }
+
+        if ($this->relationLoaded('category')) {
+            return $this->category;
+        }
+
+        if (method_exists($this->resource, 'categoryVendor')) {
+            return $this->resource->categoryVendor;
+        }
+
+        return $this->category;
+    }
+
+    private function resolveStartingPrice(): ?float
+    {
+        if ($this->active_packages_min_price !== null) {
+            return (float) $this->active_packages_min_price;
+        }
+
+        if (isset($this->attributes['price_start']) || isset($this->price_start)) {
+            $priceStart = $this->price_start ?? null;
+            if ($priceStart !== null) {
+                return max(0, (float) $priceStart - (float) ($this->discount ?? 0));
+            }
+        }
+
+        return null;
     }
 }

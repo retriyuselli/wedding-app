@@ -305,7 +305,7 @@
                                         $isConfirmed = ($vendor->messages_count ?? 0) >= 2;
                                     } else {
                                         $vendorName = $vendor->name;
-                                        $vendorCategory = $vendor->category?->name ?? 'Vendor';
+                                        $vendorCategory = $vendor->displayCategoryName();
                                         $isConfirmed = $vendor->is_verified;
                                     }
                                     $vendorBadge = $isConfirmed

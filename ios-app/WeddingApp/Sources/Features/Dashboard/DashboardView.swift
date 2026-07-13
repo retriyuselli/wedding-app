@@ -125,7 +125,7 @@ private struct HomeDashboardView: View {
                 LuxuryWeddingBackground()
 
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
                         homeHeader
                         weddingSummaryCard
                         weddingProgressCard
@@ -134,7 +134,7 @@ private struct HomeDashboardView: View {
                         quickActionsCard
                     }
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding(.top, 4)
                     .padding(.bottom, 20)
                 }
             }
@@ -225,14 +225,15 @@ private struct HomeDashboardView: View {
             .accessibilityLabel(L10n.Dashboard.notifications)
             .padding(.top, 2)
         }
-        .frame(height: 128, alignment: .top)
-        .padding(.top, 8)
+        .padding(.top, 4)
+        .padding(.bottom, 2)
     }
 
     private var weddingSummaryCard: some View {
         let cardHeight: CGFloat = 182
+        let photoLift: CGFloat = 64
 
-        return HStack(spacing: 0) {
+        return HStack(alignment: .bottom, spacing: 0) {
             VStack(alignment: .leading, spacing: 9) {
                 Text(coupleName)
                     .font(AppFont.medium(22))
@@ -268,14 +269,15 @@ private struct HomeDashboardView: View {
             }
             .padding(.leading, 20)
             .padding(.trailing, 12)
+            .padding(.vertical, 16)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             CoupleAvatarImage(
                 width: 168,
-                height: cardHeight
+                height: cardHeight + photoLift
             )
         }
-        .frame(height: cardHeight)
+        .frame(height: cardHeight, alignment: .bottom)
         .frame(maxWidth: .infinity)
         .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay {
@@ -283,6 +285,7 @@ private struct HomeDashboardView: View {
                 .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
         }
         .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 16, y: 8)
+        .padding(.top, photoLift)
     }
 
     private var weddingProgressCard: some View {
@@ -328,7 +331,7 @@ private struct HomeDashboardView: View {
     }
 
     private var quoteCard: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 30) {
             Text("\u{201C}")
                 .font(.system(size: 40, weight: .bold, design: .serif))
                 .foregroundStyle(AppTheme.gold)

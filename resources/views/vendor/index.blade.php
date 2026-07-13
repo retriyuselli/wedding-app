@@ -207,7 +207,7 @@
                                 <img src="{{ $favorite->coverImageUrl() }}" alt="{{ $favorite->name }}" class="h-10 w-10 rounded-lg object-cover">
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate text-sm font-medium text-wedding-ink">{{ $favorite->name }}</p>
-                                    <p class="text-xs text-gray-400">{{ $favorite->category?->name }}</p>
+                                    <p class="text-xs text-gray-400">{{ $favorite->displayCategoryName() }}</p>
                                 </div>
                                 <form method="POST" action="{{ route('vendor.favorite', $favorite->id) }}">
                                     @csrf

@@ -47,6 +47,11 @@ class Vendor extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function displayCategoryName(): string
+    {
+        return $this->category?->name ?? 'Vendor';
+    }
+
     public function packages(): HasMany
     {
         return $this->hasMany(VendorPackage::class)->orderBy('sort_order');
@@ -76,11 +81,25 @@ class Vendor extends Model
 
     public function coverImageUrl(): string
     {
-        if ($this->cover_image) {
-            return asset('storage/'.$this->cover_image);
+        return $this->resolvedCoverUrl() ?? DummyImage::url('vendor', $this->id);
+    }
+
+    public function resolvedCoverUrl(): ?string
+    {
+        if (! $this->cover_image) {
+            return null;
         }
 
-        return DummyImage::url('vendor', $this->id);
+        return asset('storage/'.$this->cover_image);
+    }
+
+    public function logoUrl(): ?string
+    {
+        if (! $this->logo) {
+            return null;
+        }
+
+        return asset('storage/'.$this->logo);
     }
 
     protected static function booted(): void

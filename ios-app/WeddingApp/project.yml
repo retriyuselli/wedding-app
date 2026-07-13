@@ -36,6 +36,7 @@ targets:
       - path: Sources/Resources/PrivacyInfo.xcprivacy
       - path: Sources/App/Localization/id.lproj/Localizable.strings
       - path: Sources/App/Localization/en.lproj/Localizable.strings
+      - path: Sources/Resources/LaunchScreen.storyboard
     dependencies:
       - package: GoogleSignIn
         product: GoogleSignIn
@@ -53,10 +54,8 @@ targets:
       path: Generated/Info.plist
       properties:
         ITSAppUsesNonExemptEncryption: false
-        UIDeviceFamily: [1]
         LSRequiresIPhoneOS: true
-        UILaunchScreen:
-          UIColorName: SplashBackground
+        UILaunchStoryboardName: LaunchScreen
         GIDClientID: "1008010367829-am6itqilhmatsctp7ckj1flhrkeg77es.apps.googleusercontent.com"
         CFBundleURLTypes:
           - CFBundleURLSchemes:
@@ -84,6 +83,7 @@ targets:
         "EXCLUDED_ARCHS[sdk=iphonesimulator*]": i386
         INFOPLIST_KEY_CFBundleDisplayName: Wedding App
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
+        INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       configs:

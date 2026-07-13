@@ -148,19 +148,39 @@ struct VendorDetailView: View {
         sectionCard("Kontak") {
             VStack(alignment: .leading, spacing: 10) {
                 if let phone = vendor.phone, !phone.isEmpty {
-                    contactRow(icon: "phone.fill", text: phone)
+                    contactRow(
+                        icon: "phone.fill",
+                        text: phone,
+                        url: Self.phoneURL(phone)
+                    )
                 }
                 if let email = vendor.email, !email.isEmpty {
-                    contactRow(icon: "envelope.fill", text: email)
+                    contactRow(
+                        icon: "envelope.fill",
+                        text: email,
+                        url: URL(string: "mailto:\(email)")
+                    )
                 }
                 if let instagram = vendor.instagram, !instagram.isEmpty {
-                    contactRow(icon: "camera.fill", text: instagram)
+                    contactRow(
+                        icon: "camera.fill",
+                        text: instagram,
+                        url: Self.instagramURL(instagram)
+                    )
                 }
                 if let website = vendor.website, !website.isEmpty {
-                    contactRow(icon: "globe", text: website)
+                    contactRow(
+                        icon: "globe",
+                        text: website,
+                        url: Self.websiteURL(website)
+                    )
                 }
                 if let address = vendor.address, !address.isEmpty {
-                    contactRow(icon: "mappin.circle.fill", text: address)
+                    contactRow(
+                        icon: "mappin.circle.fill",
+                        text: address,
+                        url: Self.mapsURL(address)
+                    )
                 }
             }
         }
@@ -263,7 +283,19 @@ struct VendorDetailView: View {
             .background(AppTheme.lightSage, in: Capsule())
     }
 
-    private func contactRow(icon: String, text: String) -> some View {
+    private func contactRow(icon: String, text: String, url: URL? = nil) -> some View {
+        Group {
+            if let url {
+                Link(destination: url) {
+                    contactRowContent(icon: icon, text: text, isTappable: true)
+                }
+            } else {
+                contactRowContent(icon: icon, text: text, isTappable: false)
+            }
+        }
+    }
+
+    private func contactRowContent(icon: String, text: String, isTappable: Bool) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.system(size: 13))
@@ -272,8 +304,53 @@ struct VendorDetailView: View {
 
             Text(text)
                 .font(AppFont.regular(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.72))
+                .foregroundStyle(isTappable ? AppTheme.sageDark : AppTheme.ink.opacity(0.72))
+                .underline(isTappable, color: AppTheme.sageDark.opacity(0.35))
+
+            Spacer(minLength: 0)
+
+            if isTappable {
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(AppTheme.ink.opacity(0.3))
+            }
         }
+    }
+
+    private static func phoneURL(_ phone: String) -> URL? {
+        let digits = phone.filter { $0.isNumber || $0 == "+" }
+        guard !digits.isEmpty else { return nil }
+        return URL(string: "tel:\(digits)")
+    }
+
+    private static func instagramURL(_ handle: String) -> URL? {
+        let trimmed = handle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return url
+        }
+
+        let username = trimmed
+            .replacingOccurrences(of: "@", with: "")
+            .replacingOccurrences(of: "https://instagram.com/", with: "")
+            .replacingOccurrences(of: "https://www.instagram.com/", with: "")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+
+        guard !username.isEmpty else { return nil }
+        return URL(string: "https://instagram.com/\(username)")
+    }
+
+    private static func websiteURL(_ website: String) -> URL? {
+        let trimmed = website.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return url
+        }
+        return URL(string: "https://\(trimmed)")
+    }
+
+    private static func mapsURL(_ address: String) -> URL? {
+        var components = URLComponents(string: "https://maps.apple.com/")
+        components?.queryItems = [URLQueryItem(name: "q", value: address)]
+        return components?.url
     }
 
     private func load() async {

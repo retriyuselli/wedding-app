@@ -368,7 +368,7 @@
                                 </svg>
                                 <div>
                                     <p class="text-xs text-gray-400">Kategori</p>
-                                    <p class="font-medium text-wedding-ink">{{ $vendorProfile?->category?->name ?? $activeThread->categoryLabel() }}</p>
+                                    <p class="font-medium text-wedding-ink">{{ $vendorProfile?->displayCategoryName() ?? $activeThread->categoryLabel() }}</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">

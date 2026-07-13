@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\CustomerPreparationTask;
-use App\Models\Vendor;
 use App\Models\WeddingEvent;
 use App\Services\CustomerPreparationSummaryCalculator;
 use App\Services\WeddingBudgetSummaryCalculator;
+use App\Support\VendorCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -52,7 +52,7 @@ class ProfilController extends Controller
             ->count();
 
         if ($totalVendors === 0) {
-            $totalVendors = Vendor::query()->where('is_active', true)->count();
+            $totalVendors = VendorCatalog::query()->where('is_active', true)->count();
             $confirmedVendors = (int) round($totalVendors * 0.67);
         }
 
@@ -66,12 +66,9 @@ class ProfilController extends Controller
 
         $recentVendors = $vendorThreads->isNotEmpty()
             ? $vendorThreads->take(4)
-            : Vendor::query()
-                ->where('is_active', true)
-                ->with('category')
-                ->orderBy('sort_order')
-                ->limit(4)
-                ->get();
+            : (VendorCatalog::usingPaket()
+                ? VendorCatalog::queryWithCategory()->where('is_active', true)->orderByDesc('likes')->limit(4)->get()
+                : VendorCatalog::queryWithCategory()->where('is_active', true)->orderBy('sort_order')->limit(4)->get());
 
         $unreadNotifications = $user->customerNotifications()
             ->where('is_unread', true)

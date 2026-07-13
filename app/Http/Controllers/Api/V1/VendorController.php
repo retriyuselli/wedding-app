@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\VendorPackageResource;
 use App\Http\Resources\V1\VendorResource;
-use App\Models\Vendor;
+use App\Support\VendorCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -14,14 +14,13 @@ class VendorController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Vendor::query()
-            ->with('category')
+        $query = VendorCatalog::queryWithCategory()
             ->where('is_active', true)
             ->withCount('activePackages')
             ->withMin('activePackages', 'price');
 
         if ($request->filled('category')) {
-            $query->whereHas('category', fn ($q) => $q->where('slug', $request->string('category')));
+            VendorCatalog::applyCategorySlugs($query, [$request->string('category')->toString()]);
         }
 
         if ($request->filled('province')) {
@@ -33,11 +32,25 @@ class VendorController extends Controller
         }
 
         if ($request->boolean('featured')) {
-            $query->where('is_featured', true);
+            if (VendorCatalog::usingPaket()) {
+                $query->where(function ($featuredQuery): void {
+                    $featuredQuery->whereNotNull('badge')
+                        ->where('badge', '!=', '[]')
+                        ->orWhere(function ($promoQuery): void {
+                            $promoQuery->whereNotNull('promo')->where('promo', '!=', '[]');
+                        });
+                });
+            } else {
+                $query->where('is_featured', true);
+            }
         }
 
         if ($request->boolean('verified')) {
-            $query->where('is_verified', true);
+            if (VendorCatalog::usingPaket()) {
+                $query->where('is_profile_complete', true);
+            } else {
+                $query->where('is_verified', true);
+            }
         }
 
         if ($request->filled('search')) {
@@ -49,18 +62,25 @@ class VendorController extends Controller
             });
         }
 
-        $vendors = $query
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        if (VendorCatalog::usingPaket()) {
+            $vendors = $query
+                ->orderByDesc('likes')
+                ->orderBy('name')
+                ->get();
+        } else {
+            $vendors = $query
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        }
 
         return VendorResource::collection($vendors);
     }
 
     public function show(string $vendor): VendorResource|JsonResponse
     {
-        $record = Vendor::query()
-            ->with(['category', 'activePackages'])
+        $record = VendorCatalog::query()
+            ->with([VendorCatalog::categoryRelation(), 'activePackages'])
             ->where('is_active', true)
             ->where('slug', $vendor)
             ->first();
@@ -74,7 +94,7 @@ class VendorController extends Controller
 
     public function packages(string $vendor): AnonymousResourceCollection|JsonResponse
     {
-        $record = Vendor::query()
+        $record = VendorCatalog::query()
             ->where('is_active', true)
             ->where('slug', $vendor)
             ->first();

@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\CustomerPreparationTask;
 use App\Models\Inspiration;
-use App\Models\Vendor;
 use App\Models\WeddingQuote;
 use App\Services\CustomerPreparationSummaryCalculator;
 use App\Services\WeddingBudgetSummaryCalculator;
+use App\Support\VendorCatalog;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -44,21 +44,35 @@ class DashboardController extends Controller
 
         $eventProgress = $this->eventProgress($user->id);
 
-        $featuredVendors = Vendor::query()
-            ->where('is_active', true)
-            ->where('is_featured', true)
-            ->with('category')
-            ->orderBy('sort_order')
-            ->limit(6)
-            ->get();
+        $featuredQuery = VendorCatalog::queryWithCategory()
+            ->where('is_active', true);
 
-        if ($featuredVendors->isEmpty()) {
-            $featuredVendors = Vendor::query()
-                ->where('is_active', true)
-                ->with('category')
+        if (VendorCatalog::usingPaket()) {
+            $featuredVendors = (clone $featuredQuery)
+                ->where(function ($query): void {
+                    $query->whereNotNull('badge')
+                        ->where('badge', '!=', '[]')
+                        ->orWhere(function ($promoQuery): void {
+                            $promoQuery->whereNotNull('promo')->where('promo', '!=', '[]');
+                        });
+                })
+                ->orderByDesc('likes')
+                ->limit(6)
+                ->get();
+
+            if ($featuredVendors->isEmpty()) {
+                $featuredVendors = $featuredQuery->orderByDesc('likes')->limit(6)->get();
+            }
+        } else {
+            $featuredVendors = (clone $featuredQuery)
+                ->where('is_featured', true)
                 ->orderBy('sort_order')
                 ->limit(6)
                 ->get();
+
+            if ($featuredVendors->isEmpty()) {
+                $featuredVendors = $featuredQuery->orderBy('sort_order')->limit(6)->get();
+            }
         }
 
         $savedInspirations = $user->savedInspirations()
@@ -189,7 +203,7 @@ class DashboardController extends Controller
                 'total_guests' => $totalGuests,
                 'confirmed_guests' => $confirmedGuests,
                 'confirmed_percent' => $confirmedPercent,
-                'total_vendors' => Vendor::query()->where('is_active', true)->count(),
+                'total_vendors' => VendorCatalog::query()->where('is_active', true)->count(),
                 'upcoming_payments' => $upcomingPaymentsTotal,
                 'tasks_due_week' => $tasksDueThisWeek,
             ],

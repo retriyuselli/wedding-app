@@ -81,7 +81,6 @@ struct CoupleView: View {
                 .scaledToFill()
                 .frame(width: 72, height: 72)
                 .clipShape(Circle())
-                .overlay { Circle().stroke(AppTheme.gold.opacity(0.5), lineWidth: 1.5) }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(couplePreview)

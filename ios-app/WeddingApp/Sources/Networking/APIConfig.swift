@@ -2,7 +2,7 @@ import Foundation
 
 enum APIConfig {
     /// Production API — ganti jika domain deploy berbeda.
-    static let productionURL = URL(string: "https://api.weddingapp.co.id/api/v1")!
+    static let productionURL = URL(string: "https://weddingapp.co.id/api/v1")!
 
     #if DEBUG
     /// Physical devices can't reach the Mac's localhost, so they need the Mac's LAN IP instead.

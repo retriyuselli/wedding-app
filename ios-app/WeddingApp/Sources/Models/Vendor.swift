@@ -382,7 +382,6 @@ enum VendorCategoryAppearance {
 
 enum VendorSortOption: String, CaseIterable, Identifiable {
     case popular = "popular"
-    case rating = "rating"
     case newest = "newest"
 
     var id: String { rawValue }
@@ -390,7 +389,6 @@ enum VendorSortOption: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .popular: return "Populer"
-        case .rating: return "Rating"
         case .newest: return "Terbaru"
         }
     }
@@ -400,7 +398,6 @@ struct VendorFilter: Equatable {
     var categorySlugs: Set<String> = []
     var province: String?
     var city: String?
-    var minimumRating: Double?
     var verifiedOnly: Bool = false
     var savedOnly: Bool = false
 
@@ -408,20 +405,12 @@ struct VendorFilter: Equatable {
         !categorySlugs.isEmpty
             || (province != nil && province != VendorFilter.allProvincesLabel)
             || (city != nil && city != VendorFilter.allCitiesLabel)
-            || minimumRating != nil
             || verifiedOnly
             || savedOnly
     }
 
     static let allProvincesLabel = "Semua Provinsi"
     static let allCitiesLabel = "Semua Kota"
-
-    static let ratingOptions: [(label: String, value: Double?)] = [
-        ("Semua Rating", nil),
-        ("4.5 ke atas", 4.5),
-        ("4.0 ke atas", 4.0),
-        ("3.5 ke atas", 3.5),
-    ]
 
     mutating func reset() {
         self = VendorFilter()

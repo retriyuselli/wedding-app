@@ -16,6 +16,7 @@ struct VendorView: View {
     @State private var filterTask: Task<Void, Never>?
     @ObservedObject private var savedStore = SavedVendorsStore.shared
     @State private var selectedVendorRoute: VendorRoute?
+    @State private var showVendorRequestSheet = false
     @FocusState private var isSearchFocused: Bool
 
     private let searchBarID = "vendor-search-bar"
@@ -38,23 +39,14 @@ struct VendorView: View {
                     || vendor.name.localizedCaseInsensitiveContains(query)
                     || vendor.categoryLabel.localizedCaseInsensitiveContains(query)
                     || vendor.tags.contains { $0.localizedCaseInsensitiveContains(query) }
-                let matchRating = filter.minimumRating == nil
-                    || (vendor.rating.map { $0 >= (filter.minimumRating ?? 0) } ?? true)
                 let matchSaved = !filter.savedOnly || savedStore.contains(vendor.id)
-                return matchCategory && matchSearch && matchRating && matchSaved
+                return matchCategory && matchSearch && matchSaved
             }
             .sorted { lhs, rhs in
                 switch sortOption {
                 case .popular:
                     if lhs.isFeatured != rhs.isFeatured {
                         return lhs.isFeatured && !rhs.isFeatured
-                    }
-                    return lhs.packagesCount > rhs.packagesCount
-                case .rating:
-                    let lhsRating = lhs.rating ?? 0
-                    let rhsRating = rhs.rating ?? 0
-                    if lhsRating != rhsRating {
-                        return lhsRating > rhsRating
                     }
                     return lhs.packagesCount > rhs.packagesCount
                 case .newest:
@@ -147,6 +139,9 @@ struct VendorView: View {
                 }
             )
         }
+        .sheet(isPresented: $showVendorRequestSheet) {
+            VendorRequestSheet()
+        }
     }
 
     private func openFilterSheet() {
@@ -223,9 +218,6 @@ struct VendorView: View {
         }
         if let city = filter.city, city != VendorFilter.allCitiesLabel {
             labels.append(city)
-        }
-        if let minimumRating = filter.minimumRating {
-            labels.append("Rating \(String(format: "%.1f", minimumRating))+")
         }
         if filter.verifiedOnly {
             labels.append("Terverifikasi")
@@ -576,7 +568,9 @@ struct VendorView: View {
 
             Spacer(minLength: 8)
 
-            Button {} label: {
+            Button {
+                showVendorRequestSheet = true
+            } label: {
                 Text("Kirim\nPermintaan")
                     .font(AppFont.medium(11))
                     .multilineTextAlignment(.center)
@@ -594,6 +588,189 @@ struct VendorView: View {
                 .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
         }
         .shadow(color: AppTheme.sageDark.opacity(0.07), radius: 14, y: 7)
+    }
+}
+
+// MARK: - Vendor Request Sheet
+
+private struct VendorRequestSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var category = ""
+    @State private var city = ""
+    @State private var budget = ""
+    @State private var notes = ""
+    @State private var isSending = false
+    @State private var errorMessage: String?
+    @State private var showSuccess = false
+
+    private var canSend: Bool {
+        let hasNeed = !category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return hasNeed && !isSending
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                LuxuryWeddingBackground()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Ceritakan kebutuhan vendormu. Tim support akan membantu mencarikan opsi yang cocok.")
+                            .font(AppFont.regular(13))
+                            .foregroundStyle(AppTheme.ink.opacity(0.6))
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if let errorMessage {
+                            Text(errorMessage)
+                                .font(AppFont.regular(13))
+                                .foregroundStyle(.red)
+                        }
+
+                        fieldCard(title: "Jenis Vendor", placeholder: "Contoh: Venue, Catering, MUA", text: $category)
+                        fieldCard(title: "Kota / Lokasi", placeholder: "Contoh: Palembang", text: $city)
+                        fieldCard(title: "Estimasi Budget", placeholder: "Contoh: 20–50 juta", text: $budget)
+                        notesCard
+                    }
+                    .padding(20)
+                    .padding(.bottom, 24)
+                }
+            }
+            .navigationTitle("Kirim Permintaan")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Batal") { dismiss() }
+                        .foregroundStyle(AppTheme.ink.opacity(0.7))
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    Task { await sendRequest() }
+                } label: {
+                    HStack(spacing: 8) {
+                        if isSending {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        Text("Kirim Permintaan")
+                            .font(AppFont.medium(15))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        canSend ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45),
+                        in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSend)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .padding(.bottom, 12)
+                .background(.ultraThinMaterial)
+            }
+            .alert("Permintaan Terkirim", isPresented: $showSuccess) {
+                Button("Selesai") { dismiss() }
+            } message: {
+                Text("Tim support akan menindaklanjuti permintaanmu melalui pesan di aplikasi.")
+            }
+        }
+    }
+
+    private func fieldCard(title: String, placeholder: String, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(AppFont.medium(13))
+                .foregroundStyle(AppTheme.sageDark)
+
+            TextField(placeholder, text: text)
+                .font(AppFont.regular(14))
+                .foregroundStyle(AppTheme.ink)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                }
+        }
+    }
+
+    private var notesCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Detail Kebutuhan")
+                .font(AppFont.medium(13))
+                .foregroundStyle(AppTheme.sageDark)
+
+            TextField("Tanggal acara, kapasitas, preferensi gaya, dll.", text: $notes, axis: .vertical)
+                .font(AppFont.regular(14))
+                .foregroundStyle(AppTheme.ink)
+                .lineLimit(4 ... 8)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                }
+        }
+    }
+
+    private func composedMessage() -> String {
+        var lines = ["[Permintaan Vendor]"]
+
+        let trimmedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedCity = city.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedBudget = budget.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !trimmedCategory.isEmpty {
+            lines.append("Jenis: \(trimmedCategory)")
+        }
+        if !trimmedCity.isEmpty {
+            lines.append("Lokasi: \(trimmedCity)")
+        }
+        if !trimmedBudget.isEmpty {
+            lines.append("Budget: \(trimmedBudget)")
+        }
+        if !trimmedNotes.isEmpty {
+            lines.append("Detail: \(trimmedNotes)")
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    private func sendRequest() async {
+        guard canSend else { return }
+
+        isSending = true
+        errorMessage = nil
+        defer { isSending = false }
+
+        do {
+            let threadEnvelope: Envelope<MessageThread> = try await APIClient.shared.request(
+                "messages/threads/support"
+            )
+            let thread = threadEnvelope.data
+
+            let _: Envelope<ChatMessageItem> = try await APIClient.shared.request(
+                "messages/threads/\(thread.id)/send",
+                method: "POST",
+                json: [
+                    "body": composedMessage(),
+                    "topic": SupportMessageTopic.other.rawValue,
+                ]
+            )
+            showSuccess = true
+        } catch {
+            errorMessage = error.userFacingMessage
+        }
     }
 }
 
@@ -627,7 +804,6 @@ private struct VendorFilterSheet: View {
                         if hasSelectedProvince {
                             citySection
                         }
-                        ratingSection
                         toggleSection
                     }
                     .padding(20)
@@ -800,30 +976,6 @@ private struct VendorFilterSheet: View {
                             .font(AppFont.medium(12))
                             .foregroundStyle(isSelected ? .white : AppTheme.ink.opacity(0.65))
                             .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(
-                                isSelected ? AppTheme.sageDark : AppTheme.mist,
-                                in: Capsule()
-                            )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    private var ratingSection: some View {
-        filterSection("Rating Minimum") {
-            HStack(spacing: 8) {
-                ForEach(VendorFilter.ratingOptions, id: \.label) { option in
-                    let isSelected = filter.minimumRating == option.value
-                    Button {
-                        filter.minimumRating = option.value
-                    } label: {
-                        Text(option.label)
-                            .font(AppFont.medium(11))
-                            .foregroundStyle(isSelected ? .white : AppTheme.ink.opacity(0.65))
-                            .padding(.horizontal, 12)
                             .padding(.vertical, 8)
                             .background(
                                 isSelected ? AppTheme.sageDark : AppTheme.mist,

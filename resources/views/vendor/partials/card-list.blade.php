@@ -9,7 +9,7 @@
         <div class="flex items-start justify-between gap-2">
             <div>
                 <h3 class="text-sm font-semibold text-wedding-ink">{{ $vendor->name }}</h3>
-                <p class="text-xs text-gray-400">{{ $vendor->category?->name }} · {{ $vendor->locationLabel() }}</p>
+                <p class="text-xs text-gray-400">{{ $vendor->displayCategoryName() }} · {{ $vendor->locationLabel() }}</p>
             </div>
             <form method="POST" action="{{ route('vendor.favorite', $vendor->id) }}">
                 @csrf

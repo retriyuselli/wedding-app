@@ -12,12 +12,19 @@ class VendorPackageResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $price = $this->resource->getAttribute('final_price')
+            ?? $this->price;
+
+        $coverUrl = method_exists($this->resource, 'coverImageUrl')
+            ? $this->resource->coverImageUrl()
+            : ($this->cover_image ? asset('storage/'.$this->cover_image) : null);
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
-            'price' => $this->price,
+            'price' => $price,
             'price_type' => $this->price_type?->value,
             'price_type_label' => $this->price_type?->label(),
             'capacity_min' => $this->capacity_min,
@@ -27,8 +34,8 @@ class VendorPackageResource extends JsonResource
             'facility_sections' => $this->facility_sections ?? [],
             'exclusions' => $this->exclusions ?? [],
             'cover_image' => $this->cover_image,
-            'cover_image_url' => $this->cover_image ? asset('storage/'.$this->cover_image) : null,
-            'is_featured' => $this->is_featured,
+            'cover_image_url' => $coverUrl,
+            'is_featured' => (bool) $this->is_featured,
             'sort_order' => $this->sort_order,
         ];
     }

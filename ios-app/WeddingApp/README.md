@@ -60,7 +60,7 @@ Debug builds try local API URLs first, then fall back to production:
 
 - Simulator: `http://127.0.0.1:8000/api/v1`
 - Physical device: `http://192.168.0.90:8000/api/v1`
-- Production fallback: `https://api.weddingapp.co.id/api/v1`
+- Production fallback: `https://weddingapp.co.id/api/v1`
 
 For local backend development, run the Laravel API so it is reachable by the simulator or device:
 

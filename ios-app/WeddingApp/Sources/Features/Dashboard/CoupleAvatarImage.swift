@@ -10,9 +10,6 @@ struct CoupleAvatarImage: View {
             .aspectRatio(contentMode: .fill)
             .frame(width: width, height: height)
             .clipShape(photoShape)
-            .overlay {
-                photoShape.stroke(AppTheme.gold.opacity(0.5), lineWidth: 1.2)
-            }
     }
 
     private var photoShape: UnevenRoundedRectangle {
