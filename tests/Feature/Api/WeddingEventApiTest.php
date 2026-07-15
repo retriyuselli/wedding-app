@@ -35,18 +35,21 @@ class WeddingEventApiTest extends TestCase
                 'waktu_mulai' => '10:00',
                 'jam_selesai' => '11:00',
                 'lokasi_acara' => 'Aryaduta Hotel',
+                'estimasi_tamu' => 150,
                 'catatan' => 'Mohon konfirmasi ke semua vendor 1 minggu sebelum acara.',
             ]);
 
         $response
             ->assertOk()
             ->assertJsonPath('data.lokasi_acara', 'Aryaduta Hotel')
+            ->assertJsonPath('data.estimasi_tamu', 150)
             ->assertJsonPath('data.waktu_mulai', '10:00')
             ->assertJsonPath('data.jam_selesai', '11:00');
 
         $this->assertDatabaseHas('wedding_events', [
             'id' => $event->id,
             'lokasi_acara' => 'Aryaduta Hotel',
+            'estimasi_tamu' => 150,
             'waktu_mulai' => '10:00',
             'jam_selesai' => '11:00',
         ]);
@@ -110,6 +113,58 @@ class WeddingEventApiTest extends TestCase
             'lokasi_acara' => 'Lake Maceyhaven, Indonesia',
             'waktu_mulai' => '10:00',
         ]);
+    }
+
+    public function test_user_can_add_pengajian_event_quickly_without_queue_worker(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+        $user->weddingEvents()->where('jenis_acara', 'pengajian')->delete();
+
+        $started = microtime(true);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/wedding-events', [
+                'jenis_acara' => 'pengajian',
+                'sort_order' => 2,
+                'tgl_acara' => '2026-09-04',
+                'waktu_mulai' => '09:00',
+                'jam_selesai' => '11:00',
+                'lokasi_acara' => 'Rumah',
+            ]);
+
+        $elapsed = microtime(true) - $started;
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('data.jenis_acara', 'pengajian')
+            ->assertJsonPath('data.waktu_mulai', '09:00');
+
+        $this->assertLessThan(
+            8.0,
+            $elapsed,
+            'Creating an event should stay under iOS timeout without queue/enrich bottlenecks.'
+        );
+
+        $event = $user->weddingEvents()->where('jenis_acara', 'pengajian')->first();
+        $this->assertNotNull($event);
+        $this->assertGreaterThan(0, $event->preparationTasks()->count());
+    }
+
+    public function test_store_accepts_time_with_seconds_suffix(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+        $user->weddingEvents()->delete();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/wedding-events', [
+                'jenis_acara' => 'lamaran',
+                'waktu_mulai' => '14:00:00',
+                'jam_selesai' => '16:00:00',
+                'lokasi_acara' => 'Rumah',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.waktu_mulai', '14:00')
+            ->assertJsonPath('data.jam_selesai', '16:00');
     }
 
     public function test_user_can_update_event_sort_order(): void

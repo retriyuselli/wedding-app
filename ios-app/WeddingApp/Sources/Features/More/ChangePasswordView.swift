@@ -106,7 +106,7 @@ struct ChangePasswordView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private var saveButton: some View {

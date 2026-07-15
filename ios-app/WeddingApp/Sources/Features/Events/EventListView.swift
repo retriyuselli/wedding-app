@@ -15,7 +15,7 @@ struct EventListView: View {
 
                 ForEach(events) { event in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(event.jenisLabel ?? event.jenisAcara)
+                        Text(event.jenisLabel ?? WeddingEvent.label(for: event.jenisAcara))
                             .font(AppFont.semibold(17))
                         if let tglAcara = event.tglAcara {
                             Text(tglAcara)
@@ -37,10 +37,10 @@ struct EventListView: View {
                 if isLoading && events.isEmpty {
                     ProgressView()
                 } else if events.isEmpty {
-                    ContentUnavailableView("Belum ada acara", systemImage: "calendar")
+                    ContentUnavailableView(L10n.WeddingDetail.noEvents, systemImage: "calendar")
                 }
             }
-            .navigationTitle("Acara Pernikahan")
+            .navigationTitle(L10n.Events.title)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -101,23 +101,23 @@ private struct AddEventView: View {
                     Text(errorMessage).foregroundStyle(.red)
                 }
 
-                Picker("Jenis Acara", selection: $jenisAcara) {
+                Picker(L10n.Events.jenis, selection: $jenisAcara) {
                     ForEach(WeddingEvent.jenisOptions, id: \.self) { jenis in
-                        Text(jenis.capitalized).tag(jenis)
+                        Text(WeddingEvent.label(for: jenis)).tag(jenis)
                     }
                 }
 
-                DatePicker("Tanggal", selection: $tglAcara, displayedComponents: .date)
-                TextField("Lokasi", text: $lokasiAcara)
-                TextField("Catatan", text: $catatan)
+                DatePicker(L10n.Common.date, selection: $tglAcara, displayedComponents: .date)
+                TextField(L10n.Common.location, text: $lokasiAcara)
+                TextField(L10n.Common.notes, text: $catatan)
             }
-            .navigationTitle("Tambah Acara")
+            .navigationTitle(L10n.Events.addTitle)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") { dismiss() }
+                    Button(L10n.Common.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Simpan") {
+                    Button(L10n.Common.save) {
                         Task { await save() }
                     }
                     .disabled(isLoading)

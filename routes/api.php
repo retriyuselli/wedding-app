@@ -150,6 +150,7 @@ Route::prefix('v1')->group(function () {
         Route::patch('customer-notifications/{customerNotification}/mark-read', [CustomerNotificationController::class, 'markRead']);
 
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
+        Route::post('device-tokens/test', [DeviceTokenController::class, 'sendTest']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
 
         Route::get('messages/threads', [MessageController::class, 'threads']);

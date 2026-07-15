@@ -37,7 +37,7 @@ struct SecuritySummaryView: View {
 
     private func scoreCard(_ summary: PrivacySecuritySummary) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Skor keamanan: \(summary.score)%")
+            Text(L10n.Privacy.securityScore(summary.score))
                 .font(AppFont.medium(16))
                 .foregroundStyle(AppTheme.ink)
             Text(summary.status == "secure" ? "Status: Aman" : "Status: Perlu perhatian")
@@ -46,7 +46,7 @@ struct SecuritySummaryView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private func checkRow(_ check: PrivacySecurityCheck) -> some View {
@@ -60,13 +60,13 @@ struct SecuritySummaryView: View {
             Spacer()
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private func errorState(_ message: String) -> some View {
         VStack(spacing: 12) {
             Text(message).font(AppFont.regular(13)).foregroundStyle(.red)
-            Button("Coba lagi") { Task { await viewModel.retry() } }
+            Button(L10n.Common.tryAgain) { Task { await viewModel.retry() } }
                 .font(AppFont.medium(14))
                 .foregroundStyle(AppTheme.sageDark)
         }

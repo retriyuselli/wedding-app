@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\CustomerPreparationTaskResource;
+use App\Models\CustomerPreparationSubTask;
 use App\Models\CustomerPreparationTask;
 use App\Services\CustomerPreparationSummaryCalculator;
 use Illuminate\Http\JsonResponse;
@@ -44,6 +45,9 @@ class CustomerPreparationTaskController extends Controller
     public function store(Request $request): CustomerPreparationTaskResource
     {
         $data = $this->validated($request);
+        $subTasks = $data['sub_tasks'] ?? [];
+        unset($data['sub_tasks']);
+
         $data['status'] ??= 'pending';
         $data['priority'] ??= 'medium';
         $data['user_id'] = $request->user()->id;
@@ -53,6 +57,21 @@ class CustomerPreparationTaskController extends Controller
         }
 
         $task = CustomerPreparationTask::create($data);
+
+        foreach (array_values($subTasks) as $index => $subTask) {
+            $title = trim((string) ($subTask['title'] ?? ''));
+            if ($title === '') {
+                continue;
+            }
+
+            CustomerPreparationSubTask::create([
+                'user_id' => $task->user_id,
+                'preparation_task_id' => $task->id,
+                'title' => $title,
+                'status' => $subTask['status'] ?? 'pending',
+                'sort_order' => $index + 1,
+            ]);
+        }
 
         return new CustomerPreparationTaskResource($task->load(['subTasks', 'attachments']));
     }
@@ -108,6 +127,9 @@ class CustomerPreparationTaskController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'wedding_event_id' => ['nullable', 'integer', 'exists:wedding_events,id,user_id,'.$userId],
             'section_id' => ['nullable', 'integer', 'exists:customer_preparation_sections,id,user_id,'.$userId],
+            'sub_tasks' => [$isUpdate ? 'prohibited' : 'nullable', 'array', 'max:50'],
+            'sub_tasks.*.title' => ['required', 'string', 'max:255'],
+            'sub_tasks.*.status' => ['nullable', 'string', 'in:'.implode(',', array_keys(CustomerPreparationSubTask::$statusOptions))],
         ]);
     }
 

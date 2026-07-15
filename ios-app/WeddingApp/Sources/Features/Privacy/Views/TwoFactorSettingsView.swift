@@ -94,7 +94,7 @@ struct TwoFactorSettingsView: View {
                 .foregroundStyle(AppTheme.sageDark)
         }
         .padding(16)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private var codeForm: some View {
@@ -103,13 +103,13 @@ struct TwoFactorSettingsView: View {
                 .keyboardType(.numberPad)
                 .font(AppFont.regular(16))
                 .padding(14)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .premiumGlassCard(cornerRadius: 16)
 
             if viewModel.disableMode && !usesSocialLogin {
                 SecureField(L10n.DeleteAccount.passwordPlaceholder, text: $viewModel.password)
                     .font(AppFont.regular(14))
                     .padding(14)
-                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .premiumGlassCard(cornerRadius: 16)
             }
 
             Button {

@@ -105,7 +105,7 @@ class WeddingDocumentApiTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_index_includes_checklist_attachments(): void
+    public function test_index_lists_only_user_uploaded_documents(): void
     {
         $user = User::where('email', 'test@example.com')->firstOrFail();
         $task = CustomerPreparationTask::factory()->create([
@@ -124,7 +124,7 @@ class WeddingDocumentApiTest extends TestCase
 
         WeddingDocument::factory()->create([
             'user_id' => $user->id,
-            'file_name' => 'anggaran.xlsx',
+            'file_name' => 'anggaran.pdf',
             'category' => 'keuangan',
         ]);
 
@@ -132,7 +132,34 @@ class WeddingDocumentApiTest extends TestCase
             ->getJson('/api/v1/wedding-documents');
 
         $response->assertOk();
-        $this->assertGreaterThanOrEqual(2, count($response->json('data')));
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame('anggaran.pdf', $response->json('data.0.file_name'));
+    }
+
+    public function test_index_is_empty_when_user_has_no_uploads(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/wedding-documents')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_upload_rejects_files_over_one_megabyte(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+        $file = UploadedFile::fake()->create('besar.pdf', 1025, 'application/pdf');
+
+        $this->actingAs($user, 'sanctum')
+            ->post('/api/v1/wedding-documents', [
+                'file' => $file,
+                'category' => 'vendor',
+            ], [
+                'Accept' => 'application/json',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['file']);
     }
 
     public function test_summary_returns_storage_and_counts(): void

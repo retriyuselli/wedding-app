@@ -14,10 +14,10 @@ enum DocumentCategory: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .all: return L10n.Common.all
-        case .akad: return "Akad"
-        case .resepsi: return "Resepsi"
-        case .vendor: return "Vendor"
-        case .keuangan: return "Keuangan"
+        case .akad: return L10n.Documents.categoryAkad
+        case .resepsi: return L10n.Documents.categoryResepsi
+        case .vendor: return L10n.Documents.categoryVendor
+        case .keuangan: return L10n.Documents.categoryFinance
         }
     }
 
@@ -46,10 +46,10 @@ enum DocumentSortOption: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .latest: return "Terbaru"
-        case .oldest: return "Terlama"
-        case .name: return "Nama A–Z"
-        case .nameDesc: return "Nama Z–A"
+        case .latest: return L10n.Documents.sortNewest
+        case .oldest: return L10n.Documents.sortOldest
+        case .name: return L10n.Documents.sortNameAsc
+        case .nameDesc: return L10n.Documents.sortNameDesc
         }
     }
 }
@@ -80,8 +80,12 @@ struct WeddingDocumentsView: View {
     @State private var downloadShareURL: URL?
     @State private var showDownloadShare = false
 
+    private var storageQuotaBytes: Int {
+        summary?.quotaBytes ?? (5 * 1024 * 1024)
+    }
+
     private var storageQuotaMB: Double {
-        Double(summary?.quotaBytes ?? (500 * 1024 * 1024)) / 1_048_576
+        Double(storageQuotaBytes) / 1_048_576
     }
 
     private var usedStorageBytes: Int {
@@ -93,7 +97,17 @@ struct WeddingDocumentsView: View {
     }
 
     private var storageFraction: Double {
-        min(usedStorageMB / max(storageQuotaMB, 1), 1)
+        let quota = Double(storageQuotaBytes)
+        guard quota > 0 else { return 0 }
+        return min(Double(usedStorageBytes) / quota, 1)
+    }
+
+    private var storagePercentLabel: String {
+        let percent = summary?.usedPercent ?? (storageFraction * 100)
+        if usedStorageBytes > 0 && percent > 0 && percent < 0.1 {
+            return "<0.1%"
+        }
+        return String(format: "%.1f%%", percent)
     }
 
     private func count(for category: DocumentCategory) -> Int {
@@ -168,7 +182,7 @@ struct WeddingDocumentsView: View {
                         Image(systemName: "doc.richtext")
                             .font(.system(size: 40))
                             .foregroundStyle(AppTheme.sageDark)
-                        Text("Dokumen siap dibuka")
+                        Text(L10n.Documents.readyToOpen)
                             .font(AppFont.medium(16))
                             .foregroundStyle(AppTheme.ink)
                         Text(downloadShareURL.lastPathComponent)
@@ -178,7 +192,7 @@ struct WeddingDocumentsView: View {
                             .padding(.horizontal)
 
                         ShareLink(item: downloadShareURL) {
-                            Label("Buka / Bagikan", systemImage: "square.and.arrow.up")
+                            Label(L10n.Documents.openShare, systemImage: "square.and.arrow.up")
                                 .font(AppFont.medium(15))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
@@ -197,8 +211,8 @@ struct WeddingDocumentsView: View {
                 .presentationDetents([.medium])
             }
         }
-        .alert("Buat Folder Baru", isPresented: $showNewFolderAlert) {
-            TextField("Nama folder", text: $newFolderName)
+        .alert(L10n.Documents.newFolderAlertTitle, isPresented: $showNewFolderAlert) {
+            TextField(L10n.Documents.folderNamePlaceholder, text: $newFolderName)
             Button(L10n.Common.cancel, role: .cancel) {
                 newFolderName = ""
             }
@@ -207,7 +221,7 @@ struct WeddingDocumentsView: View {
                 Task { await createFolder(named: name) }
             }
         } message: {
-            Text("Masukkan nama folder untuk mengelompokkan dokumen.")
+            Text(L10n.Documents.newFolderMessage)
         }
         .alert(statusTitle, isPresented: $showStatus) {
             Button(L10n.Common.ok, role: .cancel) {}
@@ -242,11 +256,7 @@ struct WeddingDocumentsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 16)
 
             Button {
                 showFilterSheet = true
@@ -260,11 +270,7 @@ struct WeddingDocumentsView: View {
                 .foregroundStyle(AppTheme.sageDark)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-                }
+                .premiumGlassCard(cornerRadius: 16)
             }
             .buttonStyle(.plain)
         }
@@ -293,22 +299,19 @@ struct WeddingDocumentsView: View {
                             .fill(AppTheme.mist.opacity(0.7))
                         Capsule()
                             .fill(AppTheme.sageDark)
-                            .frame(width: max(proxy.size.width * storageFraction, storageFraction > 0 ? 8 : 0))
+                            .frame(width: storageBarWidth(in: proxy.size.width))
+                            .animation(.easeInOut(duration: 0.35), value: storageFraction)
                     }
                 }
                 .frame(height: 7)
             }
 
-            Text(String(format: "%.1f%%", (summary?.usedPercent ?? storageFraction * 100)))
+            Text(storagePercentLabel)
                 .font(AppFont.semibold(13))
                 .foregroundStyle(AppTheme.sageDark)
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var uploadRow: some View {
@@ -348,7 +351,7 @@ struct WeddingDocumentsView: View {
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .premiumGlassCard(cornerRadius: 18)
                 .overlay {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .strokeBorder(
@@ -377,11 +380,7 @@ struct WeddingDocumentsView: View {
                 .frame(width: 96)
                 .frame(maxHeight: .infinity)
                 .padding(.vertical, 14)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-                }
+                .premiumGlassCard(cornerRadius: 18)
             }
             .buttonStyle(.plain)
         }
@@ -393,7 +392,7 @@ struct WeddingDocumentsView: View {
             HStack {
                 Text(L10n.Common.category)
                     .font(AppFont.medium(15))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Spacer()
                 Button {
                     showCategorySheet = true
@@ -404,7 +403,7 @@ struct WeddingDocumentsView: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 10, weight: .semibold))
                     }
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                    .foregroundStyle(AppTheme.sageMuted(0.8))
                 }
                 .buttonStyle(.plain)
             }
@@ -421,7 +420,7 @@ struct WeddingDocumentsView: View {
             if !folders.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        folderChip(id: nil, title: "Semua folder")
+                        folderChip(id: nil, title: L10n.Documents.allFolders)
                         ForEach(folders) { folder in
                             folderChip(id: folder.id, title: folder.name)
                         }
@@ -446,17 +445,17 @@ struct WeddingDocumentsView: View {
                     .minimumScaleFactor(0.8)
                 Text("\(count(for: category))")
                     .font(AppFont.regular(11))
-                    .foregroundStyle(isSelected ? .white.opacity(0.85) : AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(isSelected ? AppTheme.accentOnLightSurface : AppTheme.inkMuted(0.55))
             }
-            .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
+            .foregroundStyle(isSelected ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
             .frame(width: 74, height: 82)
-            .background(
-                isSelected ? AppTheme.sageDark : AppTheme.surface,
-                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-            )
+            .background {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(isSelected ? AppTheme.selectedChipFill : AppTheme.nestedGlassFill)
+            }
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(isSelected ? 0 : 0.12), lineWidth: 1)
+                    .stroke(isSelected ? AppTheme.selectedChipFill : AppTheme.iconChipStroke, lineWidth: 1)
             }
         }
         .buttonStyle(.plain)
@@ -470,13 +469,17 @@ struct WeddingDocumentsView: View {
         } label: {
             Text(title)
                 .font(AppFont.medium(12))
-                .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
+                .foregroundStyle(isSelected ? AppTheme.labelOnLightSurface : AppTheme.inkMuted(0.7))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(
-                    isSelected ? AppTheme.sageDark : AppTheme.lightSage,
-                    in: Capsule()
-                )
+                .background {
+                    Capsule()
+                        .fill(isSelected ? AppTheme.selectedChipFill : AppTheme.chipIdleFill)
+                }
+                .overlay {
+                    Capsule()
+                        .stroke(isSelected ? AppTheme.selectedChipFill : AppTheme.iconChipStroke, lineWidth: 1)
+                }
         }
         .buttonStyle(.plain)
     }
@@ -520,10 +523,10 @@ struct WeddingDocumentsView: View {
                     icon: "folder",
                     title: searchText.isEmpty && selectedCategory == .all && selectedFolderId == nil
                         ? L10n.Documents.empty
-                        : "Tidak ada dokumen",
+                        : L10n.Documents.emptyFiltered,
                     message: searchText.isEmpty && selectedCategory == .all && selectedFolderId == nil
                         ? L10n.Documents.emptySub
-                        : "Tidak ada dokumen yang cocok dengan pencarian atau kategori ini."
+                        : L10n.Documents.emptyFilteredSub
                 )
             } else {
                 VStack(spacing: 10) {
@@ -558,7 +561,7 @@ struct WeddingDocumentsView: View {
                     Task { await downloadOrOpen(document) }
                 } label: {
                     Label(
-                        isDownloading ? "Mengunduh…" : "Buka / Unduh",
+                        isDownloading ? L10n.Documents.downloading : L10n.Documents.openDownload,
                         systemImage: "arrow.down.to.line"
                     )
                 }
@@ -580,17 +583,13 @@ struct WeddingDocumentsView: View {
             }
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private var filterSheet: some View {
         NavigationStack {
             List {
-                Section("Kategori") {
+                Section(L10n.Common.category) {
                     ForEach(DocumentCategory.allCases) { category in
                         Button {
                             selectedCategory = category
@@ -607,12 +606,12 @@ struct WeddingDocumentsView: View {
                     }
                 }
 
-                Section("Folder") {
+                Section(L10n.Documents.folderSection) {
                     Button {
                         selectedFolderId = nil
                     } label: {
                         HStack {
-                            Text("Semua folder")
+                            Text(L10n.Documents.allFolders)
                             Spacer()
                             if selectedFolderId == nil {
                                 Image(systemName: "checkmark")
@@ -650,7 +649,7 @@ struct WeddingDocumentsView: View {
     private var categorySheet: some View {
         NavigationStack {
             List {
-                Section("Kategori") {
+                Section(L10n.Common.category) {
                     ForEach(DocumentCategory.allCases) { category in
                         Button {
                             selectedCategory = category
@@ -668,7 +667,7 @@ struct WeddingDocumentsView: View {
                 }
 
                 if !folders.isEmpty {
-                    Section("Folder") {
+                    Section(L10n.Documents.folderSection) {
                         ForEach(folders) { folder in
                             Button {
                                 selectedFolderId = folder.id
@@ -713,7 +712,7 @@ struct WeddingDocumentsView: View {
                 .foregroundStyle(AppTheme.sageDark.opacity(0.6))
         }
         .padding(14)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private func fileBadge(for document: WeddingDocumentItem) -> some View {
@@ -735,7 +734,7 @@ struct WeddingDocumentsView: View {
     private func metaLine(_ document: WeddingDocumentItem) -> String {
         let category = document.categoryKind.label
         let size = formatFileSize(document.fileSize ?? 0)
-        let uploaded = displayDate(fromISO: document.createdAt) ?? "Tanggal tidak diketahui"
+        let uploaded = displayDate(fromISO: document.createdAt) ?? L10n.Documents.unknownDate
         let folder = document.folderName.map { " · \($0)" } ?? ""
         return "\(category)\(folder) · \(size) · \(uploaded)"
     }
@@ -812,7 +811,7 @@ struct WeddingDocumentsView: View {
         let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else {
             statusTitle = L10n.Common.warning
-            statusMessage = "Nama folder tidak boleh kosong."
+            statusMessage = L10n.Documents.folderNameEmpty
             showStatus = true
             return
         }
@@ -827,8 +826,8 @@ struct WeddingDocumentsView: View {
             folders.sort { ($0.sortOrder ?? 0, $0.name) < ($1.sortOrder ?? 0, $1.name) }
             selectedFolderId = envelope.data.id
             newFolderName = ""
-            statusTitle = "Folder dibuat"
-            statusMessage = "Folder \"\(envelope.data.name)\" siap dipakai."
+            statusTitle = L10n.Documents.folderCreatedTitle
+            statusMessage = L10n.Documents.folderCreatedMessage(envelope.data.name)
             showStatus = true
         } catch {
             statusTitle = L10n.Common.warning
@@ -850,7 +849,7 @@ struct WeddingDocumentsView: View {
 
         do {
             let data = try Data(contentsOf: url)
-            if data.count > 10 * 1024 * 1024 {
+            if data.count > 1 * 1024 * 1024 {
                 statusTitle = L10n.Common.warning
                 statusMessage = L10n.Documents.uploadLimit
                 showStatus = true
@@ -877,8 +876,8 @@ struct WeddingDocumentsView: View {
             )
 
             await load()
-            statusTitle = "Berhasil diunggah"
-            statusMessage = "Dokumen \"\(fileName)\" sudah tersimpan."
+            statusTitle = L10n.Documents.uploadSuccessTitle
+            statusMessage = L10n.Documents.uploadSuccessMessage
             showStatus = true
         } catch {
             guard !error.isRequestCancelled else { return }
@@ -930,7 +929,7 @@ struct WeddingDocumentsView: View {
 
         guard let urlString = document.url, let url = URL(string: urlString) else {
             statusTitle = L10n.Common.warning
-            statusMessage = "Tautan dokumen tidak tersedia."
+            statusMessage = L10n.Documents.linkUnavailable
             showStatus = true
             return
         }
@@ -963,6 +962,13 @@ struct WeddingDocumentsView: View {
         case "DOC", "DOCX": return Color(red: 0.24, green: 0.44, blue: 0.66)
         default: return AppTheme.ink.opacity(0.55)
         }
+    }
+
+    private func storageBarWidth(in totalWidth: CGFloat) -> CGFloat {
+        guard usedStorageBytes > 0 else { return 0 }
+        // Keep tiny usage visible without exaggerating real progress.
+        let proportional = totalWidth * storageFraction
+        return min(totalWidth, max(proportional, 10))
     }
 
     private func formatStorage(_ mb: Double) -> String {

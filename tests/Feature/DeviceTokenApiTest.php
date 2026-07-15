@@ -82,4 +82,33 @@ class DeviceTokenApiTest extends TestCase
             'token' => 'token-to-delete',
         ]);
     }
+
+    public function test_user_can_send_test_push_when_token_exists(): void
+    {
+        config([
+            'push.driver' => 'log',
+        ]);
+
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        DeviceToken::factory()->for($user)->create([
+            'token' => 'apns-test-token',
+            'platform' => 'ios',
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/device-tokens/test')
+            ->assertOk()
+            ->assertJsonPath('data.sent', 1)
+            ->assertJsonPath('data.token_count', 1);
+    }
+
+    public function test_send_test_push_requires_device_token(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/device-tokens/test')
+            ->assertStatus(422);
+    }
 }

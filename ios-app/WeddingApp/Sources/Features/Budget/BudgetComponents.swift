@@ -79,12 +79,7 @@ struct BudgetCategoryRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 5)
+        .premiumGlassCard(cornerRadius: 18)
     }
 }
 
@@ -164,11 +159,7 @@ struct BudgetCategorySummaryCard: View {
                 .foregroundStyle(AppTheme.ink.opacity(0.45))
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var footerRecordedPaymentText: String {
@@ -261,6 +252,13 @@ enum CurrencyFormatter {
         default:
             return rupiah(value)
         }
+    }
+
+    /// Formats live amount typing with Indonesian thousand separators (e.g. `350.000.000`).
+    static func formatAmountInput(_ value: String) -> String {
+        let digits = value.filter(\.isNumber)
+        guard !digits.isEmpty, let number = Int(digits) else { return "" }
+        return formatter.string(from: NSNumber(value: number)) ?? digits
     }
 }
 

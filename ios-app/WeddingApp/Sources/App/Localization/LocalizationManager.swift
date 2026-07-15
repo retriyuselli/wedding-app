@@ -20,17 +20,28 @@ final class LocalizationManager {
     }
 
     private func applyLanguage(code: String) {
-        if code == AppLanguage.indonesian.rawValue {
-            bundle = .main
+        // Always resolve an explicit .lproj bundle.
+        // Using Bundle.main for Indonesian incorrectly follows the device/app
+        // development language (often English), so ID strings never appear.
+        if let languageBundle = lprojBundle(for: code) {
+            bundle = languageBundle
             return
         }
 
-        if let path = Bundle.main.path(forResource: code, ofType: "lproj"),
-           let languageBundle = Bundle(path: path) {
-            bundle = languageBundle
-        } else {
-            bundle = .main
+        if code != AppLanguage.indonesian.rawValue,
+           let indonesianBundle = lprojBundle(for: AppLanguage.indonesian.rawValue) {
+            bundle = indonesianBundle
+            return
         }
+
+        bundle = .main
+    }
+
+    private func lprojBundle(for code: String) -> Bundle? {
+        guard let path = Bundle.main.path(forResource: code, ofType: "lproj") else {
+            return nil
+        }
+        return Bundle(path: path)
     }
 
     func string(for key: String) -> String {
@@ -39,11 +50,16 @@ final class LocalizationManager {
             return value
         }
 
-        if languageCode != AppLanguage.indonesian.rawValue,
-           let path = Bundle.main.path(forResource: AppLanguage.indonesian.rawValue, ofType: "lproj"),
-           let fallbackBundle = Bundle(path: path) {
+        // Fallback to the other language pack, then the key itself.
+        let fallbackCode = languageCode == AppLanguage.indonesian.rawValue
+            ? AppLanguage.english.rawValue
+            : AppLanguage.indonesian.rawValue
+
+        if let fallbackBundle = lprojBundle(for: fallbackCode) {
             let fallback = fallbackBundle.localizedString(forKey: key, value: key, table: nil)
-            return fallback == key ? key : fallback
+            if fallback != key {
+                return fallback
+            }
         }
 
         return key

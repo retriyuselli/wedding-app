@@ -49,17 +49,17 @@ struct EditProfileView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(email.isEmpty ? L10n.Profile.emailUnavailable : email)
                                         .font(AppFont.regular(14))
-                                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                                        .foregroundStyle(AppTheme.titleOnGlass)
                                     Text(L10n.Profile.emailLocked)
                                         .font(AppFont.regular(11))
-                                        .foregroundStyle(AppTheme.ink.opacity(0.4))
+                                        .foregroundStyle(AppTheme.inkMuted(0.45))
                                 }
 
                                 Spacer(minLength: 0)
 
                                 Image(systemName: "lock.fill")
                                     .font(.system(size: 12))
-                                    .foregroundStyle(AppTheme.ink.opacity(0.25))
+                                    .foregroundStyle(AppTheme.inkMuted(0.45))
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 14)
@@ -96,9 +96,17 @@ struct EditProfileView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.72))
+                    .foregroundStyle(AppTheme.iconOnChip)
                     .frame(width: 42, height: 42)
-                    .background(.white.opacity(0.86), in: Circle())
+                    .background {
+                        Circle()
+                            .fill(AppTheme.iconChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    }
                     .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
@@ -108,10 +116,10 @@ struct EditProfileView: View {
             VStack(spacing: 4) {
                 Text(L10n.Profile.title)
                     .font(AppFont.medium(18))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Text(L10n.Profile.subtitle)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.captionOnGlass)
                     .multilineTextAlignment(.center)
             }
 
@@ -149,23 +157,19 @@ struct EditProfileView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(name.isEmpty ? L10n.Profile.nameEmpty : name)
                     .font(AppFont.medium(17))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .lineLimit(2)
 
                 Text(L10n.Profile.photoNote)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.5))
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer(minLength: 0)
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var placeholderAvatar: some View {
@@ -182,28 +186,24 @@ struct EditProfileView: View {
 
             Text(L10n.Profile.info)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.inkMuted(0.55))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .background(AppTheme.lightSage.opacity(0.45), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private func formSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             VStack(spacing: 10) {
                 content()
             }
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 18)
         }
     }
 
@@ -218,7 +218,7 @@ struct EditProfileView: View {
 
             TextField(placeholder, text: text)
                 .font(AppFont.regular(14))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
                 .keyboardType(keyboard)
         }
         .padding(.horizontal, 14)
@@ -229,14 +229,27 @@ struct EditProfileView: View {
     private func fieldIcon(_ name: String) -> some View {
         Image(systemName: name)
             .font(.system(size: 16, weight: .regular))
-            .foregroundStyle(AppTheme.ink.opacity(0.45))
+            .foregroundStyle(AppTheme.iconOnChip)
             .frame(width: 36, height: 36)
-            .background(AppTheme.mist.opacity(0.65), in: Circle())
+            .background {
+                Circle()
+                    .fill(AppTheme.iconChipFill)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .overlay {
+                Circle()
+                    .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+            }
     }
 
     private var fieldBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(AppTheme.lightSage.opacity(0.35))
+            .fill(AppTheme.nestedGlassFill)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+            }
     }
 
     private var saveButton: some View {
@@ -257,7 +270,10 @@ struct EditProfileView: View {
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(canSave ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(
+                canSave ? AppTheme.brandGradientEnd : AppTheme.brandGradientEnd.opacity(0.45),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
         }
         .buttonStyle(.plain)
         .disabled(!canSave || isLoading)

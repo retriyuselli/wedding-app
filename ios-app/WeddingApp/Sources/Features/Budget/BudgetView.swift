@@ -250,9 +250,9 @@ struct BudgetView: View {
                     .foregroundStyle(AppTheme.sageDark)
 
                 Text(L10n.Budget.subtitle)
-                    .font(.system(size: 12, weight: .regular, design: .serif))
-                    .foregroundStyle(AppTheme.gold)
                     .lineSpacing(2)
+                    .font(.system(size: 13, weight: .regular, design: .serif))
+                    .foregroundStyle(AppTheme.gold)
             }
 
             Spacer(minLength: 8)
@@ -284,13 +284,20 @@ struct BudgetView: View {
             action?()
         } label: {
             Image(systemName: icon)
-                .font(.system(size: 17, weight: .regular))
-                .foregroundStyle(isActive ? AppTheme.sageDark : AppTheme.ink.opacity(0.72))
-                .frame(width: 42, height: 42)
-                .background((isActive ? AppTheme.lightSage : .white).opacity(0.86), in: Circle())
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(isActive ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
+                .frame(width: 44, height: 44)
+                .background {
+                    Circle()
+                        .fill(isActive ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
                 .overlay {
                     Circle()
-                        .stroke(isActive ? AppTheme.sageDark.opacity(0.25) : .clear, lineWidth: 1)
+                        .stroke(
+                            isActive ? AppTheme.sage.opacity(0.35) : AppTheme.iconChipStroke,
+                            lineWidth: 1
+                        )
                 }
                 .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
         }
@@ -302,7 +309,7 @@ struct BudgetView: View {
         HStack(spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 15))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
 
                 TextField(L10n.Budget.searchPlaceholder, text: $searchText)
@@ -323,12 +330,8 @@ struct BudgetView: View {
                 }
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(isSearchFocused ? AppTheme.sageDark.opacity(0.35) : AppTheme.sage.opacity(0.18), lineWidth: isSearchFocused ? 1.5 : 1)
-            }
+            .padding(.vertical, 12)
+            .premiumGlassCard(cornerRadius: 16)
 
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -363,7 +366,7 @@ struct BudgetView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
             .padding(.horizontal, 16)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .premiumGlassCard(cornerRadius: 20)
         } else if !hasSearchResults {
             ContentUnavailableView(
                 L10n.Budget.searchNotFound,
@@ -447,12 +450,7 @@ struct BudgetView: View {
         PaymentScheduleRow(schedule: schedule)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
-            .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 5)
+            .premiumGlassCard(cornerRadius: 18)
     }
 
     private var adaptiveTotalBudgetFontSize: CGFloat {
@@ -543,12 +541,7 @@ struct BudgetView: View {
                 }
             }
             .padding(18)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
-            .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 16, y: 8)
+            .premiumGlassCard(cornerRadius: 32)
         }
         .buttonStyle(.plain)
     }
@@ -603,12 +596,7 @@ struct BudgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 6)
         .padding(.vertical, 14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 5)
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var activeExpenseFilterChip: some View {
@@ -641,11 +629,7 @@ struct BudgetView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(AppTheme.lightSage.opacity(0.65), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.18), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private var expenseStatusFilterLabel: String {
@@ -710,7 +694,7 @@ struct BudgetView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
             .padding(.horizontal, 16)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .premiumGlassCard(cornerRadius: 20)
         } else {
             LazyVStack(spacing: 10) {
                 ForEach(categories) { category in
@@ -754,12 +738,7 @@ struct BudgetView: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 12, y: 6)
+        .premiumGlassCard(cornerRadius: 22)
         .padding(.top, 4)
     }
 
@@ -886,11 +865,7 @@ private struct BudgetExpenseFilterSheet: View {
                             }
                         }
                     }
-                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                    }
+                    .premiumGlassCard(cornerRadius: 18)
 
                     Spacer()
 

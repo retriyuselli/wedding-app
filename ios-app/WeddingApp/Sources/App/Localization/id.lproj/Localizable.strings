@@ -93,7 +93,7 @@
 "more.planning_section" = "Perencanaan Saya";
 "more.account_section" = "Akun & Pengaturan";
 "more.wedding_detail" = "Detail Pernikahan";
-"more.wedding_detail_sub" = "Tanggal, lokasi, dan informasi penting";
+"more.wedding_detail_sub" = "Tanggal, lokasi, dan estimasi tamu tiap acara";
 "more.couple" = "Pasangan";
 "more.couple_sub" = "Informasi mempelai";
 "more.saved_vendors" = "Vendor Tersimpan";
@@ -122,7 +122,15 @@
 "reminders.push_toggle" = "Notifikasi push";
 "reminders.push_toggle_sub" = "Aktifkan atau nonaktifkan notifikasi aplikasi";
 "reminders.open_settings" = "Buka Pengaturan iOS";
-"reminders.info" = "Pengaturan notifikasi dikelola lewat iOS. Setelah mengubah izin di Pengaturan, status di halaman ini akan otomatis diperbarui.";
+"reminders.info" = "Tekan tombol uji untuk melihat banner sistem. Push jarak jauh (balasan pesan, dll.) membutuhkan iPhone fisik dan backend APNs.";
+"reminders.test_button" = "Kirim notifikasi uji";
+"reminders.test_title" = "Wedding App";
+"reminders.test_body_local" = "Ini contoh banner notifikasi di iPhone Anda.";
+"reminders.test_needs_permission" = "Izinkan notifikasi terlebih dahulu, lalu coba lagi.";
+"reminders.test_denied" = "Notifikasi dimatikan. Aktifkan di Pengaturan iOS.";
+"reminders.test_failed" = "Gagal menampilkan notifikasi uji.";
+"reminders.test_local_only" = "Banner lokal dijadwalkan. Push remote belum tersedia (cek login, token, atau API).";
+"reminders.test_remote_sent" = "Banner lokal dijadwalkan. Push remote terkirim ke %d perangkat.";
 "more.help" = "Bantuan & FAQ";
 "more.help_sub" = "Pusat bantuan dan pertanyaan umum";
 "more.about" = "Tentang Wedding App";
@@ -135,6 +143,12 @@
 "more.logout_message" = "Apakah Anda yakin ingin keluar dari akun?";
 "more.date_not_set" = "Tanggal belum diatur";
 "more.location_not_set" = "Lokasi belum diatur";
+"more.email_not_set" = "Email belum diatur";
+"more.joined_today" = "baru bergabung";
+"more.joined_days" = "%d hari";
+"more.joined_months" = "%d bulan";
+"more.joined_years" = "%d tahun";
+"more.joined_years_months" = "%d tahun %d bulan";
 
 /* Language */
 "language.title" = "Bahasa";
@@ -183,6 +197,18 @@
 "settings.text_size_preview" = "Pratinjau";
 "settings.text_size_preview_sample" = "Rencana pernikahan Anda, lebih jelas dan nyaman.";
 "settings.text_size_info" = "Ukuran teks diterapkan di seluruh aplikasi. Beberapa judul dekoratif bisa tetap memakai ukuran khusus.";
+"settings.countdown" = "Countdown";
+"settings.countdown_chooser_sub" = "Pilih font angka countdown di beranda";
+"settings.countdown_font_stencil" = "Stencil";
+"settings.countdown_font_stencil_sub" = "Gaya stensil khas iPhone";
+"settings.countdown_font_poppins" = "Poppins";
+"settings.countdown_font_poppins_sub" = "Tegas dan modern";
+"settings.countdown_font_rounded" = "Rounded";
+"settings.countdown_font_rounded_sub" = "Lembut dan ramah";
+"settings.countdown_font_serif" = "Serif";
+"settings.countdown_font_serif_sub" = "Elegan klasik";
+"settings.countdown_preview" = "Pratinjau";
+"settings.countdown_info" = "Font ini hanya diterapkan pada angka countdown di beranda.";
 "settings.edit_profile" = "Edit profil";
 "settings.edit_profile_sub" = "Nama, foto, dan data akun";
 "settings.privacy_security" = "Privasi & keamanan";
@@ -193,6 +219,15 @@
 "dashboard.welcome" = "Selamat datang di";
 "dashboard.plan_together" = "Rencanakan dengan indah. Bersama.";
 "dashboard.days_to_go" = "hari lagi";
+"dashboard.countdown_title" = "Hitung Mundur Hari Bahagia";
+"dashboard.countdown_label" = "Hitung Mundur";
+"dashboard.countdown_big_day" = "Hari Bahagia · Resepsi";
+"dashboard.countdown_encourage" = "Terus semangat.\nSetiap hari membawamu lebih dekat ke selamanya.";
+"dashboard.countdown_progress" = "%d%% menuju resepsi";
+"dashboard.countdown_days" = "Hari";
+"dashboard.countdown_hours" = "Jam";
+"dashboard.countdown_minutes" = "Menit";
+"dashboard.countdown_seconds" = "Detik";
 "dashboard.wedding_progress" = "Progres Pernikahan";
 "dashboard.next_up" = "Selanjutnya";
 "dashboard.completed" = "Selesai";
@@ -312,6 +347,24 @@
 "checklist.tasks_completed" = "%d dari %d tugas selesai";
 "checklist.empty_sub" = "Tugas persiapan akan muncul setelah data acara dan checklist tersedia.";
 "checklist.empty_title" = "Belum ada checklist";
+"checklist.add_task" = "Tambah Tugas";
+"checklist.add_task_title" = "Tambah Tugas";
+"checklist.add_task_subtitle" = "Buat tugas persiapan baru untuk acara Anda.";
+"checklist.task_title" = "Judul Tugas";
+"checklist.task_title_placeholder" = "Contoh: Booking fotografer";
+"checklist.task_event" = "Acara";
+"checklist.task_event_placeholder" = "Pilih acara";
+"checklist.task_priority" = "Prioritas";
+"checklist.task_due_date" = "Target Selesai";
+"checklist.task_description" = "Deskripsi";
+"checklist.task_description_placeholder" = "Detail tugas (opsional)";
+"checklist.task_save" = "Simpan Tugas";
+"checklist.task_create_error" = "Gagal menambah tugas. Coba lagi.";
+"checklist.task_sub_tasks" = "Sub Tugas";
+"checklist.task_sub_tasks_hint" = "Opsional. Pecah tugas menjadi langkah kecil.";
+"checklist.task_sub_task_placeholder" = "Contoh: Hubungi vendor";
+"checklist.task_add_sub_task" = "Tambah sub tugas";
+"checklist.no_events" = "Belum ada acara. Tambahkan acara di Detail Pernikahan dulu.";
 
 /* Budget */
 "budget.title" = "Budget";
@@ -514,6 +567,10 @@
 "vendor.found" = "%d vendor ditemukan";
 "vendor.not_found" = "Vendor tidak ditemukan";
 "vendor.not_found_sub" = "Coba kata kunci lain atau ubah kategori.";
+"vendor.partner_notice_title" = "Sumber katalog vendor";
+"vendor.partner_notice_body" = "Katalog vendor di Wedding App bersumber dari mitra kami di paketpernikahan.co.id. Kamu tetap bisa mencari, menyimpan, dan membandingkan vendor di sini.";
+"vendor.partner_notice_cta" = "Mengerti";
+"vendor.partner_footnote" = "Didukung oleh paketpernikahan.co.id";
 
 /* Inspiration */
 "inspiration.title" = "Inspirasi & Ide";
@@ -537,7 +594,7 @@
 "documents.storage_used" = "%@ dari %d MB digunakan";
 "documents.upload" = "Upload Dokumen";
 "documents.upload_hint" = "Ketuk untuk memilih atau tarik file ke sini";
-"documents.upload_limit" = "PDF, JPG, PNG maksimal 10MB";
+"documents.upload_limit" = "PDF, JPG, PNG maksimal 1MB";
 "documents.new_folder" = "Buat\nFolder Baru";
 "documents.recent" = "Dokumen Terbaru";
 "documents.security_note" = "Dokumen Anda aman dan hanya dapat diakses oleh Anda.";
@@ -668,6 +725,54 @@
 "couple.culture_placeholder" = "Contoh: Adat Jawa, Garden Romantic";
 "couple.save" = "Simpan Pasangan";
 
+/* Onboarding */
+"onboarding.step_label" = "Langkah %d dari %d";
+"onboarding.next" = "Lanjut";
+"onboarding.back" = "Kembali";
+"onboarding.finish" = "Mulai Merencanakan";
+
+"onboarding.names_eyebrow" = "Nama panggilan";
+"onboarding.names_title" = "Nanti panggilan untuk acara apa?";
+"onboarding.names_subtitle" = "Panggilan ini akan tampil di undangan dan dashboard pernikahan kalian.";
+"onboarding.bride_label" = "Panggilan perempuan";
+"onboarding.groom_label" = "Panggilan laki-laki";
+"onboarding.bride_placeholder" = "Contoh: Retri";
+"onboarding.groom_placeholder" = "Contoh: Rama";
+
+"onboarding.events_eyebrow" = "Acara pernikahan";
+"onboarding.events_title" = "Acara apa saja yang akan digelar?";
+"onboarding.events_subtitle" = "Pilih satu atau lebih. Tanggal dan detail bisa diatur nanti.";
+"onboarding.events_hint" = "Pilih minimal satu acara untuk melanjutkan.";
+"onboarding.event_lamaran" = "Lamaran";
+"onboarding.event_pengajian" = "Pengajian";
+"onboarding.event_akad" = "Akad";
+"onboarding.event_resepsi" = "Resepsi";
+
+"onboarding.date_eyebrow" = "Jadwal & lokasi";
+"onboarding.date_title" = "Tanggal & tempat tiap acara";
+"onboarding.date_subtitle" = "Isi tanggal dan lokasi untuk setiap acara yang kalian pilih.";
+"onboarding.date_for_event" = "Tanggal";
+"onboarding.location_for_event" = "Lokasi";
+"onboarding.location_eyebrow" = "Lokasi";
+"onboarding.location_title" = "Di mana masing-masing acara?";
+"onboarding.location_subtitle" = "Tambahkan lokasi untuk setiap acara yang dipilih.";
+"onboarding.location_label" = "Lokasi";
+"onboarding.location_placeholder" = "Contoh: Rumah / Balai Kartini";
+
+"onboarding.culture_eyebrow" = "Adat & konsep";
+"onboarding.culture_title" = "Budaya mana yang paling cocok?";
+"onboarding.culture_subtitle" = "Membantu kami menyesuaikan inspirasi dan checklist.";
+
+"onboarding.extras_eyebrow" = "Opsional";
+"onboarding.extras_title" = "Sedikit detail lagi";
+"onboarding.extras_subtitle" = "Boleh dilewati dulu — kalian bisa ubah lagi kapan saja.";
+"onboarding.guests_label" = "Perkiraan jumlah tamu";
+"onboarding.guests_placeholder" = "Contoh: 300";
+"onboarding.guests_for_event" = "Tamu %@";
+"onboarding.budget_label" = "Estimasi budget (IDR)";
+"onboarding.budget_placeholder" = "Contoh: 150000000";
+"onboarding.extras_hint" = "Estimasi tamu per acara dan budget bersifat opsional. Ketuk Mulai Merencanakan jika sudah siap.";
+
 /* Wedding Detail */
 "wedding_detail.title" = "Detail Pernikahan";
 "wedding_detail.subtitle" = "Informasi lengkap rencana\npernikahan Anda.";
@@ -686,6 +791,9 @@
 "wedding_detail.no_events_sub" = "Tambahkan acara pernikahan dari halaman edit.";
 "wedding_detail.attending" = "Hadir";
 "wedding_detail.time_not_set" = "Waktu belum diatur";
+"wedding_detail.estimated_guests" = "Estimasi tamu";
+"wedding_detail.estimated_guests_value" = "%@ tamu";
+"wedding_detail.estimated_guests_not_set" = "Estimasi tamu belum diisi";
 "wedding_detail.default_location" = "Lake Maceyhaven, Indonesia";
 "wedding_detail.default_couple" = "Eliane & Jaeden";
 "wedding_detail.default_date" = "23 Juni 2027";
@@ -697,3 +805,285 @@
 "inspiration_category.makeup" = "Makeup";
 "inspiration_category.catering" = "Katering";
 "inspiration_category.venue" = "Wedding Venue";
+
+/* Hardcode cleanup */
+
+/* Auth 2FA & brand */
+"auth.brand_wedding" = "Wedding";
+"auth.brand_app" = "App";
+"auth.two_factor_title" = "Verifikasi dua langkah";
+"auth.two_factor_message" = "Masukkan kode 6 digit dari aplikasi autentikator atau SMS.";
+"auth.two_factor_code_placeholder" = "Kode 6 digit";
+"auth.two_factor_verifying" = "Memverifikasi…";
+"auth.two_factor_verify" = "Verifikasi";
+
+/* Dashboard fallbacks */
+"dashboard.default_couple" = "Pasangan Wedding";
+"dashboard.default_venue" = "Lokasi pernikahan";
+"dashboard.set_date" = "Atur tanggal";
+"dashboard.upcoming" = "Mendatang";
+"dashboard.today" = "Hari ini";
+"dashboard.in_days" = "Dalam %d hari";
+
+/* Vendor extras */
+"vendor.filter_verified_chip" = "Terverifikasi";
+"vendor.filter_saved_chip" = "Tersimpan";
+"vendor.loading_categories" = "Memuat kategori…";
+"vendor.results_filtered" = "Hasil Filter";
+"vendor.all_vendors" = "Semua Vendor";
+"vendor.request_cta_title" = "Belum menemukan yang cocok?";
+"vendor.request_cta_sub" = "Kirim kebutuhanmu, vendor akan\nmenghubungimu.";
+"vendor.send_request" = "Kirim\nPermintaan";
+"vendor.send_request_short" = "Kirim Permintaan";
+"vendor.request_form_hint" = "Ceritakan kebutuhan vendormu. Tim kami akan membantu mencarikan partner yang tepat.";
+"vendor.request_category_title" = "Jenis Vendor";
+"vendor.request_category_placeholder" = "Contoh: Dekorasi, Catering";
+"vendor.request_city_title" = "Kota";
+"vendor.request_city_placeholder" = "Contoh: Jakarta";
+"vendor.request_budget_title" = "Budget";
+"vendor.request_budget_placeholder" = "Contoh: 50 juta";
+"vendor.request_sent_title" = "Permintaan Terkirim";
+"vendor.request_sent_message" = "Permintaanmu sudah dikirim. Tim kami akan menghubungi segera.";
+"vendor.request_notes_title" = "Detail Kebutuhan";
+"vendor.request_notes_placeholder" = "Jelaskan detail kebutuhan, preferensi, dan waktu acara…";
+"vendor.request_msg_category" = "Jenis: %@";
+"vendor.request_msg_location" = "Lokasi: %@";
+"vendor.request_msg_budget" = "Budget: %@";
+"vendor.request_msg_detail" = "Detail: %@";
+"vendor.filter_title" = "Filter Vendor";
+"vendor.reload_categories" = "Muat Ulang Kategori";
+"vendor.no_categories" = "Belum ada kategori vendor.";
+"vendor.province" = "Provinsi";
+"vendor.no_provinces" = "Belum ada data provinsi.";
+"vendor.city_section" = "Kota / Kabupaten";
+"vendor.no_cities" = "Belum ada data kota.";
+"vendor.filter_verified_title" = "Hanya Terverifikasi";
+"vendor.filter_verified_sub" = "Tampilkan vendor yang sudah diverifikasi";
+"vendor.filter_saved_title" = "Hanya Tersimpan";
+"vendor.filter_saved_sub" = "Tampilkan vendor yang sudah kamu simpan";
+"vendor.review_count" = "(%d review)";
+"vendor.package_count" = "%d paket";
+"vendor.package_count_title" = "%d Paket";
+"vendor.from_price" = "· dari %@";
+"vendor.from_price_title" = "Dari %@";
+"vendor.featured" = "Unggulan";
+"vendor.about" = "Tentang Vendor";
+"vendor.contact" = "Kontak";
+"vendor.packages" = "Paket";
+"vendor.show_less" = "Tutup";
+"vendor.show_more" = "Lihat";
+"vendor.no_packages" = "Belum ada paket tersedia.";
+"vendor.more_packages" = "+%d paket lainnya";
+"vendor.not_found_detail" = "Vendor tidak ditemukan.";
+"vendor.invalid" = "Vendor tidak valid.";
+"vendor.pax_range" = "%d–%d pax";
+"vendor.pax_max" = "≤ %d pax";
+"vendor.hours" = "%d jam";
+"vendor.exclusions" = "Tidak Termasuk";
+"vendor.sort_popular" = "Populer";
+"vendor.sort_newest" = "Terbaru";
+"vendor.all_provinces" = "Semua Provinsi";
+"vendor.all_cities" = "Semua Kota";
+"vendor.saved_empty_title" = "Belum ada vendor tersimpan";
+"vendor.saved_empty_message" = "Simpan vendor favoritmu dari halaman Vendor.";
+
+/* Inspiration extras */
+"inspiration.likes_chip" = "Suka %d+";
+"inspiration.empty_saved_title" = "Belum ada inspirasi tersimpan";
+"inspiration.empty_saved_sub" = "Simpan ide yang kamu suka agar mudah ditemukan lagi.";
+"inspiration.empty_search_title" = "Tidak ada inspirasi ditemukan";
+"inspiration.empty_search_sub" = "Coba ubah kata kunci atau filter pencarian.";
+"inspiration.filter_title" = "Filter Inspirasi";
+"inspiration.likes_section" = "Jumlah Suka";
+"inspiration.filter_saved_only" = "Hanya Tersimpan";
+"inspiration.filter_saved_only_sub" = "Tampilkan inspirasi yang sudah kamu simpan";
+"inspiration.see_all_sub" = "Lihat seluruh inspirasi";
+"inspiration.category_count" = "%d inspirasi tersedia";
+"inspiration.all_inspirations" = "Semua Inspirasi";
+"inspiration.category_empty_title" = "Belum ada inspirasi";
+"inspiration.category_empty_message" = "Belum ada konten di kategori ini.";
+"inspiration.saved_empty_title" = "Belum ada inspirasi tersimpan";
+"inspiration.saved_empty_message" = "Simpan ide dari halaman Inspirasi agar mudah diakses di sini.";
+"inspiration.likes_all" = "Semua";
+"inspiration.likes_200" = "200+";
+"inspiration.likes_500" = "500+";
+
+/* Documents extras */
+"documents.category_akad" = "Akad";
+"documents.category_resepsi" = "Resepsi";
+"documents.category_vendor" = "Vendor";
+"documents.category_finance" = "Keuangan";
+"documents.sort_newest" = "Terbaru";
+"documents.sort_oldest" = "Terlama";
+"documents.sort_name_asc" = "Nama A–Z";
+"documents.sort_name_desc" = "Nama Z–A";
+"documents.ready_to_open" = "Dokumen siap dibuka";
+"documents.open_share" = "Buka / Bagikan";
+"documents.downloading" = "Mengunduh…";
+"documents.open_download" = "Buka / Unduh";
+"documents.new_folder_alert_title" = "Folder Baru";
+"documents.folder_name_placeholder" = "Nama folder";
+"documents.new_folder_message" = "Masukkan nama folder baru.";
+"documents.all_folders" = "Semua folder";
+"documents.empty_filtered" = "Tidak ada dokumen";
+"documents.folder_section" = "Folder";
+"documents.unknown_date" = "Tanggal tidak diketahui";
+"documents.folder_name_empty" = "Nama folder tidak boleh kosong.";
+"documents.folder_created_title" = "Folder dibuat";
+"documents.folder_created_message" = "Folder \"%@\" berhasil dibuat.";
+"documents.upload_success_title" = "Unggah berhasil";
+"documents.upload_success_message" = "Dokumen berhasil diunggah.";
+"documents.link_unavailable" = "Tautan dokumen tidak tersedia.";
+
+/* Checklist extras */
+"checklist.fallback_section" = "Persiapan";
+"checklist.show_less" = "Tampilkan lebih sedikit";
+"checklist.show_all" = "Lihat semua (%d)";
+"checklist.other_group" = "Lainnya";
+"checklist.done_on" = "Selesai pada %@";
+"checklist.detail_title" = "Detail Tugas";
+"checklist.detail_subtitle" = "Lihat dan kelola detail tugas persiapan.";
+"checklist.detail_category" = "Kategori";
+"checklist.detail_priority" = "Prioritas";
+"checklist.detail_created" = "Tanggal Dibuat";
+"checklist.detail_due" = "Target Selesai";
+"checklist.attachments" = "Lampiran";
+"checklist.mark_done" = "Tandai Selesai";
+"checklist.mark_undone" = "Batalkan Selesai";
+"checklist.status_pending" = "Belum dimulai";
+"checklist.status_in_progress" = "Sedang berjalan";
+"checklist.status_done" = "Selesai";
+"checklist.status_done_on" = "Selesai pada %@";
+"checklist.edit_title" = "Edit Tugas";
+"checklist.task_save_error" = "Gagal menyimpan tugas. Coba lagi.";
+"checklist.priority_high" = "Tinggi";
+"checklist.priority_medium" = "Sedang";
+"checklist.priority_low" = "Rendah";
+
+/* Messages extras */
+"messages.unread_banner" = "Menampilkan pesan belum dibaca";
+"messages.search_results" = "Hasil Pencarian";
+"messages.conversations" = "Percakapan";
+"messages.chat_count" = "%d chat";
+"messages.no_message" = "Belum ada pesan";
+"messages.online" = "Online";
+"messages.offline" = "Offline";
+"messages.category_vendor" = "Vendor";
+"messages.category_committee" = "Panitia";
+"messages.category_support" = "Support";
+"messages.topic_account" = "Akun & Login";
+"messages.topic_budget" = "Budget & Pembayaran";
+"messages.topic_checklist" = "Checklist & Persiapan";
+"messages.topic_guests" = "Tamu & Undangan";
+"messages.topic_other" = "Lainnya";
+"messages.just_now" = "Baru";
+"messages.yesterday" = "Kemarin";
+
+/* Events */
+"events.title" = "Acara Pernikahan";
+"events.add_title" = "Tambah Acara";
+"events.jenis" = "Jenis Acara";
+"events.lamaran" = "Lamaran";
+"events.pengajian" = "Pengajian";
+"events.akad" = "Akad Nikah";
+"events.resepsi" = "Resepsi";
+"events.time_wib" = "%@ WIB";
+"events.time_range_wib" = "%@ – %@ WIB";
+"events.default_time_akad" = "10.00 – 11.00 WIB";
+"events.default_time_resepsi" = "11.30 – 15.00 WIB";
+"events.default_time_lamaran" = "14.00 – 16.00 WIB";
+"events.default_time_pengajian" = "09.00 – 11.00 WIB";
+
+/* Onboarding culture */
+"onboarding.culture_jawa" = "Jawa";
+"onboarding.culture_sunda" = "Sunda";
+"onboarding.culture_batak" = "Batak";
+"onboarding.culture_melayu" = "Melayu";
+"onboarding.culture_minang" = "Minang";
+"onboarding.culture_bali" = "Bali";
+"onboarding.culture_modern" = "Modern";
+"onboarding.culture_other" = "Lainnya";
+
+/* Wedding detail edit */
+"wedding_edit.title" = "Edit Detail Pernikahan";
+"wedding_edit.subtitle" = "Perbarui informasi rencana pernikahan kalian.";
+"wedding_edit.couple_section" = "Pasangan";
+"wedding_edit.bride_name" = "Nama Pengantin Wanita";
+"wedding_edit.groom_name" = "Nama Pengantin Pria";
+"wedding_edit.happy_day" = "Hari Bahagia";
+"wedding_edit.wedding_date" = "Tanggal Pernikahan";
+"wedding_edit.concept_section" = "Konsep";
+"wedding_edit.concept_placeholder" = "Pilih atau ketik konsep";
+"wedding_edit.notes_placeholder" = "Catatan tambahan untuk hari H…";
+"wedding_edit.schedule_section" = "Rangkaian Acara";
+"wedding_edit.add_event" = "Tambah Acara";
+"wedding_edit.no_events_hint" = "Belum ada rangkaian acara. Tambahkan minimal satu.";
+"wedding_edit.event_time" = "Waktu";
+"wedding_edit.event_start" = "Mulai";
+"wedding_edit.event_end" = "Selesai";
+"wedding_edit.event_location" = "Lokasi Acara";
+"wedding_edit.event_location_placeholder" = "Contoh: Gedung Serbaguna";
+"wedding_edit.event_notes_placeholder" = "Catatan acara…";
+"wedding_edit.delete_event" = "Hapus Acara";
+"wedding_edit.delete_event_title" = "Hapus acara?";
+"wedding_edit.delete_event_message" = "Acara \"%@\" akan dihapus dari rangkaian.";
+"wedding_edit.save_changes" = "Simpan Perubahan";
+"wedding_edit.concept_garden" = "Garden Romantic";
+"wedding_edit.concept_classic" = "Classic Elegant";
+"wedding_edit.concept_modern" = "Modern Minimalist";
+"wedding_edit.concept_traditional" = "Traditional";
+"wedding_edit.concept_rustic" = "Rustic Chic";
+"wedding_edit.concept_beach" = "Beach Wedding";
+
+/* About */
+"about.version" = "Versi %@ (%@)";
+"about.section_about" = "Tentang Aplikasi";
+"about.section_info" = "Informasi";
+"about.section_follow" = "Ikuti Kami";
+"about.row_developer" = "Pengembang";
+"about.row_website" = "Website";
+"about.row_email" = "Email";
+"about.row_reviews" = "Beri Ulasan";
+"about.row_privacy" = "Kebijakan Privasi";
+"about.row_terms" = "Syarat & Ketentuan";
+"about.reviews_unavailable_title" = "Ulasan tidak tersedia";
+"about.reviews_unavailable_message" = "Tidak dapat membuka halaman ulasan saat ini.";
+"about.rights" = "All rights reserved.";
+
+/* Help FAQ chrome */
+"help.search_placeholder" = "Cari topik bantuan…";
+"help.topics" = "Topik Bantuan";
+"help.popular_faq" = "FAQ Populer";
+"help.article_count" = "%d artikel";
+"help.no_results_title" = "Tidak ditemukan";
+"help.no_results_sub" = "Coba kata kunci lain atau jelajahi topik di bawah.";
+"help.need_help" = "Masih butuh bantuan?";
+"help.contact_support" = "Hubungi Support";
+"help.email_support" = "Email Support";
+"help.faq_q1" = "Bagaimana cara menambah tamu?";
+"help.faq_a1" = "Buka tab Tamu, lalu ketuk tombol tambah untuk memasukkan data tamu baru.";
+"help.faq_q2" = "Bagaimana cara mengatur budget?";
+"help.faq_a2" = "Di tab Budget, atur total anggaran lalu buat alokasi per kategori dan catat pengeluaran.";
+"help.faq_q3" = "Bagaimana cara menyimpan vendor?";
+"help.faq_a3" = "Buka Vendor, buka detail vendor, lalu ketuk ikon simpan. Vendor tersimpan ada di menu Lainnya.";
+"help.faq_q4" = "Bagaimana mengganti bahasa aplikasi?";
+"help.faq_a4" = "Buka Lainnya → Bahasa, lalu pilih Bahasa Indonesia atau English.";
+"help.faq_q5" = "Apakah data saya aman?";
+"help.faq_a5" = "Ya. Data dilindungi dan kamu bisa mengatur privasi serta keamanan akun di menu Privasi.";
+
+/* Privacy quick */
+"privacy.security_score" = "Skor keamanan: %d%%";
+"privacy.open_ios_settings" = "Buka Pengaturan iOS";
+"privacy.export_blurb" = "Unduh salinan data akunmu. Proses mungkin membutuhkan waktu.";
+
+"vendor.request_msg_header" = "[Permintaan Vendor]";
+"documents.empty_filtered_sub" = "Tidak ada dokumen yang cocok dengan pencarian atau kategori ini.";
+"wedding_edit.event_count" = "%d acara";
+"wedding_edit.all_types_added" = "Semua jenis acara sudah ditambahkan.";
+"wedding_edit.default_delete_hint" = "Acara default bisa dihapus. Ketuk Hapus Acara lalu Simpan perubahan.";
+"help.contact_support_sub" = "Tim kami siap membantu Anda";
+"checklist.uploaded_meta" = "%@ · Diunggah %@";
+"dashboard.sample_venue_meeting" = "Meeting Venue";
+"dashboard.sample_tasting" = "Sesi Tasting";
+"dashboard.sample_fitting" = "Fitting Gaun";
+"vendor.facilities" = "Fasilitas";

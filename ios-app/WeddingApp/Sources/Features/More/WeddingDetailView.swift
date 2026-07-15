@@ -6,6 +6,7 @@ private struct WeddingScheduleItem: Identifiable {
     let dateText: String
     let timeRange: String
     let location: String
+    let guestEstimateText: String
     let iconName: String
 }
 
@@ -33,11 +34,11 @@ struct WeddingDetailView: View {
 
     private var weddingDate: Date? {
         if let akad = events.first(where: { $0.jenisAcara == "akad" }),
-           let date = akad.tglAcara.flatMap({ DateFormatter.apiInput.date(from: $0) }) {
+           let date = akad.tglAcara.flatMap({ DateFormatter.calendarDate(from: $0) }) {
             return date
         }
 
-        return events.compactMap { $0.tglAcara.flatMap { DateFormatter.apiInput.date(from: $0) } }
+        return events.compactMap { $0.tglAcara.flatMap { DateFormatter.calendarDate(from: $0) } }
             .sorted()
             .last
     }
@@ -60,13 +61,24 @@ struct WeddingDetailView: View {
         events
             .sorted { ($0.sortOrder ?? Int.max) < ($1.sortOrder ?? Int.max) }
             .map { event in
-                WeddingScheduleItem(
+                let guestText: String
+                if let count = event.estimasiTamu, count > 0 {
+                    guestText = L10n.WeddingDetail.estimatedGuestsValue(String(count))
+                } else {
+                    guestText = L10n.WeddingDetail.estimatedGuestsNotSet
+                }
+
+                return WeddingScheduleItem(
                     id: event.id,
                     title: event.jenisLabel ?? WeddingEvent.label(for: event.jenisAcara),
-                    dateText: event.tglAcara.flatMap { DateFormatter.apiInput.date(from: $0) }
+                    dateText: event.tglAcara.flatMap { DateFormatter.calendarDate(from: $0) }
                         .map { DateFormatter.displayLocaleDate($0) } ?? L10n.WeddingDetail.defaultDate,
                     timeRange: Self.timeRange(for: event),
-                    location: event.lokasiAcara ?? primaryLocation,
+                    location: {
+                        let loc = event.lokasiAcara?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        return loc.isEmpty ? L10n.WeddingDetail.defaultLocation : loc
+                    }(),
+                    guestEstimateText: guestText,
                     iconName: Self.icon(for: event.jenisAcara)
                 )
             }
@@ -117,8 +129,17 @@ struct WeddingDetailView: View {
             HStack {
                 Button { dismiss() } label: {
                     Image(systemName: "arrow.left")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppTheme.ink.opacity(0.8))
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(AppTheme.iconOnChip)
+                        .frame(width: 42, height: 42)
+                        .background {
+                            Circle()
+                                .fill(AppTheme.iconChipFill)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                        .overlay {
+                            Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                        }
                 }
                 .buttonStyle(.plain)
 
@@ -127,14 +148,22 @@ struct WeddingDetailView: View {
                 Button { showEdit = true } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "square.and.pencil")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 14, weight: .semibold))
                         Text(L10n.Common.edit)
                             .font(AppFont.medium(13))
                     }
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.labelOnLightSurface)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(.white.opacity(0.86), in: Capsule())
+                    .background {
+                        Capsule()
+                            .fill(AppTheme.selectedChipFill)
+                            .background(.ultraThinMaterial, in: Capsule())
+                    }
+                    .overlay {
+                        Capsule()
+                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    }
                     .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 10, y: 5)
                 }
                 .buttonStyle(.plain)
@@ -142,7 +171,7 @@ struct WeddingDetailView: View {
 
             Text(L10n.WeddingDetail.title)
                 .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             Text(L10n.WeddingDetail.subtitle)
                 .font(.system(size: 12, weight: .regular, design: .serif))
@@ -172,7 +201,7 @@ struct WeddingDetailView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(coupleName)
                     .font(AppFont.semibold(20))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .lineLimit(2)
                     .minimumScaleFactor(0.75)
 
@@ -181,11 +210,11 @@ struct WeddingDetailView: View {
                     systemImage: "calendar"
                 )
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.inkMuted(0.55))
 
                 Label(primaryLocation, systemImage: "mappin")
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.inkMuted(0.55))
                     .lineLimit(2)
             }
 
@@ -193,12 +222,7 @@ struct WeddingDetailView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 16, y: 8)
+        .premiumGlassCard(cornerRadius: 28)
     }
 
     // MARK: - Informasi Acara
@@ -207,7 +231,7 @@ struct WeddingDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(L10n.WeddingDetail.eventInfo)
                 .font(AppFont.semibold(18))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             tabSelector
 
@@ -232,18 +256,24 @@ struct WeddingDetailView: View {
                 } label: {
                     Text(tab.title)
                         .font(AppFont.medium(12))
-                        .foregroundStyle(selectedTab == tab ? .white : AppTheme.ink.opacity(0.65))
+                        .foregroundStyle(selectedTab == tab ? .white : AppTheme.iconOnChip)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(
-                            selectedTab == tab ? AppTheme.sageDark : AppTheme.surface,
-                            in: Capsule()
-                        )
-                        .overlay {
-                            if selectedTab != tab {
+                        .background {
+                            if selectedTab == tab {
+                                Capsule().fill(AppTheme.brandGradientEnd)
+                            } else {
                                 Capsule()
-                                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+                                    .fill(AppTheme.chipIdleFill)
+                                    .background(.ultraThinMaterial, in: Capsule())
                             }
+                        }
+                        .overlay {
+                            Capsule()
+                                .stroke(
+                                    selectedTab == tab ? Color.white.opacity(0.2) : AppTheme.iconChipStroke,
+                                    lineWidth: 1
+                                )
                         }
                 }
                 .buttonStyle(.plain)
@@ -272,11 +302,7 @@ struct WeddingDetailView: View {
                         }
                     }
                     .padding(.vertical, 4)
-                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                    }
+                    .premiumGlassCard(cornerRadius: 20)
                 }
             }
 
@@ -305,28 +331,27 @@ struct WeddingDetailView: View {
             )
         }
         .padding(.vertical, 16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private func summaryCell(icon: String, label: String, value: String) -> some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 34, height: 34)
-                .background(AppTheme.lightSage, in: Circle())
+                .background(AppTheme.iconChipFill, in: Circle())
+                .overlay {
+                    Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
 
             Text(label)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .foregroundStyle(AppTheme.inkMuted(0.5))
 
             Text(value)
                 .font(AppFont.medium(12))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -338,32 +363,31 @@ struct WeddingDetailView: View {
         Button {} label: {
             HStack(spacing: 12) {
                 Image(systemName: "heart")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppTheme.iconOnChip)
                     .frame(width: 40, height: 40)
-                    .background(AppTheme.lightSage, in: Circle())
+                    .background(AppTheme.iconChipFill, in: Circle())
+                    .overlay {
+                        Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.WeddingDetail.concept)
                         .font(AppFont.medium(13))
-                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
                     Text(weddingConcept)
                         .font(AppFont.semibold(15))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.28))
+                    .foregroundStyle(AppTheme.inkMuted(0.4))
             }
             .padding(16)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
         }
         .buttonStyle(.plain)
     }
@@ -371,31 +395,37 @@ struct WeddingDetailView: View {
     private func scheduleRow(_ item: WeddingScheduleItem) -> some View {
         HStack(spacing: 12) {
             Image(systemName: item.iconName)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 38, height: 38)
-                .background(AppTheme.lightSage, in: Circle())
+                .background(AppTheme.iconChipFill, in: Circle())
+                .overlay {
+                    Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.title)
                     .font(AppFont.semibold(14))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Text(item.timeRange)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.5))
                 Text(item.dateText)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.5))
                 Text(item.location)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.5))
+                Text(item.guestEstimateText)
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.captionOnGlass)
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(AppTheme.ink.opacity(0.28))
+                .foregroundStyle(AppTheme.inkMuted(0.4))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
@@ -404,28 +434,27 @@ struct WeddingDetailView: View {
     private var noteRow: some View {
         HStack(spacing: 12) {
             Image(systemName: "doc.text")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 38, height: 38)
-                .background(AppTheme.lightSage, in: Circle())
+                .background(AppTheme.iconChipFill, in: Circle())
+                .overlay {
+                    Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
 
             Text(weddingNote)
                 .font(AppFont.regular(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.65))
+                .foregroundStyle(AppTheme.inkMuted(0.7))
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 0)
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(AppTheme.ink.opacity(0.28))
+                .foregroundStyle(AppTheme.inkMuted(0.4))
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     // MARK: - Jadwal Tab
@@ -439,14 +468,14 @@ struct WeddingDetailView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Image(systemName: item.iconName)
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .frame(width: 36, height: 36)
-                                .background(AppTheme.sageDark, in: Circle())
+                                .background(AppTheme.brandGradientEnd, in: Circle())
 
                             Text(item.title)
                                 .font(AppFont.semibold(16))
-                                .foregroundStyle(AppTheme.sageDark)
+                                .foregroundStyle(AppTheme.titleOnGlass)
 
                             Spacer()
                         }
@@ -454,13 +483,10 @@ struct WeddingDetailView: View {
                         infoLine(icon: "calendar", text: item.dateText)
                         infoLine(icon: "clock", text: item.timeRange)
                         infoLine(icon: "mappin", text: item.location)
+                        infoLine(icon: "person.3", text: item.guestEstimateText)
                     }
                     .padding(16)
-                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                    }
+                    .premiumGlassCard(cornerRadius: 20)
                 }
             }
         }
@@ -470,21 +496,24 @@ struct WeddingDetailView: View {
         VStack(spacing: 8) {
             Image(systemName: "calendar.badge.plus")
                 .font(.system(size: 28, weight: .light))
-                .foregroundStyle(AppTheme.ink.opacity(0.25))
+                .foregroundStyle(AppTheme.inkMuted(0.4))
             Text(L10n.WeddingDetail.noEvents)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .foregroundStyle(AppTheme.titleOnGlass)
             Text(message)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.4))
+                .foregroundStyle(AppTheme.inkMuted(0.5))
                 .multilineTextAlignment(.center)
             Button { showEdit = true } label: {
                 Text(L10n.Common.edit)
                     .font(AppFont.medium(12))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.labelOnLightSurface)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(AppTheme.lightSage, in: Capsule())
+                    .background(AppTheme.selectedChipFill, in: Capsule())
+                    .overlay {
+                        Capsule().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    }
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
@@ -492,7 +521,7 @@ struct WeddingDetailView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .padding(.horizontal, 16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     // MARK: - Tamu Tab
@@ -505,41 +534,40 @@ struct WeddingDetailView: View {
                 guestStat(value: "\(max(guests.count - confirmedGuests, 0))", label: L10n.Common.pending)
             }
             .padding(.vertical, 16)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
 
             if guests.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "person.2")
                         .font(.system(size: 28, weight: .light))
-                        .foregroundStyle(AppTheme.ink.opacity(0.25))
+                        .foregroundStyle(AppTheme.inkMuted(0.4))
                     Text(L10n.WeddingDetail.noGuests)
                         .font(AppFont.medium(14))
-                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .foregroundStyle(AppTheme.titleOnGlass)
                     Text(L10n.WeddingDetail.noGuestsSub)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.4))
+                        .foregroundStyle(AppTheme.inkMuted(0.5))
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 28)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .premiumGlassCard(cornerRadius: 20)
             } else {
                 VStack(spacing: 0) {
                     ForEach(guests.prefix(8)) { guest in
                         HStack {
                             Text(guest.name)
                                 .font(AppFont.medium(14))
-                                .foregroundStyle(AppTheme.ink)
+                                .foregroundStyle(AppTheme.titleOnGlass)
                             Spacer()
                             Text(guest.rsvpStatus == "hadir" ? L10n.WeddingDetail.attending : guest.rsvpStatus == "tidak_hadir" ? L10n.Common.notAttending : L10n.Common.pending)
                                 .font(AppFont.medium(11))
-                                .foregroundStyle(guest.rsvpStatus == "hadir" ? AppTheme.sageDark : AppTheme.ink.opacity(0.45))
+                                .foregroundStyle(guest.rsvpStatus == "hadir" ? AppTheme.labelOnLightSurface : AppTheme.inkMuted(0.65))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 5)
-                                .background(AppTheme.lightSage, in: Capsule())
+                                .background(AppTheme.selectedChipFill, in: Capsule())
+                                .overlay {
+                                    Capsule().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                                }
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 12)
@@ -549,11 +577,7 @@ struct WeddingDetailView: View {
                         }
                     }
                 }
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                }
+                .premiumGlassCard(cornerRadius: 20)
             }
         }
     }
@@ -562,10 +586,10 @@ struct WeddingDetailView: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(AppFont.semibold(18))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
             Text(label)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .foregroundStyle(AppTheme.inkMuted(0.5))
         }
         .frame(maxWidth: .infinity)
     }
@@ -576,7 +600,7 @@ struct WeddingDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.semibold(16))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
             content()
         }
     }
@@ -584,7 +608,7 @@ struct WeddingDetailView: View {
     private func infoLine(icon: String, text: String) -> some View {
         Label(text, systemImage: icon)
             .font(AppFont.regular(12))
-            .foregroundStyle(AppTheme.ink.opacity(0.55))
+            .foregroundStyle(AppTheme.inkMuted(0.6))
             .labelStyle(.titleAndIcon)
     }
 

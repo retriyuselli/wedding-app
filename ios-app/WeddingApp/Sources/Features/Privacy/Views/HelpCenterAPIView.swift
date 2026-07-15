@@ -23,7 +23,7 @@ struct HelpCenterAPIView: View {
                             .font(AppFont.regular(14))
                     }
                     .padding(14)
-                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .premiumGlassCard(cornerRadius: 16)
 
                     if let errorMessage = viewModel.errorMessage, viewModel.payload == nil {
                         VStack(spacing: 10) {
@@ -56,7 +56,7 @@ struct HelpCenterAPIView: View {
                                     .foregroundStyle(AppTheme.ink)
                             }
                             .padding(14)
-                            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .premiumGlassCard(cornerRadius: 16)
                         }
 
                         Text("Topik")
@@ -72,7 +72,7 @@ struct HelpCenterAPIView: View {
                             }
                             .padding(14)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .premiumGlassCard(cornerRadius: 16)
                         }
 
                         if let contacts = payload.contactMethods {
@@ -113,6 +113,6 @@ struct HelpCenterAPIView: View {
             Text(method.action).font(AppFont.medium(12)).foregroundStyle(AppTheme.sageDark)
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 }

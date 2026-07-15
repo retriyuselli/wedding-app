@@ -10,22 +10,22 @@ struct IncomingPaymentsSummaryCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Label(L10n.Budget.incoming, systemImage: "arrow.down.circle.fill")
                         .font(AppFont.medium(14))
-                        .foregroundStyle(.white.opacity(0.92))
+                        .foregroundStyle(AppTheme.sageDark)
                         .labelStyle(.titleAndIcon)
 
                     Text(CurrencyFormatter.rupiah(metrics.totalAll))
                         .font(AppFont.medium(24))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.sageDark)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
 
                     Text(L10n.Budget.incomingTotalRecorded)
                         .font(AppFont.regular(11))
-                        .foregroundStyle(.white.opacity(0.75))
+                        .foregroundStyle(AppTheme.ink.opacity(0.5))
 
                     Text(L10n.Budget.incomingNotAffectRemaining)
                         .font(AppFont.regular(10))
-                        .foregroundStyle(.white.opacity(0.68))
+                        .foregroundStyle(AppTheme.ink.opacity(0.42))
                 }
 
                 Spacer(minLength: 12)
@@ -34,30 +34,30 @@ struct IncomingPaymentsSummaryCard: View {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(L10n.Budget.confirmed)
                             .font(AppFont.regular(10))
-                            .foregroundStyle(.white.opacity(0.75))
+                            .foregroundStyle(AppTheme.ink.opacity(0.5))
                         Text(CurrencyFormatter.rupiah(metrics.totalConfirmed))
                             .font(AppFont.medium(15))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.sageDark)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
-                    .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                     if metrics.pendingCount > 0 {
                         Text(L10n.Budget.pendingCount(metrics.pendingCount))
                             .font(AppFont.regular(10))
-                            .foregroundStyle(.white.opacity(0.8))
+                            .foregroundStyle(AppTheme.sageDark.opacity(0.85))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(.white.opacity(0.14), in: Capsule())
+                            .background(AppTheme.sage.opacity(0.14), in: Capsule())
                     }
                 }
             }
 
             if !recentPayments.isEmpty {
-                Divider().overlay(.white.opacity(0.25))
+                Divider().overlay(AppTheme.sage.opacity(0.18))
 
                 VStack(spacing: 8) {
                     ForEach(recentPayments) { payment in
@@ -65,12 +65,12 @@ struct IncomingPaymentsSummaryCard: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(payment.displaySenderName)
                                     .font(AppFont.medium(12))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.ink)
                                     .lineLimit(1)
                                 if !payment.subtitleLine.isEmpty {
                                     Text(payment.subtitleLine)
                                         .font(AppFont.regular(10))
-                                        .foregroundStyle(.white.opacity(0.72))
+                                        .foregroundStyle(AppTheme.ink.opacity(0.45))
                                         .lineLimit(1)
                                 }
                             }
@@ -80,13 +80,13 @@ struct IncomingPaymentsSummaryCard: View {
                             VStack(alignment: .trailing, spacing: 2) {
                                 Text(CurrencyFormatter.rupiah(payment.amount))
                                     .font(AppFont.medium(12))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.sageDark)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.7)
 
                                 Text(payment.displayStatusLabel)
                                     .font(AppFont.regular(9))
-                                    .foregroundStyle(statusTint(for: payment).opacity(0.95))
+                                    .foregroundStyle(statusTint(for: payment))
                             }
                         }
                     }
@@ -94,26 +94,18 @@ struct IncomingPaymentsSummaryCard: View {
             } else {
                 Text(L10n.Budget.noIncoming)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(.white.opacity(0.78))
+                    .foregroundStyle(AppTheme.ink.opacity(0.5))
             }
 
             HStack {
                 Spacer()
                 Label(L10n.Common.seeAll, systemImage: "chevron.right")
                     .font(AppFont.regular(12))
-                    .foregroundStyle(.white.opacity(0.9))
+                    .foregroundStyle(AppTheme.ink.opacity(0.55))
             }
         }
         .padding(18)
-        .background(
-            LinearGradient(
-                colors: [AppTheme.sage, AppTheme.sageDark],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
-        )
-        .shadow(color: AppTheme.sageDark.opacity(0.18), radius: 14, y: 8)
+        .premiumGlassCard(cornerRadius: 22)
     }
 
     private func statusTint(for payment: IncomingPayment) -> Color {
@@ -254,11 +246,7 @@ struct IncomingPaymentsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private var filterChips: some View {
@@ -388,12 +376,7 @@ struct IncomingPaymentRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 5)
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private var statusColor: Color {
@@ -535,11 +518,7 @@ struct AddIncomingPaymentView: View {
                 content()
             }
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 18)
         }
     }
 

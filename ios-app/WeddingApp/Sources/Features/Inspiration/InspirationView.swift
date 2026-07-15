@@ -103,9 +103,16 @@ struct InspirationView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.72))
+                    .foregroundStyle(AppTheme.iconOnChip)
                     .frame(width: 42, height: 42)
-                    .background(.white.opacity(0.86), in: Circle())
+                    .background {
+                        Circle()
+                            .fill(AppTheme.iconChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                    .overlay {
+                        Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    }
                     .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
@@ -114,11 +121,11 @@ struct InspirationView: View {
 
             VStack(spacing: 4) {
                 Text(L10n.Inspiration.title)
-                    .font(AppFont.medium(18))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(.system(size: 20, weight: .semibold, design: .serif))
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Text(L10n.Inspiration.subtitle)
-                    .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .font(.system(size: 12, weight: .regular, design: .serif))
+                    .foregroundStyle(AppTheme.gold)
                     .multilineTextAlignment(.center)
             }
 
@@ -131,9 +138,20 @@ struct InspirationView: View {
             } label: {
                 Image(systemName: showSavedOnly ? "bookmark.fill" : "bookmark")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(showSavedOnly ? AppTheme.sageDark : AppTheme.ink.opacity(0.72))
+                    .foregroundStyle(showSavedOnly ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
                     .frame(width: 42, height: 42)
-                    .background((showSavedOnly ? AppTheme.lightSage : .white).opacity(0.86), in: Circle())
+                    .background {
+                        Circle()
+                            .fill(showSavedOnly ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(
+                                showSavedOnly ? AppTheme.sage.opacity(0.35) : AppTheme.iconChipStroke,
+                                lineWidth: 1
+                            )
+                    }
                     .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
@@ -147,29 +165,25 @@ struct InspirationView: View {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(AppTheme.inkMuted(0.45))
 
                 TextField(L10n.Inspiration.searchPlaceholder, text: $searchText)
                     .font(AppFont.regular(14))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .autocorrectionDisabled()
 
                 if !searchText.isEmpty {
                     Button { searchText = "" } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(AppTheme.ink.opacity(0.28))
+                            .foregroundStyle(AppTheme.inkMuted(0.4))
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 16)
 
             Button {
                 draftFilter = filter
@@ -181,13 +195,20 @@ struct InspirationView: View {
                     Text(L10n.Common.filter)
                         .font(AppFont.medium(13))
                 }
-                .foregroundStyle(filter.isActive ? AppTheme.sageDark : AppTheme.sageDark)
+                .foregroundStyle(filter.isActive ? AppTheme.labelOnLightSurface : AppTheme.inkMuted(0.7))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
-                .background((filter.isActive ? AppTheme.lightSage : AppTheme.surface), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(filter.isActive ? AppTheme.selectedChipFill : AppTheme.chipIdleFill)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
                 .overlay {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(filter.isActive ? 0.35 : 0.12), lineWidth: 1)
+                        .stroke(
+                            filter.isActive ? AppTheme.sage.opacity(0.35) : AppTheme.iconChipStroke,
+                            lineWidth: filter.isActive ? 1.5 : 1
+                        )
                 }
             }
             .buttonStyle(.plain)
@@ -201,7 +222,7 @@ struct InspirationView: View {
             HStack {
                 Text(L10n.Common.category)
                     .font(AppFont.medium(15))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Spacer()
                 NavigationLink {
                     InspirationCategoriesView(items: items)
@@ -212,7 +233,7 @@ struct InspirationView: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 10, weight: .semibold))
                     }
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                    .foregroundStyle(AppTheme.sageMuted(0.85))
                 }
                 .buttonStyle(.plain)
             }
@@ -239,30 +260,38 @@ struct InspirationView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: category.iconName)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12, weight: .semibold))
                 Text(category.label)
                     .font(AppFont.medium(12))
                     .lineLimit(1)
                 Text("\(count(for: category))")
                     .font(AppFont.medium(11))
-                    .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
+                    .foregroundStyle(isSelected ? .white.opacity(0.9) : AppTheme.labelOnLightSurface)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
                     .background(
-                        (isSelected ? Color.white.opacity(0.25) : AppTheme.lightSage),
+                        (isSelected ? Color.white.opacity(0.22) : AppTheme.selectedChipFill.opacity(0.95)),
                         in: Capsule()
                     )
             }
-            .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
+            .foregroundStyle(isSelected ? .white : AppTheme.iconOnChip)
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
-            .background(
-                isSelected ? AppTheme.sageDark : AppTheme.surface,
-                in: Capsule()
-            )
+            .background {
+                if isSelected {
+                    Capsule().fill(AppTheme.brandGradientEnd)
+                } else {
+                    Capsule()
+                        .fill(AppTheme.chipIdleFill)
+                        .background(.ultraThinMaterial, in: Capsule())
+                }
+            }
             .overlay {
                 Capsule()
-                    .stroke(AppTheme.sage.opacity(isSelected ? 0 : 0.15), lineWidth: 1)
+                    .stroke(
+                        isSelected ? Color.white.opacity(0.2) : AppTheme.iconChipStroke,
+                        lineWidth: 1
+                    )
             }
         }
         .buttonStyle(.plain)
@@ -280,8 +309,8 @@ struct InspirationView: View {
     private var latestSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(showSavedOnly ? L10n.Inspiration.saved : L10n.Inspiration.latest)
-                .font(AppFont.medium(15))
-                .foregroundStyle(AppTheme.ink)
+                .font(.system(size: 15, weight: .semibold, design: .serif))
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             if filteredItems.isEmpty {
                 emptyStateCard
@@ -319,10 +348,10 @@ struct InspirationView: View {
             labels.append(filter.categories.map(\.label).sorted().joined(separator: ", "))
         }
         if let minimumLikes = filter.minimumLikes {
-            labels.append("Suka \(minimumLikes)+")
+            labels.append(L10n.Inspiration.likesChip(minimumLikes))
         }
         if filter.savedOnly {
-            labels.append("Tersimpan")
+            labels.append(L10n.Inspiration.savedLabel)
         }
         return labels
     }
@@ -339,7 +368,7 @@ struct InspirationView: View {
                         .background(AppTheme.lightSage, in: Capsule())
                 }
 
-                Button("Reset Filter") {
+                Button(L10n.Common.reset) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         filter.reset()
                     }
@@ -359,13 +388,13 @@ struct InspirationView: View {
                 .font(.system(size: 32, weight: .light))
                 .foregroundStyle(AppTheme.sage.opacity(0.65))
 
-            Text(showSavedOnly ? "Belum ada inspirasi tersimpan" : "Inspirasi tidak ditemukan")
+            Text(showSavedOnly ? L10n.Inspiration.emptySavedTitle : L10n.Inspiration.emptySearchTitle)
                 .font(AppFont.medium(15))
                 .foregroundStyle(AppTheme.sageDark)
 
             Text(showSavedOnly
-                ? "Simpan ide favorit Anda dengan mengetuk ikon bookmark pada kartu inspirasi."
-                : "Coba kata kunci lain atau ubah filter.")
+                ? L10n.Inspiration.emptySavedSub
+                : L10n.Inspiration.emptySearchSub)
                 .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.ink.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -373,11 +402,7 @@ struct InspirationView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 36)
         .padding(.horizontal, 20)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 22)
     }
 
     private func load() async {
@@ -418,10 +443,17 @@ private struct InspirationGridCard: View {
 
                 Button(action: onToggleSave) {
                     Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(isSaved ? AppTheme.sageDark : AppTheme.ink.opacity(0.55))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(isSaved ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
                         .frame(width: 28, height: 28)
-                        .background(.white.opacity(0.92), in: Circle())
+                        .background {
+                            Circle()
+                                .fill(isSaved ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                        .overlay {
+                            Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                        }
                 }
                 .buttonStyle(.plain)
                 .padding(8)
@@ -444,14 +476,14 @@ private struct InspirationGridCard: View {
 
             Text(item.title)
                 .font(AppFont.semibold(13))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
 
             if let description = item.description, !description.isEmpty {
                 Text(description)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.inkMuted(0.5))
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -459,29 +491,25 @@ private struct InspirationGridCard: View {
             HStack(spacing: 12) {
                 HStack(spacing: 4) {
                     Image(systemName: isLiked ? "heart.fill" : "heart")
-                        .font(.system(size: 10))
-                        .foregroundStyle(isLiked ? AppTheme.peachDark : AppTheme.ink.opacity(0.35))
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(isLiked ? AppTheme.peachDark : AppTheme.inkMuted(0.5))
                     Text(formattedCount(likes))
                         .font(AppFont.regular(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
                 }
 
                 HStack(spacing: 4) {
                     Image(systemName: "eye.fill")
                         .font(.system(size: 10))
-                        .foregroundStyle(AppTheme.sageDark.opacity(0.6))
+                        .foregroundStyle(AppTheme.sageMuted(0.85))
                     Text(formattedCount(item.views))
                         .font(AppFont.regular(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
                 }
             }
         }
         .padding(10)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private func formattedCount(_ value: Int) -> String {
@@ -515,18 +543,18 @@ private struct InspirationFilterSheet: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Filter Inspirasi")
+            .navigationTitle(L10n.Inspiration.filterTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") { dismiss() }
+                    Button(L10n.Common.cancel) { dismiss() }
                         .foregroundStyle(AppTheme.ink.opacity(0.7))
                 }
             }
             .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 12) {
                     Button(action: onReset) {
-                        Text("Reset")
+                        Text(L10n.Common.reset)
                             .font(AppFont.medium(15))
                             .foregroundStyle(AppTheme.ink.opacity(0.7))
                             .frame(maxWidth: .infinity)
@@ -536,7 +564,7 @@ private struct InspirationFilterSheet: View {
                     .buttonStyle(.plain)
 
                     Button { onApply(filter) } label: {
-                        Text("Terapkan")
+                        Text(L10n.Common.apply)
                             .font(AppFont.medium(15))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -555,7 +583,7 @@ private struct InspirationFilterSheet: View {
     }
 
     private var categorySection: some View {
-        filterSection("Kategori") {
+        filterSection(L10n.Common.category) {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
                 ForEach(InspirationCategory.filterableCases) { category in
                     let isSelected = filter.categories.contains(category)
@@ -586,7 +614,7 @@ private struct InspirationFilterSheet: View {
     }
 
     private var likesSection: some View {
-        filterSection("Jumlah Suka") {
+        filterSection(L10n.Inspiration.likesSection) {
             HStack(spacing: 8) {
                 ForEach(InspirationFilter.likesOptions, id: \.label) { option in
                     let isSelected = filter.minimumLikes == option.value
@@ -609,10 +637,10 @@ private struct InspirationFilterSheet: View {
     private var toggleSection: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("Hanya Inspirasi Tersimpan")
+                Text(L10n.Inspiration.filterSavedOnly)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.ink)
-                Text("Tampilkan ide yang sudah Anda simpan")
+                Text(L10n.Inspiration.filterSavedOnlySub)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
             }
@@ -624,11 +652,7 @@ private struct InspirationFilterSheet: View {
                 .tint(AppTheme.sageDark)
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private func filterSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -640,11 +664,7 @@ private struct InspirationFilterSheet: View {
             content()
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                }
+                .premiumGlassCard(cornerRadius: 16)
         }
     }
 }
@@ -701,11 +721,7 @@ struct InspirationDetailView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(16)
-                            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                            }
+                            .premiumGlassCard(cornerRadius: 18)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -738,9 +754,16 @@ struct InspirationDetailView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.75))
+                    .foregroundStyle(AppTheme.labelOnLightSurface)
                     .frame(width: 42, height: 42)
-                    .background(.white.opacity(0.9), in: Circle())
+                    .background {
+                        Circle()
+                            .fill(AppTheme.selectedChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                    .overlay {
+                        Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    }
                     .shadow(color: AppTheme.sageDark.opacity(0.12), radius: 10, y: 4)
             }
             .buttonStyle(.plain)
@@ -752,14 +775,17 @@ struct InspirationDetailView: View {
     private var categoryTag: some View {
         HStack(spacing: 6) {
             Image(systemName: item.category.iconName)
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 11, weight: .semibold))
             Text(item.category.label)
                 .font(AppFont.medium(12))
         }
-        .foregroundStyle(AppTheme.sageDark)
+        .foregroundStyle(AppTheme.labelOnLightSurface)
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
-        .background(AppTheme.lightSage, in: Capsule())
+        .background(AppTheme.selectedChipFill, in: Capsule())
+        .overlay {
+            Capsule().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+        }
     }
 
     private var statsRow: some View {
@@ -769,11 +795,11 @@ struct InspirationDetailView: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: isLiked ? "heart.fill" : "heart")
-                        .font(.system(size: 13))
-                        .foregroundStyle(isLiked ? AppTheme.peachDark : AppTheme.ink.opacity(0.35))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(isLiked ? AppTheme.peachDark : AppTheme.inkMuted(0.5))
                     Text(L10n.Inspiration.likes(formattedCount(displayLikes)))
                         .font(AppFont.regular(13))
-                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .foregroundStyle(AppTheme.inkMuted(0.6))
                 }
             }
             .buttonStyle(.plain)
@@ -781,10 +807,10 @@ struct InspirationDetailView: View {
             HStack(spacing: 6) {
                 Image(systemName: "eye.fill")
                     .font(.system(size: 13))
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.6))
+                    .foregroundStyle(AppTheme.sageMuted(0.85))
                 Text(L10n.Inspiration.views(formattedCount(item.views)))
                     .font(AppFont.regular(13))
-                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+                    .foregroundStyle(AppTheme.inkMuted(0.6))
             }
         }
     }
@@ -839,7 +865,7 @@ struct InspirationCategoriesView: View {
                         categoryRow(
                             category: .all,
                             count: items.count,
-                            subtitle: "Lihat seluruh inspirasi"
+                            subtitle: L10n.Inspiration.seeAllSub
                         )
 
                         ForEach(InspirationCategory.filterableCases) { category in
@@ -848,7 +874,7 @@ struct InspirationCategoriesView: View {
                                 categoryRow(
                                     category: category,
                                     count: count,
-                                    subtitle: "\(count) inspirasi tersedia"
+                                    subtitle: L10n.Inspiration.categoryCount(count)
                                 )
                             }
                         }
@@ -897,11 +923,7 @@ struct InspirationCategoriesView: View {
                     .foregroundStyle(AppTheme.ink.opacity(0.28))
             }
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -925,11 +947,11 @@ struct InspirationCategoryItemsView: View {
     }
 
     private var pageTitle: String {
-        category == .all ? "Semua Inspirasi" : category.label
+        category == .all ? L10n.Inspiration.allInspirations : category.label
     }
 
     private var pageSubtitle: String {
-        "\(filteredItems.count) inspirasi ditemukan"
+        L10n.Inspiration.categoryCount(filteredItems.count)
     }
 
     var body: some View {
@@ -946,8 +968,8 @@ struct InspirationCategoryItemsView: View {
                     if filteredItems.isEmpty {
                         MoreEmptyState(
                             icon: "sparkles",
-                            title: "Belum ada inspirasi",
-                            message: "Inspirasi untuk kategori ini akan segera ditambahkan."
+                            title: L10n.Inspiration.categoryEmptyTitle,
+                            message: L10n.Inspiration.categoryEmptyMessage
                         )
                     } else {
                         LazyVGrid(

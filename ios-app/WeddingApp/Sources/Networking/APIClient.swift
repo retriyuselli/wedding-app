@@ -7,8 +7,8 @@ final class APIClient {
 
     private lazy var session: URLSession = {
         let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = 8
-        configuration.timeoutIntervalForResource = 10
+        configuration.timeoutIntervalForRequest = 30
+        configuration.timeoutIntervalForResource = 45
         configuration.waitsForConnectivity = false
         return URLSession(configuration: configuration)
     }()
@@ -270,7 +270,7 @@ final class APIClient {
         if statusCode == 413 || body.localizedCaseInsensitiveContains("Content-Length")
             || body.localizedCaseInsensitiveContains("post_max_size")
             || body.localizedCaseInsensitiveContains("exceeds the limit") {
-            return .server("File terlalu besar untuk diunggah. Maksimal 10MB (batas server saat ini mungkin lebih kecil).")
+            return .server("File terlalu besar untuk diunggah. Maksimal 1MB.")
         }
 
         if !body.isEmpty {

@@ -4,7 +4,6 @@ struct MoreView: View {
     @EnvironmentObject private var session: SessionStore
 
     @State private var info = WeddingInfo(id: nil, groomName: "", brideName: "", budaya: "", songlist: [])
-    @State private var events: [WeddingEvent] = []
     @State private var showLogoutConfirmation = false
     @State private var showComingSoon = false
 
@@ -17,14 +16,38 @@ struct MoreView: View {
         return [bride, groom].filter { !$0.isEmpty }.joined(separator: " & ")
     }
 
-    private var weddingDate: Date? {
-        events.compactMap { $0.tglAcara.flatMap { DateFormatter.apiInput.date(from: $0) } }
-            .sorted()
-            .last
+    private var joinedDateText: String {
+        guard let date = session.currentUser?.joinedAtDate else {
+            return L10n.More.dateNotSet
+        }
+        let dateText = DateFormatter.displayLocaleDate(date)
+        return "\(dateText) · \(membershipDurationText(from: date))"
     }
 
-    private var primaryLocation: String {
-        events.compactMap(\.lokasiAcara).first { !$0.isEmpty } ?? L10n.More.locationNotSet
+    private var accountEmail: String {
+        let email = session.currentUser?.email.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return email.isEmpty ? L10n.More.emailNotSet : email
+    }
+
+    private func membershipDurationText(from date: Date) -> String {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day], from: date, to: Date())
+        let years = max(components.year ?? 0, 0)
+        let months = max(components.month ?? 0, 0)
+        let days = max(components.day ?? 0, 0)
+
+        if years > 0 {
+            return months > 0
+                ? L10n.More.joinedYearsMonths(years, months)
+                : L10n.More.joinedYears(years)
+        }
+        if months > 0 {
+            return L10n.More.joinedMonths(months)
+        }
+        if days > 0 {
+            return L10n.More.joinedDays(days)
+        }
+        return L10n.More.joinedToday
     }
 
     var body: some View {
@@ -93,17 +116,17 @@ struct MoreView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(coupleName)
                         .font(AppFont.medium(19))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
 
-                    Text(weddingDate.map { DateFormatter.displayLocaleDate($0) } ?? L10n.More.dateNotSet)
+                    Text(joinedDateText)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.5))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
 
-                    Text(primaryLocation)
+                    Text(accountEmail)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.5))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
                         .lineLimit(1)
                 }
 
@@ -124,17 +147,20 @@ struct MoreView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 11)
-                .background(AppTheme.lightSage, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(AppTheme.lightSage.opacity(0.72))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                }
             }
             .buttonStyle(.plain)
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 16, y: 8)
+        .premiumGlassCard(cornerRadius: 28)
     }
 
     private func sectionGroup(title: String, items: [MoreItem]) -> some View {
@@ -153,12 +179,7 @@ struct MoreView: View {
                     }
                 }
             }
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
-            .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 12, y: 6)
+            .premiumGlassCard(cornerRadius: 22)
         }
     }
 
@@ -180,7 +201,9 @@ struct MoreView: View {
             MoreItem(
                 icon: "globe",
                 title: L10n.More.language,
-                subtitle: LanguageFeature.isSelectionEnabled ? LanguageStore.shared.selected.nativeSubtitle : "Indonesia",
+                subtitle: LanguageFeature.isSelectionEnabled
+                    ? LanguageStore.shared.selected.nativeSubtitle
+                    : L10n.Language.indonesian,
                 destination: LanguageFeature.isSelectionEnabled ? .language : nil
             ),
             MoreItem(icon: "questionmark.circle", title: L10n.More.help, subtitle: L10n.More.helpSub, destination: .help),
@@ -216,16 +239,16 @@ struct MoreView: View {
                     .foregroundStyle(AppTheme.sageDark)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
-                    .background(.white, in: Capsule())
-                    .overlay { Capsule().stroke(AppTheme.sage.opacity(0.2), lineWidth: 1) }
+                    .background {
+                        Capsule()
+                            .fill(Color.white.opacity(0.78))
+                            .background(.ultraThinMaterial, in: Capsule())
+                    }
+                    .overlay { Capsule().stroke(Color.white.opacity(0.65), lineWidth: 1) }
             }
         }
         .padding(16)
-        .background(AppTheme.lightSage.opacity(0.7), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 22)
     }
 
     private var logoutButton: some View {
@@ -237,10 +260,10 @@ struct MoreView: View {
                 .foregroundStyle(Color.red.opacity(0.85))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .premiumGlassCard(cornerRadius: 16)
                 .overlay {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                        .stroke(Color.red.opacity(0.22), lineWidth: 1)
                 }
         }
         .buttonStyle(.plain)
@@ -248,10 +271,8 @@ struct MoreView: View {
 
     private func load() async {
         do {
-            async let infoEnvelope: Envelope<WeddingInfo> = APIClient.shared.request("wedding-info")
-            async let eventEnvelope: Envelope<[WeddingEvent]> = APIClient.shared.request("wedding-events")
-            info = try await infoEnvelope.data
-            events = try await eventEnvelope.data
+            let infoEnvelope: Envelope<WeddingInfo> = try await APIClient.shared.request("wedding-info")
+            info = infoEnvelope.data
         } catch {
             // biarkan tampilan pakai data default kalau gagal
         }
@@ -320,7 +341,15 @@ private struct MoreRow: View {
                 .font(.system(size: 16, weight: .regular))
                 .foregroundStyle(AppTheme.sageDark)
                 .frame(width: 34, height: 34)
-                .background(AppTheme.sage.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(AppTheme.sage.opacity(0.12))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color.white.opacity(0.45), lineWidth: 1)
+                }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title)

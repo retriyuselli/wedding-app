@@ -60,6 +60,14 @@ class WeddingEventForm
                             ->maxLength(255)
                             ->placeholder('Nama venue, alamat, atau kota')
                             ->columnSpanFull(),
+                        TextInput::make('estimasi_tamu')
+                            ->label('Estimasi Tamu')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100000)
+                            ->placeholder('Contoh: 300')
+                            ->helperText('Perkiraan jumlah tamu untuk acara ini.')
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Catatan & Integrasi')

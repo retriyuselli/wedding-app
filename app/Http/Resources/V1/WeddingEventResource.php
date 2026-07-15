@@ -23,6 +23,7 @@ class WeddingEventResource extends JsonResource
             'waktu_mulai' => $this->formatTime($this->waktu_mulai),
             'jam_selesai' => $this->formatTime($this->jam_selesai),
             'lokasi_acara' => $this->lokasi_acara,
+            'estimasi_tamu' => $this->estimasi_tamu,
             'vendor_booking_id' => $this->vendor_booking_id,
             'catatan' => $this->catatan,
             'created_at' => $this->created_at,

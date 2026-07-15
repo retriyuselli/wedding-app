@@ -7,15 +7,40 @@ final class PushNotificationManager: NSObject, ObservableObject {
     static let shared = PushNotificationManager()
 
     @Published private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
+    @Published private(set) var lastTestMessage: String?
 
-    private var pendingToken: String?
+    private static let tokenDefaultsKey = "push.apnsDeviceToken"
+
+    private var pendingToken: String? {
+        didSet {
+            if let pendingToken {
+                UserDefaults.standard.set(pendingToken, forKey: Self.tokenDefaultsKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Self.tokenDefaultsKey)
+            }
+        }
+    }
 
     private override init() {
         super.init()
+        pendingToken = UserDefaults.standard.string(forKey: Self.tokenDefaultsKey)
     }
 
     func configure() {
         UNUserNotificationCenter.current().delegate = self
+
+        Task {
+            await refreshAuthorizationStatus()
+            if isAuthorized {
+                UIApplication.shared.registerForRemoteNotifications()
+            }
+        }
+    }
+
+    var isAuthorized: Bool {
+        authorizationStatus == .authorized
+            || authorizationStatus == .provisional
+            || authorizationStatus == .ephemeral
     }
 
     /// Minta izin (jika belum) dan daftarkan ulang ke APNs setelah user login.
@@ -126,17 +151,94 @@ final class PushNotificationManager: NSObject, ObservableObject {
             print("Device token unregister failed: \(error)")
             #endif
         }
+
+        pendingToken = nil
+    }
+
+    /// Menampilkan banner sistem lokal (berguna untuk uji tanpa APNs).
+    func scheduleLocalBanner(
+        title: String,
+        body: String,
+        delay: TimeInterval = 1,
+        userInfo: [AnyHashable: Any] = ["destination": "messages", "type": "local_test"]
+    ) async throws {
+        await refreshAuthorizationStatus()
+
+        guard isAuthorized else {
+            throw PushNotificationError.notAuthorized
+        }
+
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        content.userInfo = userInfo
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 0.5), repeats: false)
+        let request = UNNotificationRequest(
+            identifier: "weddingapp.local.\(UUID().uuidString)",
+            content: content,
+            trigger: trigger
+        )
+
+        try await UNUserNotificationCenter.current().add(request)
+    }
+
+    /// Kirim banner uji: lokal dulu, lalu remote lewat backend bila token sudah terdaftar.
+    func sendTestBanner() async {
+        lastTestMessage = nil
+
+        do {
+            try await scheduleLocalBanner(
+                title: L10n.Reminders.testTitle,
+                body: L10n.Reminders.testBodyLocal
+            )
+        } catch {
+            if authorizationStatus == .notDetermined {
+                requestAuthorizationAndRegister()
+                lastTestMessage = L10n.Reminders.testNeedsPermission
+            } else if authorizationStatus == .denied {
+                lastTestMessage = L10n.Reminders.testDenied
+            } else {
+                lastTestMessage = L10n.Reminders.testFailed
+            }
+            return
+        }
+
+        await syncDeviceTokenIfPossible()
+
+        do {
+            let envelope: Envelope<PushTestResult> = try await APIClient.shared.request(
+                "device-tokens/test",
+                method: "POST"
+            )
+            let sent = envelope.data.sent
+            lastTestMessage = sent > 0
+                ? L10n.Reminders.testRemoteSent(sent)
+                : L10n.Reminders.testLocalOnly
+        } catch {
+            lastTestMessage = L10n.Reminders.testLocalOnly
+            #if DEBUG
+            print("[Push] Remote test failed: \(error)")
+            #endif
+        }
     }
 
     func handleRemoteNotification(userInfo: [AnyHashable: Any]) {
-        let destination = userInfo["destination"] as? String
+        routeDestination(userInfo["destination"] as? String)
+    }
 
+    private func routeDestination(_ destination: String?) {
         guard destination == "messages" else {
             return
         }
 
         NotificationCenter.default.post(name: .openMessages, object: nil)
     }
+}
+
+enum PushNotificationError: Error {
+    case notAuthorized
 }
 
 extension PushNotificationManager: UNUserNotificationCenterDelegate {
@@ -153,12 +255,8 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
     ) async {
         let destination = response.notification.request.content.userInfo["destination"] as? String
 
-        guard destination == "messages" else {
-            return
-        }
-
         await MainActor.run {
-            NotificationCenter.default.post(name: .openMessages, object: nil)
+            PushNotificationManager.shared.routeDestination(destination)
         }
     }
 }
@@ -166,4 +264,9 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
 private struct DeviceTokenRegistration: Decodable {
     let id: Int
     let platform: String
+}
+
+private struct PushTestResult: Decodable {
+    let sent: Int
+    let tokenCount: Int
 }

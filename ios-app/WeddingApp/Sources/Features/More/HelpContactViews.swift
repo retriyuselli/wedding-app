@@ -105,7 +105,7 @@ struct HelpCustomerSupportView: View {
             }
         }
         .padding(16)
-        .background(AppTheme.lightSage.opacity(0.45), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private func existingChatCard(_ thread: MessageThread) -> some View {
@@ -145,11 +145,7 @@ struct HelpCustomerSupportView: View {
                     .foregroundStyle(AppTheme.ink.opacity(0.28))
             }
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -209,7 +205,7 @@ struct HelpCustomerSupportView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private var serviceHoursCard: some View {
@@ -414,11 +410,7 @@ struct HelpSendEmailView: View {
             .buttonStyle(.plain)
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var subjectPicker: some View {
@@ -477,7 +469,7 @@ struct HelpSendEmailView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.lightSage.opacity(0.45), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private var serviceHoursCard: some View {
@@ -543,10 +535,6 @@ struct HelpServiceHoursCard: View {
             Spacer(minLength: 0)
         }
         .padding(16)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 }

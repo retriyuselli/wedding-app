@@ -46,7 +46,7 @@ struct LoginView: View {
             }
             .background(LoginPalette.background)
             .toolbar(.hidden, for: .navigationBar)
-            .tint(LoginPalette.green)
+            .tint(AppTheme.sageDark)
             .navigationDestination(isPresented: $showRegister) {
                 RegisterView()
             }
@@ -61,37 +61,64 @@ struct LoginView: View {
             )) {
                 NavigationStack {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Verifikasi dua langkah")
-                            .font(AppFont.medium(18))
-                        Text(session.pendingTwoFactorMessage ?? "Masukkan kode 6 digit yang dikirim ke email Anda.")
-                            .font(AppFont.regular(13))
-                            .foregroundStyle(.secondary)
+                        Text(L10n.Auth.twoFactorTitle)
+                            .font(.system(size: 20, weight: .semibold, design: .serif))
+                            .foregroundStyle(AppTheme.sageDark)
+                        Text(session.pendingTwoFactorMessage ?? L10n.Auth.twoFactorMessage)
+                            .font(.system(size: 13, weight: .regular, design: .rounded))
+                            .foregroundStyle(AppTheme.ink.opacity(0.55))
 
-                        TextField("Kode 6 digit", text: $twoFactorCode)
+                        TextField(L10n.Auth.twoFactorCodePlaceholder, text: $twoFactorCode)
                             .keyboardType(.numberPad)
-                            .font(AppFont.regular(16))
+                            .font(.system(size: 16, weight: .regular, design: .rounded))
                             .padding(14)
-                            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+                            .background {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .fill(AppTheme.cream.opacity(0.55))
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .fill(.ultraThinMaterial)
+                                        .opacity(0.55)
+                                }
+                            }
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                            }
 
                         if let errorMessage = session.errorMessage {
                             Text(errorMessage)
-                                .font(AppFont.regular(13))
+                                .font(.system(size: 13, weight: .regular, design: .rounded))
                                 .foregroundStyle(.red)
                         }
 
                         Button {
                             Task { await session.verifyTwoFactor(code: twoFactorCode) }
                         } label: {
-                            Text(session.isLoading ? "Memverifikasi…" : "Verifikasi")
+                            Text(session.isLoading ? L10n.Auth.twoFactorVerifying : L10n.Auth.twoFactorVerify)
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
+                                .background(
+                                    LinearGradient(
+                                        colors: [AppTheme.sage, AppTheme.sageDark],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                )
+                                .shadow(color: AppTheme.sageDark.opacity(0.16), radius: 14, y: 6)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.plain)
                         .disabled(twoFactorCode.count != 6 || session.isLoading)
+                        .opacity(twoFactorCode.count != 6 || session.isLoading ? 0.55 : 1)
 
                         Spacer()
                     }
                     .padding(20)
+                    .premiumGlassCard(cornerRadius: 24)
+                    .padding(16)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button(L10n.Common.cancel) {
@@ -102,6 +129,7 @@ struct LoginView: View {
                     }
                 }
                 .presentationDetents([.medium])
+                .presentationBackground(AppTheme.cream.opacity(0.95))
             }
             .onAppear {
                 session.resetTransientUIState()
@@ -165,25 +193,35 @@ private struct ForgotPasswordSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             Capsule()
-                .fill(LoginPalette.greenLight.opacity(0.55))
+                .fill(AppTheme.sage.opacity(0.40))
                 .frame(width: 46, height: 5)
                 .padding(.top, 10)
                 .padding(.bottom, 18)
 
             VStack(spacing: 13) {
                 Image(systemName: didSendRequest ? "checkmark.seal.fill" : "key.fill")
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(didSendRequest ? LoginPalette.green : LoginPalette.gold)
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(didSendRequest ? AppTheme.sageDark : AppTheme.gold)
                     .frame(width: 58, height: 58)
-                    .background(LoginPalette.greenLight.opacity(0.26), in: Circle())
+                    .background {
+                        ZStack {
+                            Circle().fill(AppTheme.lightSage.opacity(0.45))
+                            Circle().fill(.ultraThinMaterial).opacity(0.40)
+                        }
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(Color.white.opacity(0.70), lineWidth: 1)
+                    }
+                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 10, y: 4)
 
                 Text(L10n.Auth.forgotTitle)
-                    .font(AppFont.semibold(22))
-                    .foregroundStyle(LoginPalette.green)
+                    .font(.system(size: 22, weight: .semibold, design: .serif))
+                    .foregroundStyle(AppTheme.sageDark)
                     .multilineTextAlignment(.center)
 
                 Text(L10n.Auth.forgotSubtitle)
-                    .font(AppFont.regular(13))
+                    .font(.system(size: 13, weight: .regular, design: .rounded))
                     .foregroundStyle(LoginPalette.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -207,7 +245,7 @@ private struct ForgotPasswordSheet: View {
                     AuthNativeStatusMessage(
                         message: statusMessage,
                         systemImage: didSendRequest ? "checkmark.circle.fill" : "exclamationmark.circle.fill",
-                        tint: didSendRequest ? LoginPalette.green : .red
+                        tint: didSendRequest ? AppTheme.sageDark : .red
                     )
                 }
 
@@ -224,8 +262,8 @@ private struct ForgotPasswordSheet: View {
                 dismiss()
             } label: {
                 Text(L10n.Auth.forgotBackToLogin)
-                    .font(AppFont.medium(14))
-                    .foregroundStyle(LoginPalette.green)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(AppTheme.sageDark)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.plain)
@@ -234,7 +272,24 @@ private struct ForgotPasswordSheet: View {
         .padding(.horizontal, 28)
         .padding(.bottom, 22)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(LoginPalette.sheet.ignoresSafeArea())
+        .background {
+            LinearGradient(
+                colors: [
+                    AppTheme.surface.opacity(0.98),
+                    AppTheme.cream.opacity(0.94),
+                    AppTheme.lightSage.opacity(0.35),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            .overlay {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.35)
+                    .ignoresSafeArea()
+            }
+        }
         .onAppear {
             focusedField = .email
         }
@@ -311,9 +366,7 @@ private struct LoginFormSheet: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            LoginSheetShape()
-                .fill(LoginPalette.sheet)
-                .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: -8)
+            LoginSheetGlassBackground()
 
             VStack(spacing: 0) {
                 LoginBadge()
@@ -322,19 +375,19 @@ private struct LoginFormSheet: View {
 
                 HStack(spacing: 8) {
                     Text(L10n.Auth.welcome)
-                        .font(AppFont.semibold(27))
-                        .foregroundStyle(LoginPalette.green)
+                        .font(.system(size: 28, weight: .semibold, design: .serif))
+                        .foregroundStyle(AppTheme.sageDark)
 
                     Image(systemName: "heart")
-                        .font(.system(size: 19, weight: .light))
-                        .foregroundStyle(LoginPalette.gold)
+                        .font(.system(size: 18, weight: .light))
+                        .foregroundStyle(AppTheme.gold)
                         .offset(y: 2)
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
 
                 Text(L10n.Auth.loginSubtitle)
-                    .font(AppFont.regular(12))
+                    .font(.system(size: 13, weight: .regular, design: .rounded))
                     .foregroundStyle(LoginPalette.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.top, 5)
@@ -370,8 +423,8 @@ private struct LoginFormSheet: View {
 
                 Button(action: onForgotPassword) {
                     Text(L10n.Auth.forgotPassword)
-                        .font(AppFont.medium(15))
-                        .foregroundStyle(LoginPalette.green)
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundStyle(AppTheme.sageDark)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .buttonStyle(.plain)
@@ -406,16 +459,16 @@ private struct LoginFormSheet: View {
                 Button(action: onRegister) {
                     HStack(spacing: 8) {
                         Text(L10n.Auth.noAccount)
-                            .font(AppFont.regular(13))
+                            .font(.system(size: 13, weight: .regular, design: .rounded))
                             .foregroundStyle(LoginPalette.textSecondary)
 
                         Text(L10n.Auth.registerNow)
-                            .font(AppFont.semibold(13))
-                            .foregroundStyle(LoginPalette.green)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(AppTheme.sageDark)
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(LoginPalette.green)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(AppTheme.sageDark)
                     }
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)

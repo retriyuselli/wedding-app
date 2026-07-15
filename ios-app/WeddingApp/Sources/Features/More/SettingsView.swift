@@ -152,6 +152,22 @@ struct SettingsView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+
+            divider
+
+            NavigationLink {
+                CountdownFontSettingsView()
+            } label: {
+                rowContent(
+                    icon: "timer",
+                    title: L10n.Settings.countdown,
+                    subtitle: appearance.countdownFont.title
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -204,11 +220,7 @@ struct SettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     // MARK: - Building Blocks
@@ -223,11 +235,7 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 content()
             }
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
         }
     }
 

@@ -86,23 +86,23 @@ struct DeleteAccountView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 20))
-                .foregroundStyle(Color.red.opacity(0.8))
+                .foregroundStyle(Color.red.opacity(0.9))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.DeleteAccount.warningTitle)
                     .font(AppFont.medium(14))
-                    .foregroundStyle(Color.red.opacity(0.85))
+                    .foregroundStyle(Color.red.opacity(0.95))
                 Text(L10n.DeleteAccount.warningMessage)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+                    .foregroundStyle(AppTheme.inkMuted(0.6))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(14)
-        .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.red.opacity(0.2), lineWidth: 1)
+                .stroke(Color.red.opacity(0.35), lineWidth: 1)
         }
     }
 
@@ -112,7 +112,7 @@ struct DeleteAccountView: View {
 
             SecureField(L10n.DeleteAccount.passwordPlaceholder, text: $password)
                 .font(AppFont.regular(14))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
                 .textContentType(.password)
         }
         .padding(.horizontal, 14)
@@ -126,7 +126,7 @@ struct DeleteAccountView: View {
 
             Text(L10n.DeleteAccount.socialNote)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .foregroundStyle(AppTheme.inkMuted(0.65))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 14)
@@ -140,7 +140,7 @@ struct DeleteAccountView: View {
 
             TextField(L10n.DeleteAccount.confirmPlaceholder, text: $confirmation)
                 .font(AppFont.regular(14))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.characters)
         }
@@ -153,25 +153,21 @@ struct DeleteAccountView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.DeleteAccount.dataTitle)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             ForEach(deletedDataItems, id: \.self) { item in
                 HStack(spacing: 8) {
                     Image(systemName: "minus.circle.fill")
                         .font(.system(size: 11))
-                        .foregroundStyle(Color.red.opacity(0.6))
+                        .foregroundStyle(Color.red.opacity(0.85))
                     Text(item)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .foregroundStyle(AppTheme.inkMuted(0.65))
                 }
             }
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private var deleteButton: some View {
@@ -189,10 +185,14 @@ struct DeleteAccountView: View {
                 Text(L10n.DeleteAccount.button)
                     .font(AppFont.medium(16))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(canDelete ? Color.red.opacity(0.85) : Color.red.opacity(0.35), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(
+                canDelete ? Color(red: 0.72, green: 0.18, blue: 0.18) : Color(red: 0.45, green: 0.16, blue: 0.16),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
+            .opacity(canDelete ? 1 : 0.72)
         }
         .buttonStyle(.plain)
         .disabled(!canDelete)

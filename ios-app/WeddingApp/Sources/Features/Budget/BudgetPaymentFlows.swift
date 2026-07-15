@@ -338,11 +338,7 @@ struct BudgetSummaryDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private func summaryMetric(title: String, amount: Double, percent: Int, tint: Color) -> some View {
@@ -507,11 +503,7 @@ struct BudgetCategoriesView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 }
 
@@ -663,7 +655,15 @@ struct EditTotalBudgetView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(AppTheme.ink.opacity(0.72))
                     .frame(width: 42, height: 42)
-                    .background(.white.opacity(0.86), in: Circle())
+                    .background {
+                        Circle()
+                            .fill(Color.white.opacity(0.78))
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                    }
                     .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
@@ -708,11 +708,7 @@ struct EditTotalBudgetView: View {
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private func formSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -725,11 +721,7 @@ struct EditTotalBudgetView: View {
                 content()
             }
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 18)
         }
     }
 
@@ -947,11 +939,7 @@ struct BudgetReportShareView: View {
             .padding(.horizontal, 4)
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var overBudgetBanner: some View {
@@ -991,7 +979,7 @@ struct BudgetReportShareView: View {
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
-                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .premiumGlassCard(cornerRadius: 18)
             } else {
                 VStack(spacing: 10) {
                     ForEach(sortedCategories) { category in
@@ -1050,11 +1038,7 @@ struct BudgetReportShareView: View {
             .frame(height: 5)
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private func reportMetaChip(label: String, value: String) -> some View {

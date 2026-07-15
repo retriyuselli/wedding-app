@@ -108,21 +108,17 @@ struct GuestExportShareView: View {
             sectionRow(icon: "house.fill", title: L10n.Guest.tabFamily, count: familyMembers.count)
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var formatNote: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.Guest.exportFormatTitle)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
             Text(L10n.Guest.exportFormatSub)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.inkMuted(0.55))
                 .fixedSize(horizontal: false, vertical: true)
 
             if let writeError {
@@ -133,7 +129,11 @@ struct GuestExportShareView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.lightSage.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(AppTheme.chipIdleFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+        }
     }
 
     private func metricCard(_ title: String, _ value: String, _ tint: Color) -> some View {
@@ -181,7 +181,7 @@ struct GuestExportShareView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .background(AppTheme.brandGradientEnd, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 10)

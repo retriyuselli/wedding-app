@@ -15,13 +15,13 @@ struct DataExportView: View {
                         subtitle: L10n.Privacy.downloadDataSub
                     )
 
-                    Text("Kami akan menyiapkan salinan data akun Anda (profil, pernikahan, tamu, anggaran, dokumen metadata) dalam file ZIP.")
+                    Text(L10n.Privacy.exportBlurb)
                         .font(AppFont.regular(13))
                         .foregroundStyle(AppTheme.ink.opacity(0.55))
 
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage).font(AppFont.regular(13)).foregroundStyle(.red)
-                        Button("Coba lagi") { Task { await viewModel.retry() } }
+                        Button(L10n.Common.tryAgain) { Task { await viewModel.retry() } }
                     }
 
                     Button {
@@ -51,7 +51,7 @@ struct DataExportView: View {
                                 .font(AppFont.medium(14))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .premiumGlassCard(cornerRadius: 16)
                         }
                     }
                 }

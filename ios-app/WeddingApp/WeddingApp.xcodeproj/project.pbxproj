@@ -24,6 +24,7 @@
 		1CF37640D1ACD5D7A3F2082F /* AppearanceSettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6557AEAE5761C849181404 /* AppearanceSettingsViews.swift */; };
 		1D4FBFC8AF8D4B6698BE4439 /* AppPermissionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2A0935EC71D05B45C9BE67 /* AppPermissionsViewModel.swift */; };
 		1F2A7E48617B0F6473D64382 /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FAA7A25E3A8C135810D011 /* PushNotificationManager.swift */; };
+		20812FF6F08FAC741B0BDB5B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F75D0A0B4D82B88E5F120266 /* OnboardingView.swift */; };
 		210E2BC5463F92A217DA3C74 /* GoogleSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2099A5B85E5688D984396C9 /* GoogleSignInService.swift */; };
 		212039ED3B73E5FAC3091964 /* CoupleAvatarImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 593CDE1B148ACE38C2CD2AEB /* CoupleAvatarImage.swift */; };
 		23378BE8B8E41D3AC2AE8434 /* CustomerPaymentMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 332CE37C58326829BF4FF5AC /* CustomerPaymentMethod.swift */; };
@@ -43,6 +44,7 @@
 		326E45E67593920FD8F503B7 /* IncomingPaymentFlows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52660BF241E3B193D7DC01A8 /* IncomingPaymentFlows.swift */; };
 		33C18E7B7352E5E1E59F845B /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E93DAFA60C7860E8699721B /* FamilyMember.swift */; };
 		3568A6D235610963324830EA /* NotificationsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C24DCB0F7989B03AC84D85E /* NotificationsSheet.swift */; };
+		38BB5382F2839095386568E1 /* SairaStencilOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 05ABDF3CD9ECBD393E039710 /* SairaStencilOne-Regular.ttf */; };
 		38E761E75F2255260509BB9F /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133726E37291C60910E4D29C /* APIError.swift */; };
 		38F320E93AE9AB8B458882A6 /* HelpFAQView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6585DC9D7458D7BC9946F17B /* HelpFAQView.swift */; };
 		3D93AFCC9CAE24A21FDB70C4 /* PrivacyPolicyContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD8134A6EDAA696F70B84FF /* PrivacyPolicyContent.swift */; };
@@ -89,6 +91,7 @@
 		8AF15BBD764E1DC0B8490BE6 /* PrivacyRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6D943A9DBB65EEF8E543E55 /* PrivacyRepository.swift */; };
 		8E8BD989EEDD88CB0F7BCE4D /* BudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EF1EF74D6E80C28D3DF8CEC /* BudgetCategory.swift */; };
 		8F029C1BBBADF2050AA7169D /* VendorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AF956B4117204E2C03178F /* VendorDetailView.swift */; };
+		9006D4118ED7872EF26354FC /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526F0880C7D1B0AF445636E9 /* SplashScreenView.swift */; };
 		901BBA272B9F947BA7939342 /* SavedVendorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D2428C547A82B0A49FA89F /* SavedVendorsView.swift */; };
 		90A735AFE7FAEF924C2A4FE7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 971FF8A8171E9D972A3A746E /* LaunchScreen.storyboard */; };
 		90CA1E052C314E520C791A8F /* AppearanceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD6DC7A8E527EA104DB3FE7 /* AppearanceStore.swift */; };
@@ -147,6 +150,7 @@
 		02770B7ECD82B4248458F711 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		03D045B66E37D82C4882CBB0 /* TermsOfServiceContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsOfServiceContent.swift; sourceTree = "<group>"; };
 		04CDE7F54F4143A5BEA9F9FD /* PrivacyAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyAPIService.swift; sourceTree = "<group>"; };
+		05ABDF3CD9ECBD393E039710 /* SairaStencilOne-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SairaStencilOne-Regular.ttf"; sourceTree = "<group>"; };
 		06D3783A1E540184C23FFBCB /* VendorFilterCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorFilterCatalog.swift; sourceTree = "<group>"; };
 		08A737CF9E3DDD9F939BB702 /* BudgetDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetDefaults.swift; sourceTree = "<group>"; };
 		0999072473E2F9FD2AD577D0 /* MoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreView.swift; sourceTree = "<group>"; };
@@ -184,6 +188,7 @@
 		4F8C255E3C4744D9A51D5A3F /* AboutWeddingAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWeddingAppView.swift; sourceTree = "<group>"; };
 		50F98766A9F27330C7919FAF /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		52660BF241E3B193D7DC01A8 /* IncomingPaymentFlows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncomingPaymentFlows.swift; sourceTree = "<group>"; };
+		526F0880C7D1B0AF445636E9 /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
 		52DE810C73DE1D501791D578 /* CoupleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoupleView.swift; sourceTree = "<group>"; };
 		533FF60D7EC9C432A96F0682 /* GuestContactLinker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestContactLinker.swift; sourceTree = "<group>"; };
 		534C089B07685E8E3EEBC243 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -273,6 +278,7 @@
 		F043F71005380D96B3ED208E /* TrustedDevicesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustedDevicesViewModel.swift; sourceTree = "<group>"; };
 		F13B8FEC38E36E63D02204BE /* MoreSubpageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreSubpageLayout.swift; sourceTree = "<group>"; };
 		F2B79086DC38F3F4C7B20A09 /* WeddingDetailEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeddingDetailEditView.swift; sourceTree = "<group>"; };
+		F75D0A0B4D82B88E5F120266 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		F9129EF3C2E5BB8D4637C985 /* IndonesiaRegionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndonesiaRegionsStore.swift; sourceTree = "<group>"; };
 		F96C30225F48FB3402F222A0 /* AboutContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutContent.swift; sourceTree = "<group>"; };
 		FB6BE745BA400F2D6115FDDB /* HelpCenterAPIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpCenterAPIView.swift; sourceTree = "<group>"; };
@@ -483,6 +489,7 @@
 				DB220400741C1B1D1B0B7989 /* Poppins-Medium.ttf */,
 				E37E72152E136EB6B8D1A465 /* Poppins-Regular.ttf */,
 				6485577B65E9B38A3ADC0AFC /* Poppins-SemiBold.ttf */,
+				05ABDF3CD9ECBD393E039710 /* SairaStencilOne-Regular.ttf */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -502,7 +509,9 @@
 				B0D7053CD3852CB794DC77BB /* AppTheme.swift */,
 				2BC0C8F85F08E30963613F0F /* DateFormatters.swift */,
 				B5C3FC5964802FB1C13461BE /* LuxuryWeddingBackground.swift */,
+				F75D0A0B4D82B88E5F120266 /* OnboardingView.swift */,
 				EC274742DFC3A894FD5A01C5 /* RootView.swift */,
+				526F0880C7D1B0AF445636E9 /* SplashScreenView.swift */,
 				263D47DCFC4217D8D018C526 /* StatusBarBlur.swift */,
 				828DBA56CBCC51CA03F24D8C /* WeddingAppApp.swift */,
 				0E9335507003E6946103E3F1 /* Localization */,
@@ -713,6 +722,7 @@
 				7AEBBFA8F4CAE02008531BF7 /* Poppins-Regular.ttf in Resources */,
 				59FAA22B04A4EF49FC08B419 /* Poppins-SemiBold.ttf in Resources */,
 				CF350FF80683674DAB34B691 /* PrivacyInfo.xcprivacy in Resources */,
+				38BB5382F2839095386568E1 /* SairaStencilOne-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -802,6 +812,7 @@
 				10305721DC9DA4661AB7985A /* MoreSubpageLayout.swift in Sources */,
 				930E0BC7C68B50C5E0F52A95 /* MoreView.swift in Sources */,
 				3568A6D235610963324830EA /* NotificationsSheet.swift in Sources */,
+				20812FF6F08FAC741B0BDB5B /* OnboardingView.swift in Sources */,
 				9853A72C9DD97BF33809FF8F /* PackageFacilitiesView.swift in Sources */,
 				E407FF1D04680A373745866F /* PaymentSchedule.swift in Sources */,
 				A969A747AD436E4DE7BEF466 /* PreparationTask.swift in Sources */,
@@ -822,6 +833,7 @@
 				09EFCEF31CBBEEBFCB4AF794 /* SecuritySummaryView.swift in Sources */,
 				85066D7C482FBF24F94AD35E /* SessionStore.swift in Sources */,
 				D86BEA58AF017CF10F06C9BA /* SettingsView.swift in Sources */,
+				9006D4118ED7872EF26354FC /* SplashScreenView.swift in Sources */,
 				CF00DD9220D1443B58F0D379 /* StatusBarBlur.swift in Sources */,
 				4B2334E360B905DA11715952 /* TermsOfServiceContent.swift in Sources */,
 				411F9292C67B87EDB391B239 /* TermsOfServiceView.swift in Sources */,

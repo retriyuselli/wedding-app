@@ -19,6 +19,7 @@ class WeddingEvent extends Model
         'waktu_mulai',
         'jam_selesai',
         'lokasi_acara',
+        'estimasi_tamu',
         'vendor_booking_id',
         'catatan',
     ];
@@ -28,6 +29,7 @@ class WeddingEvent extends Model
         return [
             'tgl_acara' => 'date',
             'sort_order' => 'integer',
+            'estimasi_tamu' => 'integer',
         ];
     }
 

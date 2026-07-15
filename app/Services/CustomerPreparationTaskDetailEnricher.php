@@ -57,11 +57,7 @@ class CustomerPreparationTaskDetailEnricher
             ]);
         }
 
-        if ($this->shouldHaveAttachment($task->title)) {
-            $this->createAttachment($userId, $task->id, [
-                'name' => $this->attachmentFileName($task->title),
-            ]);
-        }
+        // Do not auto-create sample attachments — Documents should only show user uploads.
     }
 
     /**
@@ -105,9 +101,7 @@ class CustomerPreparationTaskDetailEnricher
             ]);
         }
 
-        foreach ($detail['attachments'] ?? [] as $attachment) {
-            $this->createAttachment($userId, $task->id, $attachment);
-        }
+        // Skip demo attachments from manualDetails() — keep checklist text/subtasks only.
     }
 
     private function resolvePriority(string $sectionTitle, string $taskTitle): string

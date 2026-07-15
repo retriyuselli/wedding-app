@@ -17,9 +17,12 @@ struct VendorView: View {
     @ObservedObject private var savedStore = SavedVendorsStore.shared
     @State private var selectedVendorRoute: VendorRoute?
     @State private var showVendorRequestSheet = false
+    @State private var showPartnerNotice = false
+    @AppStorage("vendor_partner_notice_seen") private var hasSeenPartnerNotice = false
     @FocusState private var isSearchFocused: Bool
 
     private let searchBarID = "vendor-search-bar"
+    private let partnerSiteURL = URL(string: "https://apps.apple.com/id/app/paket-pernikahan/id6777688676")
 
     private var filterCatalog: VendorFilterCatalog {
         VendorFilterCatalog(vendors: catalogVendors)
@@ -83,6 +86,7 @@ struct VendorView: View {
                         }
                         vendorListSection
                         requestCTA
+                        partnerFootnote
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -108,6 +112,11 @@ struct VendorView: View {
             async let catalogTask: Void = loadCatalog()
             _ = await (categoriesTask, catalogTask)
             await loadVendors()
+
+            if !hasSeenPartnerNotice {
+                try? await Task.sleep(for: .milliseconds(450))
+                showPartnerNotice = true
+            }
         }
         .refreshable {
             async let categoriesTask: Void = categoriesStore.reload()
@@ -141,6 +150,17 @@ struct VendorView: View {
         }
         .sheet(isPresented: $showVendorRequestSheet) {
             VendorRequestSheet()
+        }
+        .sheet(isPresented: $showPartnerNotice, onDismiss: {
+            hasSeenPartnerNotice = true
+        }) {
+            VendorPartnerNoticeSheet {
+                hasSeenPartnerNotice = true
+                showPartnerNotice = false
+            }
+            .presentationDetents([.height(280)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
         }
     }
 
@@ -220,10 +240,10 @@ struct VendorView: View {
             labels.append(city)
         }
         if filter.verifiedOnly {
-            labels.append("Terverifikasi")
+            labels.append(L10n.Vendor.filterVerifiedChip)
         }
         if filter.savedOnly {
-            labels.append("Tersimpan")
+            labels.append(L10n.Vendor.filterSavedChip)
         }
         return labels
     }
@@ -240,7 +260,7 @@ struct VendorView: View {
                         .background(AppTheme.lightSage, in: Capsule())
                 }
 
-                Button("Reset Filter") {
+                Button(L10n.Common.reset) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         filter.reset()
                     }
@@ -266,9 +286,7 @@ struct VendorView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppTheme.ink.opacity(0.8))
+                    circleButton("arrow.left")
                 }
                 .buttonStyle(.plain)
 
@@ -282,7 +300,7 @@ struct VendorView: View {
 
             Text(L10n.Vendor.title)
                 .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             Text(L10n.Vendor.subtitle)
                 .font(.system(size: 12, weight: .regular, design: .serif))
@@ -294,13 +312,20 @@ struct VendorView: View {
 
     private func circleButton(_ icon: String, isActive: Bool = false) -> some View {
         Image(systemName: icon)
-            .font(.system(size: 17, weight: .regular))
-            .foregroundStyle(isActive ? AppTheme.sageDark : AppTheme.ink.opacity(0.72))
+            .font(.system(size: 17, weight: .medium))
+            .foregroundStyle(isActive ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
             .frame(width: 42, height: 42)
-            .background((isActive ? AppTheme.lightSage : .white).opacity(0.86), in: Circle())
+            .background {
+                Circle()
+                    .fill(isActive ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
             .overlay {
                 Circle()
-                    .stroke(AppTheme.sage.opacity(isActive ? 0.35 : 0), lineWidth: 1)
+                    .stroke(
+                        isActive ? AppTheme.sage.opacity(0.35) : AppTheme.iconChipStroke,
+                        lineWidth: 1
+                    )
             }
             .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
     }
@@ -313,7 +338,7 @@ struct VendorView: View {
 
             Spacer()
 
-            Button("Hapus") {
+            Button(L10n.Common.delete) {
                 searchText = ""
                 isSearchFocused = false
             }
@@ -330,13 +355,13 @@ struct VendorView: View {
                 Button(action: activateSearch) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(isSearchFocused ? AppTheme.sageDark : AppTheme.ink.opacity(0.35))
+                        .foregroundStyle(isSearchFocused ? AppTheme.iconOnChip : AppTheme.inkMuted(0.45))
                 }
                 .buttonStyle(.plain)
 
                 TextField(L10n.Vendor.searchPlaceholder, text: $searchText)
                     .font(AppFont.regular(13))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .focused($isSearchFocused)
                     .submitLabel(.search)
                     .onSubmit {
@@ -349,37 +374,41 @@ struct VendorView: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(AppTheme.ink.opacity(0.28))
+                            .foregroundStyle(AppTheme.inkMuted(0.4))
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(AppTheme.surface, in: Capsule())
+            .premiumGlassCard(cornerRadius: 24)
             .overlay {
                 Capsule()
                     .stroke(
-                        isSearchFocused ? AppTheme.sageDark.opacity(0.35) : AppTheme.sage.opacity(0.10),
-                        lineWidth: isSearchFocused ? 1.5 : 1
+                        isSearchFocused ? AppTheme.sageDark.opacity(0.35) : Color.clear,
+                        lineWidth: isSearchFocused ? 1.5 : 0
                     )
             }
 
             Button(action: openFilterSheet) {
                 HStack(spacing: 6) {
                     Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 13, weight: .semibold))
                     Text(L10n.Common.filter)
                         .font(AppFont.medium(12))
                 }
-                .foregroundStyle(filter.isActive ? AppTheme.sageDark : AppTheme.ink.opacity(0.7))
+                .foregroundStyle(filter.isActive ? AppTheme.labelOnLightSurface : AppTheme.inkMuted(0.7))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background((filter.isActive ? AppTheme.lightSage : AppTheme.surface).opacity(0.95), in: Capsule())
+                .background {
+                    Capsule()
+                        .fill(filter.isActive ? AppTheme.selectedChipFill : AppTheme.chipIdleFill)
+                        .background(.ultraThinMaterial, in: Capsule())
+                }
                 .overlay {
                     Capsule()
                         .stroke(
-                            filter.isActive ? AppTheme.sageDark.opacity(0.35) : AppTheme.sage.opacity(0.10),
+                            filter.isActive ? AppTheme.sage.opacity(0.35) : AppTheme.iconChipStroke,
                             lineWidth: filter.isActive ? 1.5 : 1
                         )
                 }
@@ -395,7 +424,7 @@ struct VendorView: View {
             if categoriesStore.isLoading && categoriesStore.categories.isEmpty {
                 HStack(spacing: 8) {
                     ProgressView()
-                    Text("Memuat kategori...")
+                    Text(L10n.Vendor.loadingCategories)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
                 }
@@ -406,7 +435,7 @@ struct VendorView: View {
                     Text(error)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.5))
-                    Button("Coba Lagi") {
+                    Button(L10n.Common.tryAgain) {
                         Task { await categoriesStore.reload() }
                     }
                     .font(AppFont.medium(12))
@@ -418,7 +447,7 @@ struct VendorView: View {
                     HStack(spacing: 14) {
                         VendorCategoryChip(
                             iconName: "square.grid.2x2",
-                            label: "Semua",
+                            label: L10n.Common.all,
                             isSelected: filter.categorySlugs.isEmpty
                         ) {
                             withAnimation(.easeInOut(duration: 0.2)) {
@@ -453,14 +482,14 @@ struct VendorView: View {
     private var vendorListSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text(isSearching || filter.isActive ? "Hasil Filter" : "Semua Vendor")
-                    .font(AppFont.semibold(18))
+                Text(isSearching || filter.isActive ? L10n.Vendor.resultsFiltered : L10n.Vendor.allVendors)
+                    .font(.system(size: 18, weight: .semibold, design: .serif))
                     .foregroundStyle(AppTheme.sageDark)
 
                 Spacer()
 
                 HStack(spacing: 6) {
-                    Text("Urutkan")
+                    Text(L10n.Common.sort)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
 
@@ -480,11 +509,7 @@ struct VendorView: View {
                         .foregroundStyle(AppTheme.ink.opacity(0.7))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .background(AppTheme.surface, in: Capsule())
-                        .overlay {
-                            Capsule()
-                                .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-                        }
+                        .premiumGlassCard(cornerRadius: 20)
                     }
                 }
             }
@@ -498,7 +523,7 @@ struct VendorView: View {
                         Text(errorMessage)
                             .font(AppFont.medium(14))
                             .foregroundStyle(AppTheme.ink.opacity(0.55))
-                        Button("Coba Lagi") {
+                        Button(L10n.Common.tryAgain) {
                             Task {
                                 await loadCatalog()
                                 await loadVendors()
@@ -509,7 +534,7 @@ struct VendorView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 28)
-                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .premiumGlassCard(cornerRadius: 22)
                 } else if filteredVendors.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "magnifyingglass")
@@ -525,7 +550,7 @@ struct VendorView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 28)
-                    .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .premiumGlassCard(cornerRadius: 22)
                 } else {
                     ForEach(filteredVendors) { vendor in
                         Button {
@@ -553,14 +578,21 @@ struct VendorView: View {
                 .font(.system(size: 18, weight: .regular))
                 .foregroundStyle(AppTheme.sageDark)
                 .frame(width: 44, height: 44)
-                .background(.white, in: Circle())
+                .background {
+                    Circle()
+                        .fill(Color.white.opacity(0.78))
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .overlay {
+                    Circle().stroke(Color.white.opacity(0.65), lineWidth: 1)
+                }
                 .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 8, y: 4)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Belum menemukan yang cocok?")
+                Text(L10n.Vendor.requestCtaTitle)
                     .font(AppFont.medium(13))
                     .foregroundStyle(AppTheme.ink)
-                Text("Kirim kebutuhanmu, vendor akan\nmenghubungimu.")
+                Text(L10n.Vendor.requestCtaSub)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.5))
                     .lineSpacing(2)
@@ -571,7 +603,7 @@ struct VendorView: View {
             Button {
                 showVendorRequestSheet = true
             } label: {
-                Text("Kirim\nPermintaan")
+                Text(L10n.Vendor.sendRequest)
                     .font(AppFont.medium(11))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white)
@@ -582,12 +614,68 @@ struct VendorView: View {
             .buttonStyle(.plain)
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        .premiumGlassCard(cornerRadius: 22)
+    }
+
+    private var partnerFootnote: some View {
+        Group {
+            if let partnerSiteURL {
+                Link(destination: partnerSiteURL) {
+                    partnerFootnoteLabel
+                }
+                .buttonStyle(.plain)
+            } else {
+                partnerFootnoteLabel
+            }
         }
-        .shadow(color: AppTheme.sageDark.opacity(0.07), radius: 14, y: 7)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 4)
+    }
+
+    private var partnerFootnoteLabel: some View {
+        Text(L10n.Vendor.partnerFootnote)
+            .font(AppFont.regular(11))
+            .foregroundStyle(AppTheme.ink.opacity(0.42))
+            .multilineTextAlignment(.center)
+    }
+}
+
+// MARK: - Partner Notice Sheet
+
+private struct VendorPartnerNoticeSheet: View {
+    var onAcknowledge: () -> Void
+
+    var body: some View {
+        ZStack {
+            LuxuryWeddingBackground()
+
+            VStack(alignment: .leading, spacing: 18) {
+                Text(L10n.Vendor.partnerNoticeTitle)
+                    .font(.system(size: 22, weight: .semibold, design: .serif))
+                    .foregroundStyle(AppTheme.sageDark)
+
+                Text(L10n.Vendor.partnerNoticeBody)
+                    .font(AppFont.regular(14))
+                    .foregroundStyle(AppTheme.ink.opacity(0.62))
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Spacer(minLength: 0)
+
+                Button(action: onAcknowledge) {
+                    Text(L10n.Vendor.partnerNoticeCTA)
+                        .font(AppFont.semibold(15))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 28)
+            .padding(.bottom, 20)
+        }
     }
 }
 
@@ -617,7 +705,7 @@ private struct VendorRequestSheet: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Ceritakan kebutuhan vendormu. Tim support akan membantu mencarikan opsi yang cocok.")
+                        Text(L10n.Vendor.requestFormHint)
                             .font(AppFont.regular(13))
                             .foregroundStyle(AppTheme.ink.opacity(0.6))
                             .fixedSize(horizontal: false, vertical: true)
@@ -628,20 +716,20 @@ private struct VendorRequestSheet: View {
                                 .foregroundStyle(.red)
                         }
 
-                        fieldCard(title: "Jenis Vendor", placeholder: "Contoh: Venue, Catering, MUA", text: $category)
-                        fieldCard(title: "Kota / Lokasi", placeholder: "Contoh: Palembang", text: $city)
-                        fieldCard(title: "Estimasi Budget", placeholder: "Contoh: 20–50 juta", text: $budget)
+                        fieldCard(title: L10n.Vendor.requestCategoryTitle, placeholder: L10n.Vendor.requestCategoryPlaceholder, text: $category)
+                        fieldCard(title: L10n.Vendor.requestCityTitle, placeholder: L10n.Vendor.requestCityPlaceholder, text: $city)
+                        fieldCard(title: L10n.Vendor.requestBudgetTitle, placeholder: L10n.Vendor.requestBudgetPlaceholder, text: $budget)
                         notesCard
                     }
                     .padding(20)
                     .padding(.bottom, 24)
                 }
             }
-            .navigationTitle("Kirim Permintaan")
+            .navigationTitle(L10n.Vendor.sendRequestShort)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") { dismiss() }
+                    Button(L10n.Common.cancel) { dismiss() }
                         .foregroundStyle(AppTheme.ink.opacity(0.7))
                 }
             }
@@ -657,7 +745,7 @@ private struct VendorRequestSheet: View {
                             Image(systemName: "paperplane.fill")
                                 .font(.system(size: 14, weight: .semibold))
                         }
-                        Text("Kirim Permintaan")
+                        Text(L10n.Vendor.sendRequestShort)
                             .font(AppFont.medium(15))
                     }
                     .foregroundStyle(.white)
@@ -675,10 +763,10 @@ private struct VendorRequestSheet: View {
                 .padding(.bottom, 12)
                 .background(.ultraThinMaterial)
             }
-            .alert("Permintaan Terkirim", isPresented: $showSuccess) {
-                Button("Selesai") { dismiss() }
+            .alert(L10n.Vendor.requestSentTitle, isPresented: $showSuccess) {
+                Button(L10n.Common.done) { dismiss() }
             } message: {
-                Text("Tim support akan menindaklanjuti permintaanmu melalui pesan di aplikasi.")
+                Text(L10n.Vendor.requestSentMessage)
             }
         }
     }
@@ -694,36 +782,28 @@ private struct VendorRequestSheet: View {
                 .foregroundStyle(AppTheme.ink)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                }
+                .premiumGlassCard(cornerRadius: 14)
         }
     }
 
     private var notesCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Detail Kebutuhan")
+            Text(L10n.Vendor.requestNotesTitle)
                 .font(AppFont.medium(13))
                 .foregroundStyle(AppTheme.sageDark)
 
-            TextField("Tanggal acara, kapasitas, preferensi gaya, dll.", text: $notes, axis: .vertical)
+            TextField(L10n.Vendor.requestNotesPlaceholder, text: $notes, axis: .vertical)
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink)
                 .lineLimit(4 ... 8)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                }
+                .premiumGlassCard(cornerRadius: 14)
         }
     }
 
     private func composedMessage() -> String {
-        var lines = ["[Permintaan Vendor]"]
+        var lines = [L10n.Vendor.requestMsgHeader]
 
         let trimmedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedCity = city.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -731,16 +811,16 @@ private struct VendorRequestSheet: View {
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if !trimmedCategory.isEmpty {
-            lines.append("Jenis: \(trimmedCategory)")
+            lines.append(L10n.Vendor.requestMsgCategory(trimmedCategory))
         }
         if !trimmedCity.isEmpty {
-            lines.append("Lokasi: \(trimmedCity)")
+            lines.append(L10n.Vendor.requestMsgLocation(trimmedCity))
         }
         if !trimmedBudget.isEmpty {
-            lines.append("Budget: \(trimmedBudget)")
+            lines.append(L10n.Vendor.requestMsgBudget(trimmedBudget))
         }
         if !trimmedNotes.isEmpty {
-            lines.append("Detail: \(trimmedNotes)")
+            lines.append(L10n.Vendor.requestMsgDetail(trimmedNotes))
         }
 
         return lines.joined(separator: "\n")
@@ -809,18 +889,18 @@ private struct VendorFilterSheet: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Filter Vendor")
+            .navigationTitle(L10n.Vendor.filterTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") { dismiss() }
+                    Button(L10n.Common.cancel) { dismiss() }
                         .foregroundStyle(AppTheme.ink.opacity(0.7))
                 }
             }
             .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 12) {
                     Button(action: onReset) {
-                        Text("Reset")
+                        Text(L10n.Common.reset)
                             .font(AppFont.medium(15))
                             .foregroundStyle(AppTheme.ink.opacity(0.7))
                             .frame(maxWidth: .infinity)
@@ -832,7 +912,7 @@ private struct VendorFilterSheet: View {
                     Button {
                         onApply(filter)
                     } label: {
-                        Text("Terapkan")
+                        Text(L10n.Common.apply)
                             .font(AppFont.medium(15))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -874,18 +954,18 @@ private struct VendorFilterSheet: View {
     }
 
     private var categorySection: some View {
-        filterSection("Kategori") {
+        filterSection(L10n.Common.category) {
             if let categoriesError, categories.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(categoriesError)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.5))
-                    Button("Muat Ulang Kategori", action: onReloadCategories)
+                    Button(L10n.Vendor.reloadCategories, action: onReloadCategories)
                         .font(AppFont.medium(12))
                         .foregroundStyle(AppTheme.sageDark)
                 }
             } else if displayCategories.isEmpty {
-                Text("Belum ada kategori vendor.")
+                Text(L10n.Vendor.noCategories)
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
             } else {
@@ -923,9 +1003,9 @@ private struct VendorFilterSheet: View {
     }
 
     private var provinceSection: some View {
-        filterSection("Provinsi") {
+        filterSection(L10n.Vendor.province) {
             if catalog.provinces.isEmpty {
-                Text("Belum ada data provinsi dari vendor.")
+                Text(L10n.Vendor.noProvinces)
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
             } else {
@@ -942,9 +1022,9 @@ private struct VendorFilterSheet: View {
     }
 
     private var citySection: some View {
-        filterSection("Kota / Kabupaten") {
+        filterSection(L10n.Vendor.citySection) {
             if cityOptions.count <= 1 {
-                Text("Tidak ada kota untuk provinsi ini.")
+                Text(L10n.Vendor.noCities)
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
             } else {
@@ -991,13 +1071,13 @@ private struct VendorFilterSheet: View {
     private var toggleSection: some View {
         VStack(spacing: 12) {
             toggleRow(
-                title: "Hanya Vendor Terverifikasi",
-                subtitle: "Tampilkan vendor dengan badge verifikasi",
+                title: L10n.Vendor.filterVerifiedTitle,
+                subtitle: L10n.Vendor.filterVerifiedSub,
                 isOn: $filter.verifiedOnly
             )
             toggleRow(
-                title: "Hanya Vendor Tersimpan",
-                subtitle: "Tampilkan vendor yang sudah Anda simpan",
+                title: L10n.Vendor.filterSavedTitle,
+                subtitle: L10n.Vendor.filterSavedSub,
                 isOn: $filter.savedOnly
             )
         }
@@ -1021,11 +1101,7 @@ private struct VendorFilterSheet: View {
                 .tint(AppTheme.sageDark)
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private func filterSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -1037,11 +1113,7 @@ private struct VendorFilterSheet: View {
             content()
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                }
+                .premiumGlassCard(cornerRadius: 16)
         }
     }
 }
@@ -1058,23 +1130,28 @@ private struct VendorCategoryChip: View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: iconName)
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(isSelected ? AppTheme.sageDark : AppTheme.ink.opacity(0.55))
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(isSelected ? .white : AppTheme.iconOnChip)
                     .frame(width: 54, height: 54)
-                    .background(
-                        isSelected ? AppTheme.mist : AppTheme.surface,
-                        in: Circle()
-                    )
+                    .background {
+                        Circle()
+                            .fill(isSelected ? AppTheme.brandGradientEnd : AppTheme.iconChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
                     .overlay {
                         Circle()
-                            .stroke(AppTheme.sage.opacity(isSelected ? 0 : 0.10), lineWidth: 1)
+                            .stroke(
+                                isSelected ? Color.white.opacity(0.22) : AppTheme.iconChipStroke,
+                                lineWidth: 1
+                            )
                     }
+                    .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 8, y: 3)
 
                 Text(label)
                     .font(AppFont.regular(11))
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(isSelected ? AppTheme.sageDark : AppTheme.ink.opacity(0.55))
+                    .foregroundStyle(isSelected ? AppTheme.titleOnGlass : AppTheme.inkMuted(0.55))
             }
             .frame(width: 72)
         }
@@ -1097,23 +1174,23 @@ private struct VendorCard: View {
                 HStack(spacing: 4) {
                     Text(vendor.name)
                         .font(AppFont.semibold(14))
-                        .foregroundStyle(AppTheme.ink)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                         .lineLimit(1)
 
                     if vendor.isVerified {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 12))
-                            .foregroundStyle(AppTheme.sageDark)
+                            .foregroundStyle(AppTheme.sageMuted(0.95))
                     }
                 }
 
                 Text(vendor.categoryLabel)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.5))
 
                 Label(vendor.city, systemImage: "mappin")
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.5))
                     .labelStyle(.titleAndIcon)
 
                 if let rating = vendor.rating, let reviewCount = vendor.reviewCount {
@@ -1123,23 +1200,23 @@ private struct VendorCard: View {
                             .foregroundStyle(AppTheme.gold)
                         Text(String(format: "%.1f", rating))
                             .font(AppFont.medium(11))
-                            .foregroundStyle(AppTheme.ink)
-                        Text("(\(reviewCount) review)")
+                            .foregroundStyle(AppTheme.titleOnGlass)
+                        Text(L10n.Vendor.reviewCount(reviewCount))
                             .font(AppFont.regular(11))
-                            .foregroundStyle(AppTheme.ink.opacity(0.45))
+                            .foregroundStyle(AppTheme.inkMuted(0.45))
                     }
                 } else if vendor.packagesCount > 0 {
                     HStack(spacing: 4) {
                         Image(systemName: "gift.fill")
                             .font(.system(size: 11))
-                            .foregroundStyle(AppTheme.sageDark)
-                        Text("\(vendor.packagesCount) paket")
+                            .foregroundStyle(AppTheme.iconOnChip)
+                        Text(L10n.Vendor.packageCount(vendor.packagesCount))
                             .font(AppFont.medium(11))
-                            .foregroundStyle(AppTheme.ink)
+                            .foregroundStyle(AppTheme.titleOnGlass)
                         if let startingPrice = vendor.startingPrice {
-                            Text("· dari \(CurrencyFormatter.rupiahShort(startingPrice))")
+                            Text(L10n.Vendor.fromPrice(CurrencyFormatter.rupiahShort(startingPrice)))
                                 .font(AppFont.regular(11))
-                                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                                .foregroundStyle(AppTheme.inkMuted(0.45))
                         }
                     }
                 }
@@ -1149,47 +1226,111 @@ private struct VendorCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             ZStack(alignment: .topTrailing) {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [vendor.thumbnailTint.opacity(0.35), vendor.thumbnailTint.opacity(0.15)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 88, height: 88)
-                    .overlay {
-                        Image(systemName: vendor.thumbnailSymbol)
-                            .font(.system(size: 28, weight: .light))
-                            .foregroundStyle(vendor.thumbnailTint.opacity(0.8))
-                    }
+                vendorThumbnail
 
                 Button(action: onToggleSave) {
                     Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(isSaved ? AppTheme.sageDark : AppTheme.ink.opacity(0.45))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(isSaved ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
                         .frame(width: 26, height: 26)
-                        .background(.white.opacity(0.92), in: Circle())
+                        .background {
+                            Circle()
+                                .fill(isSaved ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                        .overlay {
+                            Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                        }
                 }
                 .buttonStyle(.borderless)
                 .offset(x: 4, y: -4)
             }
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.07), radius: 14, y: 7)
+        .premiumGlassCard(cornerRadius: 22)
     }
 
     private var vendorLogo: some View {
+        ZStack {
+            Circle()
+                .fill(vendor.logoTint)
+
+            if let url = remoteImageURL(vendor.logoUrl ?? vendor.coverImageUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    default:
+                        logoPlaceholderIcon
+                    }
+                }
+                .frame(width: 48, height: 48)
+                .clipShape(Circle())
+            } else {
+                logoPlaceholderIcon
+            }
+        }
+        .frame(width: 48, height: 48)
+    }
+
+    private var logoPlaceholderIcon: some View {
         Image(systemName: vendor.logoSymbol)
             .font(.system(size: 20, weight: .medium))
             .foregroundStyle(.white)
-            .frame(width: 48, height: 48)
-            .background(vendor.logoTint, in: Circle())
+    }
+
+    private var vendorThumbnail: some View {
+        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
+
+        return ZStack {
+            shape
+                .fill(
+                    LinearGradient(
+                        colors: [vendor.thumbnailTint.opacity(0.35), vendor.thumbnailTint.opacity(0.15)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            if let url = remoteImageURL(vendor.coverImageUrl ?? vendor.logoUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    case .failure:
+                        thumbnailPlaceholderIcon
+                    case .empty:
+                        thumbnailPlaceholderIcon
+                            .overlay { ProgressView().tint(vendor.thumbnailTint) }
+                    @unknown default:
+                        thumbnailPlaceholderIcon
+                    }
+                }
+                .frame(width: 88, height: 88)
+                .clipped()
+            } else {
+                thumbnailPlaceholderIcon
+            }
+        }
+        .frame(width: 88, height: 88)
+        .clipShape(shape)
+    }
+
+    private var thumbnailPlaceholderIcon: some View {
+        Image(systemName: vendor.thumbnailSymbol)
+            .font(.system(size: 28, weight: .light))
+            .foregroundStyle(AppTheme.inkMuted(0.55))
+    }
+
+    private func remoteImageURL(_ raw: String?) -> URL? {
+        guard let raw = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
+            return nil
+        }
+        return URL(string: raw)
     }
 }
 
@@ -1203,10 +1344,10 @@ private struct FlowTagRow: View {
             ForEach(tags.prefix(3), id: \.self) { tag in
                 Text(tag)
                     .font(AppFont.regular(10))
-                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+                    .foregroundStyle(AppTheme.inkMuted(0.65))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(AppTheme.mist, in: Capsule())
+                    .background(AppTheme.chipIdleFill, in: Capsule())
                     .lineLimit(1)
             }
         }

@@ -10,10 +10,10 @@ enum MessageCategory: String, CaseIterable, Identifiable, Hashable, Decodable {
 
     var label: String {
         switch self {
-        case .all: return "Semua"
-        case .vendor: return "Vendor"
-        case .committee: return "Panitia"
-        case .support: return "Support"
+        case .all: return L10n.Common.all
+        case .vendor: return L10n.Messages.categoryVendor
+        case .committee: return L10n.Messages.categoryCommittee
+        case .support: return L10n.Messages.categorySupport
         }
     }
 
@@ -61,11 +61,11 @@ enum SupportMessageTopic: String, CaseIterable, Identifiable, Hashable {
 
     var label: String {
         switch self {
-        case .account: return "Akun & Login"
-        case .budget: return "Budget & Pembayaran"
-        case .checklist: return "Checklist & Persiapan"
-        case .guests: return "Tamu & Undangan"
-        case .other: return "Lainnya"
+        case .account: return L10n.Messages.topicAccount
+        case .budget: return L10n.Messages.topicBudget
+        case .checklist: return L10n.Messages.topicChecklist
+        case .guests: return L10n.Messages.topicGuests
+        case .other: return L10n.Messages.topicOther
         }
     }
 }
@@ -124,7 +124,7 @@ struct ChatMessageItem: Identifiable, Hashable, Decodable {
     }
 
     var timeLabel: String {
-        guard let createdAt else { return "Baru" }
+        guard let createdAt else { return L10n.Messages.justNow }
         return DateFormatter.messageThreadTime.string(from: createdAt)
     }
 }
@@ -138,7 +138,7 @@ enum MessageTimeFormatter {
         }
 
         if calendar.isDateInYesterday(date) {
-            return "Kemarin"
+            return L10n.Messages.yesterday
         }
 
         return DateFormatter.messageThreadDate.string(from: date)

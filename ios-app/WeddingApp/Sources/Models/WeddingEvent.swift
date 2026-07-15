@@ -9,16 +9,17 @@ struct WeddingEvent: Codable, Identifiable {
     var waktuMulai: String?
     var jamSelesai: String?
     var lokasiAcara: String?
+    var estimasiTamu: Int?
     var catatan: String?
 
     static let jenisOptions = ["lamaran", "pengajian", "akad", "resepsi"]
 
     static func label(for jenis: String) -> String {
         switch jenis.lowercased() {
-        case "lamaran": return "Lamaran"
-        case "pengajian": return "Pengajian"
-        case "akad": return "Akad Nikah"
-        case "resepsi": return "Resepsi"
+        case "lamaran": return L10n.Events.lamaran
+        case "pengajian": return L10n.Events.pengajian
+        case "akad": return L10n.Events.akad
+        case "resepsi": return L10n.Events.resepsi
         default: return jenis.capitalized
         }
     }
@@ -65,11 +66,11 @@ enum WeddingEventTime {
         let end = displayTime(jamSelesai)
 
         if !start.isEmpty, !end.isEmpty {
-            return "\(start) – \(end) WIB"
+            return L10n.Events.timeRangeWib(start, end)
         }
 
         if !start.isEmpty {
-            return "\(start) WIB"
+            return L10n.Events.timeWib(start)
         }
 
         return defaultTimeRange(for: jenisAcara)
@@ -77,10 +78,10 @@ enum WeddingEventTime {
 
     static func defaultTimeRange(for jenisAcara: String) -> String {
         switch jenisAcara.lowercased() {
-        case "akad": return "10.00 – 11.00 WIB"
-        case "resepsi": return "11.30 – 15.00 WIB"
-        case "lamaran": return "14.00 – 16.00 WIB"
-        case "pengajian": return "09.00 – 11.00 WIB"
+        case "akad": return L10n.Events.defaultTimeAkad
+        case "resepsi": return L10n.Events.defaultTimeResepsi
+        case "lamaran": return L10n.Events.defaultTimeLamaran
+        case "pengajian": return L10n.Events.defaultTimePengajian
         default: return L10n.WeddingDetail.timeNotSet
         }
     }

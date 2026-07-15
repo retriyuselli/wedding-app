@@ -3,7 +3,7 @@ import Foundation
 /// Feature flag bahasa — nonisolated agar bisa diakses dari enum dan view tanpa MainActor.
 enum LanguageFeature {
     /// Ubah ke `true` saat fitur Bahasa siap dirilis ke user.
-    static let isSelectionEnabled = false
+    static let isSelectionEnabled = true
 }
 
 enum AppLanguage: String, CaseIterable, Identifiable {

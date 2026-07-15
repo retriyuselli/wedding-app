@@ -91,6 +91,14 @@ enum L10n {
         static var appleTokenMissing: String { "auth.apple_token_missing".localized }
         static var appleCancelled: String { "auth.apple_cancelled".localized }
         static var appleFailed: String { "auth.apple_failed".localized }
+        static var brandWedding: String { "auth.brand_wedding".localized }
+        static var brandApp: String { "auth.brand_app".localized }
+        static var twoFactorTitle: String { "auth.two_factor_title".localized }
+        static var twoFactorMessage: String { "auth.two_factor_message".localized }
+        static var twoFactorCodePlaceholder: String { "auth.two_factor_code_placeholder".localized }
+        static var twoFactorVerifying: String { "auth.two_factor_verifying".localized }
+        static var twoFactorVerify: String { "auth.two_factor_verify".localized }
+
     }
 
     enum More {
@@ -127,6 +135,14 @@ enum L10n {
         static var logoutMessage: String { "more.logout_message".localized }
         static var dateNotSet: String { "more.date_not_set".localized }
         static var locationNotSet: String { "more.location_not_set".localized }
+        static var emailNotSet: String { "more.email_not_set".localized }
+        static var joinedToday: String { "more.joined_today".localized }
+        static func joinedDays(_ count: Int) -> String { "more.joined_days".localized(count) }
+        static func joinedMonths(_ count: Int) -> String { "more.joined_months".localized(count) }
+        static func joinedYears(_ count: Int) -> String { "more.joined_years".localized(count) }
+        static func joinedYearsMonths(_ years: Int, _ months: Int) -> String {
+            "more.joined_years_months".localized(years, months)
+        }
     }
 
     enum Reminders {
@@ -142,6 +158,14 @@ enum L10n {
         static var pushToggleSub: String { "reminders.push_toggle_sub".localized }
         static var openSettings: String { "reminders.open_settings".localized }
         static var info: String { "reminders.info".localized }
+        static var testButton: String { "reminders.test_button".localized }
+        static var testTitle: String { "reminders.test_title".localized }
+        static var testBodyLocal: String { "reminders.test_body_local".localized }
+        static var testNeedsPermission: String { "reminders.test_needs_permission".localized }
+        static var testDenied: String { "reminders.test_denied".localized }
+        static var testFailed: String { "reminders.test_failed".localized }
+        static var testLocalOnly: String { "reminders.test_local_only".localized }
+        static func testRemoteSent(_ count: Int) -> String { "reminders.test_remote_sent".localized(count) }
     }
 
     enum Language {
@@ -192,6 +216,18 @@ enum L10n {
         static var textSizePreview: String { "settings.text_size_preview".localized }
         static var textSizePreviewSample: String { "settings.text_size_preview_sample".localized }
         static var textSizeInfo: String { "settings.text_size_info".localized }
+        static var countdown: String { "settings.countdown".localized }
+        static var countdownChooserSub: String { "settings.countdown_chooser_sub".localized }
+        static var countdownFontStencil: String { "settings.countdown_font_stencil".localized }
+        static var countdownFontStencilSub: String { "settings.countdown_font_stencil_sub".localized }
+        static var countdownFontPoppins: String { "settings.countdown_font_poppins".localized }
+        static var countdownFontPoppinsSub: String { "settings.countdown_font_poppins_sub".localized }
+        static var countdownFontRounded: String { "settings.countdown_font_rounded".localized }
+        static var countdownFontRoundedSub: String { "settings.countdown_font_rounded_sub".localized }
+        static var countdownFontSerif: String { "settings.countdown_font_serif".localized }
+        static var countdownFontSerifSub: String { "settings.countdown_font_serif_sub".localized }
+        static var countdownPreview: String { "settings.countdown_preview".localized }
+        static var countdownInfo: String { "settings.countdown_info".localized }
         static var editProfile: String { "settings.edit_profile".localized }
         static var editProfileSub: String { "settings.edit_profile_sub".localized }
         static var privacySecurity: String { "settings.privacy_security".localized }
@@ -203,6 +239,15 @@ enum L10n {
         static var welcome: String { "dashboard.welcome".localized }
         static var planTogether: String { "dashboard.plan_together".localized }
         static var daysToGo: String { "dashboard.days_to_go".localized }
+        static var countdownTitle: String { "dashboard.countdown_title".localized }
+        static var countdownLabel: String { "dashboard.countdown_label".localized }
+        static var countdownBigDay: String { "dashboard.countdown_big_day".localized }
+        static var countdownEncourage: String { "dashboard.countdown_encourage".localized }
+        static func countdownProgress(_ percent: Int) -> String { "dashboard.countdown_progress".localized(percent) }
+        static var countdownDays: String { "dashboard.countdown_days".localized }
+        static var countdownHours: String { "dashboard.countdown_hours".localized }
+        static var countdownMinutes: String { "dashboard.countdown_minutes".localized }
+        static var countdownSeconds: String { "dashboard.countdown_seconds".localized }
         static var weddingProgress: String { "dashboard.wedding_progress".localized }
         static var nextUp: String { "dashboard.next_up".localized }
         static var completed: String { "dashboard.completed".localized }
@@ -226,6 +271,15 @@ enum L10n {
         static var vendors: String { "dashboard.vendors".localized }
         static var inspiration: String { "dashboard.inspiration".localized }
         static var messages: String { "dashboard.messages".localized }
+        static var defaultCouple: String { "dashboard.default_couple".localized }
+        static var defaultVenue: String { "dashboard.default_venue".localized }
+        static var setDate: String { "dashboard.set_date".localized }
+        static var upcoming: String { "dashboard.upcoming".localized }
+        static var today: String { "dashboard.today".localized }
+        static func inDays(_ count: Int) -> String { "dashboard.in_days".localized(count) }
+        static var sampleVenueMeeting: String { "dashboard.sample_venue_meeting".localized }
+        static var sampleTasting: String { "dashboard.sample_tasting".localized }
+        static var sampleFitting: String { "dashboard.sample_fitting".localized }
     }
 
     enum Guest {
@@ -338,6 +392,51 @@ enum L10n {
         }
         static var emptyTitle: String { "checklist.empty_title".localized }
         static var emptySub: String { "checklist.empty_sub".localized }
+        static var addTask: String { "checklist.add_task".localized }
+        static var addTaskTitle: String { "checklist.add_task_title".localized }
+        static var addTaskSubtitle: String { "checklist.add_task_subtitle".localized }
+        static var taskTitle: String { "checklist.task_title".localized }
+        static var taskTitlePlaceholder: String { "checklist.task_title_placeholder".localized }
+        static var taskEvent: String { "checklist.task_event".localized }
+        static var taskEventPlaceholder: String { "checklist.task_event_placeholder".localized }
+        static var taskPriority: String { "checklist.task_priority".localized }
+        static var taskDueDate: String { "checklist.task_due_date".localized }
+        static var taskDescription: String { "checklist.task_description".localized }
+        static var taskDescriptionPlaceholder: String { "checklist.task_description_placeholder".localized }
+        static var taskSave: String { "checklist.task_save".localized }
+        static var taskCreateError: String { "checklist.task_create_error".localized }
+        static var taskSubTasks: String { "checklist.task_sub_tasks".localized }
+        static var taskSubTasksHint: String { "checklist.task_sub_tasks_hint".localized }
+        static var taskSubTaskPlaceholder: String { "checklist.task_sub_task_placeholder".localized }
+        static var taskAddSubTask: String { "checklist.task_add_sub_task".localized }
+        static var noEvents: String { "checklist.no_events".localized }
+        static var fallbackSection: String { "checklist.fallback_section".localized }
+        static var showLess: String { "checklist.show_less".localized }
+        static func showAll(_ count: Int) -> String { "checklist.show_all".localized(count) }
+        static var otherGroup: String { "checklist.other_group".localized }
+        static func doneOn(_ date: String) -> String { "checklist.done_on".localized(date) }
+        static var detailTitle: String { "checklist.detail_title".localized }
+        static var detailSubtitle: String { "checklist.detail_subtitle".localized }
+        static var detailCategory: String { "checklist.detail_category".localized }
+        static var detailPriority: String { "checklist.detail_priority".localized }
+        static var detailCreated: String { "checklist.detail_created".localized }
+        static var detailDue: String { "checklist.detail_due".localized }
+        static var attachments: String { "checklist.attachments".localized }
+        static var markDone: String { "checklist.mark_done".localized }
+        static var markUndone: String { "checklist.mark_undone".localized }
+        static var statusPending: String { "checklist.status_pending".localized }
+        static var statusInProgress: String { "checklist.status_in_progress".localized }
+        static var statusDone: String { "checklist.status_done".localized }
+        static func statusDoneOn(_ date: String) -> String { "checklist.status_done_on".localized(date) }
+        static var editTitle: String { "checklist.edit_title".localized }
+        static var taskSaveError: String { "checklist.task_save_error".localized }
+        static func uploadedMeta(_ size: String, _ date: String) -> String {
+            "checklist.uploaded_meta".localized(size, date)
+        }
+        static var priorityHigh: String { "checklist.priority_high".localized }
+        static var priorityMedium: String { "checklist.priority_medium".localized }
+        static var priorityLow: String { "checklist.priority_low".localized }
+
     }
 
     enum Budget {
@@ -541,6 +640,73 @@ enum L10n {
         static func found(_ count: Int) -> String { "vendor.found".localized(count) }
         static var notFound: String { "vendor.not_found".localized }
         static var notFoundSub: String { "vendor.not_found_sub".localized }
+        static var partnerNoticeTitle: String { "vendor.partner_notice_title".localized }
+        static var partnerNoticeBody: String { "vendor.partner_notice_body".localized }
+        static var partnerNoticeCTA: String { "vendor.partner_notice_cta".localized }
+        static var partnerFootnote: String { "vendor.partner_footnote".localized }
+        static var filterVerifiedChip: String { "vendor.filter_verified_chip".localized }
+        static var filterSavedChip: String { "vendor.filter_saved_chip".localized }
+        static var loadingCategories: String { "vendor.loading_categories".localized }
+        static var resultsFiltered: String { "vendor.results_filtered".localized }
+        static var allVendors: String { "vendor.all_vendors".localized }
+        static var requestCtaTitle: String { "vendor.request_cta_title".localized }
+        static var requestCtaSub: String { "vendor.request_cta_sub".localized }
+        static var sendRequest: String { "vendor.send_request".localized }
+        static var sendRequestShort: String { "vendor.send_request_short".localized }
+        static var requestFormHint: String { "vendor.request_form_hint".localized }
+        static var requestCategoryTitle: String { "vendor.request_category_title".localized }
+        static var requestCategoryPlaceholder: String { "vendor.request_category_placeholder".localized }
+        static var requestCityTitle: String { "vendor.request_city_title".localized }
+        static var requestCityPlaceholder: String { "vendor.request_city_placeholder".localized }
+        static var requestBudgetTitle: String { "vendor.request_budget_title".localized }
+        static var requestBudgetPlaceholder: String { "vendor.request_budget_placeholder".localized }
+        static var requestSentTitle: String { "vendor.request_sent_title".localized }
+        static var requestSentMessage: String { "vendor.request_sent_message".localized }
+        static var requestNotesTitle: String { "vendor.request_notes_title".localized }
+        static var requestNotesPlaceholder: String { "vendor.request_notes_placeholder".localized }
+        static func requestMsgCategory(_ value: String) -> String { "vendor.request_msg_category".localized(value) }
+        static func requestMsgLocation(_ value: String) -> String { "vendor.request_msg_location".localized(value) }
+        static func requestMsgBudget(_ value: String) -> String { "vendor.request_msg_budget".localized(value) }
+        static func requestMsgDetail(_ value: String) -> String { "vendor.request_msg_detail".localized(value) }
+        static var requestMsgHeader: String { "vendor.request_msg_header".localized }
+        static var filterTitle: String { "vendor.filter_title".localized }
+        static var reloadCategories: String { "vendor.reload_categories".localized }
+        static var noCategories: String { "vendor.no_categories".localized }
+        static var province: String { "vendor.province".localized }
+        static var noProvinces: String { "vendor.no_provinces".localized }
+        static var citySection: String { "vendor.city_section".localized }
+        static var noCities: String { "vendor.no_cities".localized }
+        static var filterVerifiedTitle: String { "vendor.filter_verified_title".localized }
+        static var filterVerifiedSub: String { "vendor.filter_verified_sub".localized }
+        static var filterSavedTitle: String { "vendor.filter_saved_title".localized }
+        static var filterSavedSub: String { "vendor.filter_saved_sub".localized }
+        static func reviewCount(_ count: Int) -> String { "vendor.review_count".localized(count) }
+        static func packageCount(_ count: Int) -> String { "vendor.package_count".localized(count) }
+        static func packageCountTitle(_ count: Int) -> String { "vendor.package_count_title".localized(count) }
+        static func fromPrice(_ price: String) -> String { "vendor.from_price".localized(price) }
+        static func fromPriceTitle(_ price: String) -> String { "vendor.from_price_title".localized(price) }
+        static var featured: String { "vendor.featured".localized }
+        static var about: String { "vendor.about".localized }
+        static var contact: String { "vendor.contact".localized }
+        static var packages: String { "vendor.packages".localized }
+        static var showLess: String { "vendor.show_less".localized }
+        static var showMore: String { "vendor.show_more".localized }
+        static var noPackages: String { "vendor.no_packages".localized }
+        static func morePackages(_ count: Int) -> String { "vendor.more_packages".localized(count) }
+        static var notFoundDetail: String { "vendor.not_found_detail".localized }
+        static var invalid: String { "vendor.invalid".localized }
+        static func paxRange(_ min: Int, _ max: Int) -> String { "vendor.pax_range".localized(min, max) }
+        static func paxMax(_ max: Int) -> String { "vendor.pax_max".localized(max) }
+        static func hours(_ count: Int) -> String { "vendor.hours".localized(count) }
+        static var exclusions: String { "vendor.exclusions".localized }
+        static var facilities: String { "vendor.facilities".localized }
+        static var sortPopular: String { "vendor.sort_popular".localized }
+        static var sortNewest: String { "vendor.sort_newest".localized }
+        static var allProvinces: String { "vendor.all_provinces".localized }
+        static var allCities: String { "vendor.all_cities".localized }
+        static var savedEmptyTitle: String { "vendor.saved_empty_title".localized }
+        static var savedEmptyMessage: String { "vendor.saved_empty_message".localized }
+
     }
 
     enum Inspiration {
@@ -556,6 +722,26 @@ enum L10n {
         static func views(_ count: String) -> String { "inspiration.views".localized(count) }
         static var saveInspiration: String { "inspiration.save_inspiration".localized }
         static var savedLabel: String { "inspiration.saved_label".localized }
+        static func likesChip(_ count: Int) -> String { "inspiration.likes_chip".localized(count) }
+        static var emptySavedTitle: String { "inspiration.empty_saved_title".localized }
+        static var emptySavedSub: String { "inspiration.empty_saved_sub".localized }
+        static var emptySearchTitle: String { "inspiration.empty_search_title".localized }
+        static var emptySearchSub: String { "inspiration.empty_search_sub".localized }
+        static var filterTitle: String { "inspiration.filter_title".localized }
+        static var likesSection: String { "inspiration.likes_section".localized }
+        static var filterSavedOnly: String { "inspiration.filter_saved_only".localized }
+        static var filterSavedOnlySub: String { "inspiration.filter_saved_only_sub".localized }
+        static var seeAllSub: String { "inspiration.see_all_sub".localized }
+        static func categoryCount(_ count: Int) -> String { "inspiration.category_count".localized(count) }
+        static var allInspirations: String { "inspiration.all_inspirations".localized }
+        static var categoryEmptyTitle: String { "inspiration.category_empty_title".localized }
+        static var categoryEmptyMessage: String { "inspiration.category_empty_message".localized }
+        static var savedEmptyTitle: String { "inspiration.saved_empty_title".localized }
+        static var savedEmptyMessage: String { "inspiration.saved_empty_message".localized }
+        static var likesAll: String { "inspiration.likes_all".localized }
+        static var likes200: String { "inspiration.likes_200".localized }
+        static var likes500: String { "inspiration.likes_500".localized }
+
     }
 
     enum Documents {
@@ -574,6 +760,33 @@ enum L10n {
         static var securityNote: String { "documents.security_note".localized }
         static var empty: String { "documents.empty".localized }
         static var emptySub: String { "documents.empty_sub".localized }
+        static var categoryAkad: String { "documents.category_akad".localized }
+        static var categoryResepsi: String { "documents.category_resepsi".localized }
+        static var categoryVendor: String { "documents.category_vendor".localized }
+        static var categoryFinance: String { "documents.category_finance".localized }
+        static var sortNewest: String { "documents.sort_newest".localized }
+        static var sortOldest: String { "documents.sort_oldest".localized }
+        static var sortNameAsc: String { "documents.sort_name_asc".localized }
+        static var sortNameDesc: String { "documents.sort_name_desc".localized }
+        static var readyToOpen: String { "documents.ready_to_open".localized }
+        static var openShare: String { "documents.open_share".localized }
+        static var downloading: String { "documents.downloading".localized }
+        static var openDownload: String { "documents.open_download".localized }
+        static var newFolderAlertTitle: String { "documents.new_folder_alert_title".localized }
+        static var folderNamePlaceholder: String { "documents.folder_name_placeholder".localized }
+        static var newFolderMessage: String { "documents.new_folder_message".localized }
+        static var allFolders: String { "documents.all_folders".localized }
+        static var emptyFiltered: String { "documents.empty_filtered".localized }
+        static var emptyFilteredSub: String { "documents.empty_filtered_sub".localized }
+        static var folderSection: String { "documents.folder_section".localized }
+        static var unknownDate: String { "documents.unknown_date".localized }
+        static var folderNameEmpty: String { "documents.folder_name_empty".localized }
+        static var folderCreatedTitle: String { "documents.folder_created_title".localized }
+        static func folderCreatedMessage(_ name: String) -> String { "documents.folder_created_message".localized(name) }
+        static var uploadSuccessTitle: String { "documents.upload_success_title".localized }
+        static var uploadSuccessMessage: String { "documents.upload_success_message".localized }
+        static var linkUnavailable: String { "documents.link_unavailable".localized }
+
     }
 
     enum Messages {
@@ -585,6 +798,24 @@ enum L10n {
         static var notFoundSub: String { "messages.not_found_sub".localized }
         static var totalChat: String { "messages.total_chat".localized }
         static var unread: String { "messages.unread".localized }
+        static var unreadBanner: String { "messages.unread_banner".localized }
+        static var searchResults: String { "messages.search_results".localized }
+        static var conversations: String { "messages.conversations".localized }
+        static func chatCount(_ count: Int) -> String { "messages.chat_count".localized(count) }
+        static var noMessage: String { "messages.no_message".localized }
+        static var online: String { "messages.online".localized }
+        static var offline: String { "messages.offline".localized }
+        static var categoryVendor: String { "messages.category_vendor".localized }
+        static var categoryCommittee: String { "messages.category_committee".localized }
+        static var categorySupport: String { "messages.category_support".localized }
+        static var topicAccount: String { "messages.topic_account".localized }
+        static var topicBudget: String { "messages.topic_budget".localized }
+        static var topicChecklist: String { "messages.topic_checklist".localized }
+        static var topicGuests: String { "messages.topic_guests".localized }
+        static var topicOther: String { "messages.topic_other".localized }
+        static var justNow: String { "messages.just_now".localized }
+        static var yesterday: String { "messages.yesterday".localized }
+
     }
 
     enum Privacy {
@@ -621,6 +852,10 @@ enum L10n {
         static var twoFactorInactive: String { "privacy.two_factor_inactive".localized }
         static var commitment: String { "privacy.commitment".localized }
         static var helpCenterSub: String { "privacy.help_center_sub".localized }
+        static func securityScore(_ percent: Int) -> String { "privacy.security_score".localized(percent) }
+        static var openIosSettings: String { "privacy.open_ios_settings".localized }
+        static var exportBlurb: String { "privacy.export_blurb".localized }
+
     }
 
     enum ChangePassword {
@@ -707,6 +942,72 @@ enum L10n {
         static var save: String { "couple.save".localized }
     }
 
+    enum Onboarding {
+        static func stepLabel(_ current: Int, _ total: Int) -> String {
+            "onboarding.step_label".localized(current, total)
+        }
+        static var next: String { "onboarding.next".localized }
+        static var back: String { "onboarding.back".localized }
+        static var finish: String { "onboarding.finish".localized }
+
+        static var namesEyebrow: String { "onboarding.names_eyebrow".localized }
+        static var namesTitle: String { "onboarding.names_title".localized }
+        static var namesSubtitle: String { "onboarding.names_subtitle".localized }
+        static var brideLabel: String { "onboarding.bride_label".localized }
+        static var groomLabel: String { "onboarding.groom_label".localized }
+        static var bridePlaceholder: String { "onboarding.bride_placeholder".localized }
+        static var groomPlaceholder: String { "onboarding.groom_placeholder".localized }
+
+        static var eventsEyebrow: String { "onboarding.events_eyebrow".localized }
+        static var eventsTitle: String { "onboarding.events_title".localized }
+        static var eventsSubtitle: String { "onboarding.events_subtitle".localized }
+        static var eventsHint: String { "onboarding.events_hint".localized }
+        static var eventLamaran: String { "onboarding.event_lamaran".localized }
+        static var eventPengajian: String { "onboarding.event_pengajian".localized }
+        static var eventAkad: String { "onboarding.event_akad".localized }
+        static var eventResepsi: String { "onboarding.event_resepsi".localized }
+
+        static var dateEyebrow: String { "onboarding.date_eyebrow".localized }
+        static var dateTitle: String { "onboarding.date_title".localized }
+        static var dateSubtitle: String { "onboarding.date_subtitle".localized }
+        static var dateForEvent: String { "onboarding.date_for_event".localized }
+        static var locationForEvent: String { "onboarding.location_for_event".localized }
+
+        static var locationEyebrow: String { "onboarding.location_eyebrow".localized }
+        static var locationTitle: String { "onboarding.location_title".localized }
+        static var locationSubtitle: String { "onboarding.location_subtitle".localized }
+        static var locationLabel: String { "onboarding.location_label".localized }
+        static var locationPlaceholder: String { "onboarding.location_placeholder".localized }
+
+        static var cultureEyebrow: String { "onboarding.culture_eyebrow".localized }
+        static var cultureTitle: String { "onboarding.culture_title".localized }
+        static var cultureSubtitle: String { "onboarding.culture_subtitle".localized }
+
+        static var cultureJawa: String { "onboarding.culture_jawa".localized }
+        static var cultureSunda: String { "onboarding.culture_sunda".localized }
+        static var cultureBatak: String { "onboarding.culture_batak".localized }
+        static var cultureMelayu: String { "onboarding.culture_melayu".localized }
+        static var cultureMinang: String { "onboarding.culture_minang".localized }
+        static var cultureBali: String { "onboarding.culture_bali".localized }
+        static var cultureModern: String { "onboarding.culture_modern".localized }
+        static var cultureOther: String { "onboarding.culture_other".localized }
+        static var cultureOptions: [String] {
+            [cultureJawa, cultureSunda, cultureBatak, cultureMelayu, cultureMinang, cultureBali, cultureModern, cultureOther]
+        }
+
+        static var extrasEyebrow: String { "onboarding.extras_eyebrow".localized }
+        static var extrasTitle: String { "onboarding.extras_title".localized }
+        static var extrasSubtitle: String { "onboarding.extras_subtitle".localized }
+        static var guestsLabel: String { "onboarding.guests_label".localized }
+        static var guestsPlaceholder: String { "onboarding.guests_placeholder".localized }
+        static func guestsForEvent(_ name: String) -> String {
+            "onboarding.guests_for_event".localized(name)
+        }
+        static var budgetLabel: String { "onboarding.budget_label".localized }
+        static var budgetPlaceholder: String { "onboarding.budget_placeholder".localized }
+        static var extrasHint: String { "onboarding.extras_hint".localized }
+    }
+
     enum WeddingDetail {
         static var title: String { "wedding_detail.title".localized }
         static var subtitle: String { "wedding_detail.subtitle".localized }
@@ -725,10 +1026,124 @@ enum L10n {
         static var noEventsSub: String { "wedding_detail.no_events_sub".localized }
         static var attending: String { "wedding_detail.attending".localized }
         static var timeNotSet: String { "wedding_detail.time_not_set".localized }
+        static var estimatedGuests: String { "wedding_detail.estimated_guests".localized }
+        static func estimatedGuestsValue(_ count: String) -> String {
+            "wedding_detail.estimated_guests_value".localized(count)
+        }
+        static var estimatedGuestsNotSet: String { "wedding_detail.estimated_guests_not_set".localized }
         static var defaultLocation: String { "wedding_detail.default_location".localized }
         static var defaultCouple: String { "wedding_detail.default_couple".localized }
         static var defaultDate: String { "wedding_detail.default_date".localized }
         static var defaultDateWeekday: String { "wedding_detail.default_date_weekday".localized }
+    }
+
+
+    enum Events {
+        static var title: String { "events.title".localized }
+        static var addTitle: String { "events.add_title".localized }
+        static var jenis: String { "events.jenis".localized }
+        static var lamaran: String { "events.lamaran".localized }
+        static var pengajian: String { "events.pengajian".localized }
+        static var akad: String { "events.akad".localized }
+        static var resepsi: String { "events.resepsi".localized }
+        static func timeWib(_ time: String) -> String { "events.time_wib".localized(time) }
+        static func timeRangeWib(_ start: String, _ end: String) -> String {
+            "events.time_range_wib".localized(start, end)
+        }
+        static var defaultTimeAkad: String { "events.default_time_akad".localized }
+        static var defaultTimeResepsi: String { "events.default_time_resepsi".localized }
+        static var defaultTimeLamaran: String { "events.default_time_lamaran".localized }
+        static var defaultTimePengajian: String { "events.default_time_pengajian".localized }
+    }
+
+    enum WeddingEdit {
+        static var title: String { "wedding_edit.title".localized }
+        static var subtitle: String { "wedding_edit.subtitle".localized }
+        static var coupleSection: String { "wedding_edit.couple_section".localized }
+        static var brideName: String { "wedding_edit.bride_name".localized }
+        static var groomName: String { "wedding_edit.groom_name".localized }
+        static var happyDay: String { "wedding_edit.happy_day".localized }
+        static var weddingDate: String { "wedding_edit.wedding_date".localized }
+        static var conceptSection: String { "wedding_edit.concept_section".localized }
+        static var conceptPlaceholder: String { "wedding_edit.concept_placeholder".localized }
+        static var notesPlaceholder: String { "wedding_edit.notes_placeholder".localized }
+        static var scheduleSection: String { "wedding_edit.schedule_section".localized }
+        static var addEvent: String { "wedding_edit.add_event".localized }
+        static var noEventsHint: String { "wedding_edit.no_events_hint".localized }
+        static var eventTime: String { "wedding_edit.event_time".localized }
+        static var eventStart: String { "wedding_edit.event_start".localized }
+        static var eventEnd: String { "wedding_edit.event_end".localized }
+        static var eventLocation: String { "wedding_edit.event_location".localized }
+        static var eventLocationPlaceholder: String { "wedding_edit.event_location_placeholder".localized }
+        static var eventNotesPlaceholder: String { "wedding_edit.event_notes_placeholder".localized }
+        static var deleteEvent: String { "wedding_edit.delete_event".localized }
+        static var deleteEventTitle: String { "wedding_edit.delete_event_title".localized }
+        static func deleteEventMessage(_ name: String) -> String {
+            "wedding_edit.delete_event_message".localized(name)
+        }
+        static var saveChanges: String { "wedding_edit.save_changes".localized }
+        static func eventCount(_ count: Int) -> String { "wedding_edit.event_count".localized(count) }
+        static var allTypesAdded: String { "wedding_edit.all_types_added".localized }
+        static var defaultDeleteHint: String { "wedding_edit.default_delete_hint".localized }
+        static var conceptGarden: String { "wedding_edit.concept_garden".localized }
+        static var conceptClassic: String { "wedding_edit.concept_classic".localized }
+        static var conceptModern: String { "wedding_edit.concept_modern".localized }
+        static var conceptTraditional: String { "wedding_edit.concept_traditional".localized }
+        static var conceptRustic: String { "wedding_edit.concept_rustic".localized }
+        static var conceptBeach: String { "wedding_edit.concept_beach".localized }
+        static var conceptOptions: [String] {
+            [conceptGarden, conceptClassic, conceptModern, conceptTraditional, conceptRustic, conceptBeach]
+        }
+    }
+
+    enum About {
+        static func version(_ version: String, _ build: String) -> String {
+            "about.version".localized(version, build)
+        }
+        static var sectionAbout: String { "about.section_about".localized }
+        static var sectionInfo: String { "about.section_info".localized }
+        static var sectionFollow: String { "about.section_follow".localized }
+        static var rowDeveloper: String { "about.row_developer".localized }
+        static var rowWebsite: String { "about.row_website".localized }
+        static var rowEmail: String { "about.row_email".localized }
+        static var rowReviews: String { "about.row_reviews".localized }
+        static var rowPrivacy: String { "about.row_privacy".localized }
+        static var rowTerms: String { "about.row_terms".localized }
+        static var reviewsUnavailableTitle: String { "about.reviews_unavailable_title".localized }
+        static var reviewsUnavailableMessage: String { "about.reviews_unavailable_message".localized }
+        static var rights: String { "about.rights".localized }
+    }
+
+    enum Help {
+        static var searchPlaceholder: String { "help.search_placeholder".localized }
+        static var topics: String { "help.topics".localized }
+        static var popularFaq: String { "help.popular_faq".localized }
+        static func articleCount(_ count: Int) -> String { "help.article_count".localized(count) }
+        static var noResultsTitle: String { "help.no_results_title".localized }
+        static var noResultsSub: String { "help.no_results_sub".localized }
+        static var needHelp: String { "help.need_help".localized }
+        static var contactSupport: String { "help.contact_support".localized }
+        static var contactSupportSub: String { "help.contact_support_sub".localized }
+        static var emailSupport: String { "help.email_support".localized }
+        static var faqQ1: String { "help.faq_q1".localized }
+        static var faqA1: String { "help.faq_a1".localized }
+        static var faqQ2: String { "help.faq_q2".localized }
+        static var faqA2: String { "help.faq_a2".localized }
+        static var faqQ3: String { "help.faq_q3".localized }
+        static var faqA3: String { "help.faq_a3".localized }
+        static var faqQ4: String { "help.faq_q4".localized }
+        static var faqA4: String { "help.faq_a4".localized }
+        static var faqQ5: String { "help.faq_q5".localized }
+        static var faqA5: String { "help.faq_a5".localized }
+        static var faqItems: [(question: String, answer: String)] {
+            [
+                (faqQ1, faqA1),
+                (faqQ2, faqA2),
+                (faqQ3, faqA3),
+                (faqQ4, faqA4),
+                (faqQ5, faqA5),
+            ]
+        }
     }
 
     enum InspirationCategory {

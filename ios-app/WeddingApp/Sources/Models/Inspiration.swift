@@ -108,11 +108,13 @@ struct InspirationFilter: Equatable {
         !categories.isEmpty || minimumLikes != nil || savedOnly
     }
 
-    static let likesOptions: [(label: String, value: Int?)] = [
-        ("Semua", nil),
-        ("200+", 200),
-        ("500+", 500),
-    ]
+    static var likesOptions: [(label: String, value: Int?)] {
+        [
+            (L10n.Inspiration.likesAll, nil),
+            (L10n.Inspiration.likes200, 200),
+            (L10n.Inspiration.likes500, 500),
+        ]
+    }
 
     mutating func reset() {
         self = InspirationFilter()

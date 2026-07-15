@@ -1,10 +1,13 @@
 import SwiftUI
 
 struct AboutWeddingAppView: View {
+    @State private var showReviewUnavailableAlert = false
+    @Environment(\.openURL) private var openURL
+
     private var appVersionLabel: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        return "Versi \(version) (\(build))"
+        return L10n.About.version(version, build)
     }
 
     var body: some View {
@@ -14,8 +17,8 @@ struct AboutWeddingAppView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
                     MoreSubpageNavigationHeader(
-                        title: "About Wedding App",
-                        subtitle: "Kenali lebih dekat tentang aplikasi ini"
+                        title: L10n.More.about,
+                        subtitle: L10n.More.aboutSub
                     )
 
                     heroCard
@@ -35,6 +38,11 @@ struct AboutWeddingAppView: View {
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
+        .alert(L10n.About.reviewsUnavailableTitle, isPresented: $showReviewUnavailableAlert) {
+            Button(L10n.Common.ok, role: .cancel) {}
+        } message: {
+            Text(L10n.About.reviewsUnavailableMessage)
+        }
     }
 
     // MARK: - Hero
@@ -54,7 +62,7 @@ struct AboutWeddingAppView: View {
                         }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Wedding App")
+                        Text(L10n.Auth.appName)
                             .font(AppFont.medium(18))
                             .foregroundStyle(AppTheme.sageDark)
                         Text(appVersionLabel)
@@ -74,11 +82,7 @@ struct AboutWeddingAppView: View {
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 22)
 
             ZStack(alignment: .bottomTrailing) {
                 Image("CouplePortrait")
@@ -103,7 +107,7 @@ struct AboutWeddingAppView: View {
 
     private var aboutSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionTitle("Tentang Aplikasi")
+            sectionTitle(L10n.About.sectionAbout)
 
             VStack(spacing: 0) {
                 ForEach(AboutContent.highlights.indices, id: \.self) { index in
@@ -117,11 +121,7 @@ struct AboutWeddingAppView: View {
                 }
             }
             .padding(.vertical, 4)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
         }
     }
 
@@ -154,25 +154,34 @@ struct AboutWeddingAppView: View {
 
     private var informationSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionTitle("Informasi")
+            sectionTitle(L10n.About.sectionInfo)
 
             VStack(spacing: 0) {
-                infoValueRow(icon: "building.2", title: "Pengembang", value: AboutContent.developerName)
+                infoValueRow(icon: "building.2", title: L10n.About.rowDeveloper, value: AboutContent.developerName)
 
                 Divider().padding(.leading, 58)
 
-                infoLinkRow(icon: "globe", title: "Website", value: AboutContent.website, url: AboutContent.websiteURL)
+                infoLinkRow(icon: "globe", title: L10n.About.rowWebsite, value: AboutContent.website, url: AboutContent.websiteURL)
 
                 Divider().padding(.leading, 58)
 
-                infoMailRow(icon: "envelope", title: "Email", value: AboutContent.email)
+                infoMailRow(icon: "envelope", title: L10n.About.rowEmail, value: AboutContent.email)
+
+                Divider().padding(.leading, 58)
+
+                Button {
+                    openAppStoreReviews()
+                } label: {
+                    infoTrailingRow(icon: "star", title: L10n.About.rowReviews, trailing: nil)
+                }
+                .buttonStyle(.plain)
 
                 Divider().padding(.leading, 58)
 
                 NavigationLink {
                     PrivacyPolicyView()
                 } label: {
-                    infoTrailingRow(icon: "shield", title: "Kebijakan Privasi", trailing: nil)
+                    infoTrailingRow(icon: "shield", title: L10n.About.rowPrivacy, trailing: nil)
                 }
                 .buttonStyle(.plain)
 
@@ -181,15 +190,11 @@ struct AboutWeddingAppView: View {
                 NavigationLink {
                     TermsOfServiceView()
                 } label: {
-                    infoTrailingRow(icon: "doc.text", title: "Syarat & Ketentuan", trailing: nil)
+                    infoTrailingRow(icon: "doc.text", title: L10n.About.rowTerms, trailing: nil)
                 }
                 .buttonStyle(.plain)
             }
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
         }
     }
 
@@ -234,6 +239,14 @@ struct AboutWeddingAppView: View {
         .buttonStyle(.plain)
     }
 
+    private func openAppStoreReviews() {
+        guard let url = AboutContent.appStoreWriteReviewURL else {
+            showReviewUnavailableAlert = true
+            return
+        }
+        openURL(url)
+    }
+
     private func infoTrailingRow(icon: String, title: String, trailing: String?) -> some View {
         HStack(spacing: 14) {
             infoIcon(icon)
@@ -272,7 +285,7 @@ struct AboutWeddingAppView: View {
 
     private var followUsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionTitle("Ikuti Kami")
+            sectionTitle(L10n.About.sectionFollow)
 
             HStack(spacing: 10) {
                 ForEach(AboutContent.socialLinks) { social in
@@ -280,11 +293,7 @@ struct AboutWeddingAppView: View {
                         AboutSocialBrandIcon(brand: social.brand)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                            }
+                            .premiumGlassCard(cornerRadius: 16)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(social.name)
@@ -297,10 +306,10 @@ struct AboutWeddingAppView: View {
 
     private var footerCopyright: some View {
         VStack(spacing: 4) {
-            Text("© \(AboutContent.copyrightYear) Wedding App")
+            Text("© \(AboutContent.copyrightYear) \(L10n.Auth.appName)")
                 .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.ink.opacity(0.4))
-            Text("All rights reserved.")
+            Text(L10n.About.rights)
                 .font(AppFont.regular(11))
                 .foregroundStyle(AppTheme.ink.opacity(0.35))
         }

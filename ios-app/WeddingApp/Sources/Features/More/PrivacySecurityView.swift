@@ -39,7 +39,7 @@ struct PrivacySecurityView: View {
                             Text(errorMessage)
                                 .font(AppFont.regular(13))
                                 .foregroundStyle(.red)
-                            Button("Coba lagi") {
+                            Button(L10n.Common.tryAgain) {
                                 Task { await viewModel.retry() }
                             }
                             .font(AppFont.medium(13))
@@ -101,11 +101,7 @@ struct PrivacySecurityView: View {
                 }
             }
             .padding(16)
-            .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
         }
         .buttonStyle(.plain)
     }
@@ -294,11 +290,7 @@ struct PrivacySecurityView: View {
             }
         }
         .padding(16)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private var helpRow: some View {
@@ -311,11 +303,7 @@ struct PrivacySecurityView: View {
                 subtitle: L10n.Privacy.helpCenterSub
             )
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -330,11 +318,7 @@ struct PrivacySecurityView: View {
             VStack(spacing: 0) {
                 content()
             }
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
         }
     }
 

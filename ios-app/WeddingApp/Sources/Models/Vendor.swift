@@ -107,7 +107,7 @@ struct VendorPackage: Decodable, Identifiable, Hashable {
 
                 guard !items.isEmpty else { return nil }
                 return VendorFacilitySection(
-                    title: title.isEmpty ? "Fasilitas" : title,
+                    title: title.isEmpty ? L10n.Vendor.facilities : title,
                     items: items
                 )
             }
@@ -124,7 +124,7 @@ struct VendorPackage: Decodable, Identifiable, Hashable {
             .filter { !$0.isEmpty }
 
         guard !items.isEmpty else { return [] }
-        return [VendorFacilitySection(title: "Fasilitas", items: items)]
+        return [VendorFacilitySection(title: L10n.Vendor.facilities, items: items)]
     }
 
     var displayExclusions: [String] {
@@ -222,13 +222,13 @@ struct VendorItem: Identifiable, Hashable {
 
         var tagList: [String] = []
         if packagesCount > 0 {
-            tagList.append("\(packagesCount) Paket")
+            tagList.append(L10n.Vendor.packageCountTitle(packagesCount))
         }
         if let startingPrice = vendor.startingPriceValue {
-            tagList.append("Dari \(CurrencyFormatter.rupiahShort(startingPrice))")
+            tagList.append(L10n.Vendor.fromPriceTitle(CurrencyFormatter.rupiahShort(startingPrice)))
         }
         if vendor.isFeatured {
-            tagList.append("Unggulan")
+            tagList.append(L10n.Vendor.featured)
         }
         tags = tagList
     }
@@ -409,8 +409,8 @@ enum VendorSortOption: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .popular: return "Populer"
-        case .newest: return "Terbaru"
+        case .popular: return L10n.Vendor.sortPopular
+        case .newest: return L10n.Vendor.sortNewest
         }
     }
 }
@@ -430,8 +430,8 @@ struct VendorFilter: Equatable {
             || savedOnly
     }
 
-    static let allProvincesLabel = "Semua Provinsi"
-    static let allCitiesLabel = "Semua Kota"
+    static var allProvincesLabel: String { L10n.Vendor.allProvinces }
+    static var allCitiesLabel: String { L10n.Vendor.allCities }
 
     mutating func reset() {
         self = VendorFilter()

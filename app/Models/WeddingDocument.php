@@ -13,9 +13,9 @@ class WeddingDocument extends Model
     /** @use HasFactory<WeddingDocumentFactory> */
     use HasFactory;
 
-    public const STORAGE_QUOTA_BYTES = 500 * 1024 * 1024;
+    public const STORAGE_QUOTA_BYTES = 5 * 1024 * 1024;
 
-    public const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+    public const MAX_UPLOAD_BYTES = 1 * 1024 * 1024;
 
     /**
      * @var array<string, string>

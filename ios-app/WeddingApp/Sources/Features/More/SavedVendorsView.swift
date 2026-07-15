@@ -20,8 +20,8 @@ struct SavedVendorsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
-                        title: "Vendor Tersimpan",
-                        subtitle: "Daftar vendor pilihan Anda"
+                        title: L10n.More.savedVendors,
+                        subtitle: L10n.More.savedVendorsSub
                     )
 
                     if let errorMessage {
@@ -37,8 +37,8 @@ struct SavedVendorsView: View {
                     } else if savedVendors.isEmpty {
                         MoreEmptyState(
                             icon: "bookmark",
-                            title: "Belum ada vendor tersimpan",
-                            message: "Simpan vendor favorit dari tab Vendor agar mudah ditemukan di sini."
+                            title: L10n.Vendor.savedEmptyTitle,
+                            message: L10n.Vendor.savedEmptyMessage
                         )
                     } else {
                         VStack(spacing: 12) {
@@ -87,11 +87,31 @@ private struct SavedVendorRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: vendor.logoSymbol)
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(.white)
-                .frame(width: 48, height: 48)
-                .background(vendor.logoTint, in: Circle())
+            ZStack {
+                Circle()
+                    .fill(vendor.logoTint)
+
+                if let raw = vendor.logoUrl ?? vendor.coverImageUrl,
+                   let url = URL(string: raw) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image.resizable().scaledToFill()
+                        default:
+                            Image(systemName: vendor.logoSymbol)
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .frame(width: 48, height: 48)
+                    .clipShape(Circle())
+                } else {
+                    Image(systemName: vendor.logoSymbol)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(.white)
+                }
+            }
+            .frame(width: 48, height: 48)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(vendor.name)
@@ -127,10 +147,6 @@ private struct SavedVendorRow: View {
             }
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 }

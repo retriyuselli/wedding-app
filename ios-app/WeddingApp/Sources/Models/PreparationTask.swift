@@ -52,9 +52,9 @@ struct PreparationTask: Codable, Identifiable, Hashable {
 
         var label: String {
             switch self {
-            case .high: return "Tinggi"
-            case .medium: return "Sedang"
-            case .low: return "Rendah"
+            case .high: return L10n.Checklist.priorityHigh
+            case .medium: return L10n.Checklist.priorityMedium
+            case .low: return L10n.Checklist.priorityLow
             }
         }
     }

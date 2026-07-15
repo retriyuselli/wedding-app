@@ -16,28 +16,9 @@ struct HelpFAQView: View {
 
     private let topics = HelpTopicKind.allCases
 
-    private let faqs: [FAQItem] = [
-        FAQItem(
-            question: "Bagaimana cara menambahkan expense di budget?",
-            answer: "Buka tab Budget, ketuk tombol Tambah Expense, lalu isi nama pengeluaran, kategori, dan nominal. Simpan untuk mencatat pengeluaran Anda."
-        ),
-        FAQItem(
-            question: "Bagaimana cara mengundang tamu?",
-            answer: "Buka tab Tamu, ketuk Tambah Tamu, isi nama dan kontak, lalu bagikan undangan digital melalui tautan atau WhatsApp."
-        ),
-        FAQItem(
-            question: "Apakah data saya aman di Wedding App?",
-            answer: "Ya. Semua data Anda dienkripsi dan hanya dapat diakses oleh Anda. Kami menjaga privasi Anda dengan standar keamanan tinggi."
-        ),
-        FAQItem(
-            question: "Bagaimana cara mengekspor data pernikahan?",
-            answer: "Buka menu Privasi & Keamanan, pilih Unduh Data Saya untuk mengekspor salinan data pribadi dan detail pernikahan Anda."
-        ),
-        FAQItem(
-            question: "Bagaimana cara menghubungi customer support?",
-            answer: "Anda dapat menghubungi kami melalui tombol Hubungi Customer Support di bawah, atau kirim email ke \(HelpFAQView.supportEmail). Kami merespons pada jam layanan."
-        ),
-    ]
+    private var faqs: [FAQItem] {
+        L10n.Help.faqItems.map { FAQItem(question: $0.question, answer: $0.answer) }
+    }
 
     private var filteredFAQs: [FAQItem] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -54,8 +35,8 @@ struct HelpFAQView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
                     MoreSubpageNavigationHeader(
-                        title: "Bantuan & FAQ",
-                        subtitle: "Kami siap membantu Anda"
+                        title: L10n.More.help,
+                        subtitle: L10n.More.helpSub
                     )
 
                     searchBar
@@ -90,25 +71,21 @@ struct HelpFAQView: View {
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(AppTheme.ink.opacity(0.4))
 
-            TextField("Cari bantuan atau pertanyaan...", text: $searchText)
+            TextField(L10n.Help.searchPlaceholder, text: $searchText)
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink)
                 .autocorrectionDisabled()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 15)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     // MARK: - Topics
 
     private var topicSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Topik Bantuan")
+            Text(L10n.Help.topics)
                 .font(AppFont.medium(15))
                 .foregroundStyle(AppTheme.ink)
 
@@ -141,17 +118,13 @@ struct HelpFAQView: View {
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("\(topic.articleCount) artikel")
+                Text(L10n.Help.articleCount(topic.articleCount))
                     .font(AppFont.regular(10))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
             }
             .frame(width: 92, height: 116)
             .padding(.horizontal, 6)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -161,7 +134,7 @@ struct HelpFAQView: View {
     private var faqSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("FAQ Populer")
+                Text(L10n.Help.popularFaq)
                     .font(AppFont.medium(15))
                     .foregroundStyle(AppTheme.ink)
                 Spacer()
@@ -182,8 +155,8 @@ struct HelpFAQView: View {
             if filteredFAQs.isEmpty {
                 MoreEmptyState(
                     icon: "questionmark.circle",
-                    title: "Tidak ada hasil",
-                    message: "Coba kata kunci lain atau hubungi customer support kami."
+                    title: L10n.Help.noResultsTitle,
+                    message: L10n.Help.noResultsSub
                 )
             } else {
                 VStack(spacing: 10) {
@@ -232,18 +205,14 @@ struct HelpFAQView: View {
                     .padding(.bottom, 16)
             }
         }
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     // MARK: - Contact
 
     private var contactSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Butuh Bantuan Lain?")
+            Text(L10n.Help.needHelp)
                 .font(AppFont.medium(15))
                 .foregroundStyle(AppTheme.ink)
 
@@ -253,8 +222,8 @@ struct HelpFAQView: View {
                 } label: {
                     contactRow(
                         icon: "bubble.left.and.bubble.right.fill",
-                        title: "Hubungi Customer Support",
-                        subtitle: "Tim kami siap membantu Anda"
+                        title: L10n.Help.contactSupport,
+                        subtitle: L10n.Help.contactSupportSub
                     )
                 }
                 .buttonStyle(.plain)
@@ -266,17 +235,13 @@ struct HelpFAQView: View {
                 } label: {
                     contactRow(
                         icon: "envelope.fill",
-                        title: "Kirim Email",
+                        title: L10n.Help.emailSupport,
                         subtitle: supportEmail
                     )
                 }
                 .buttonStyle(.plain)
             }
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 18)
         }
     }
 

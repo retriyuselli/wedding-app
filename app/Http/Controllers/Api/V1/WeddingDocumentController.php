@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\WeddingDocumentResource;
-use App\Models\CustomerPreparationTaskAttachment;
 use App\Models\WeddingDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +19,7 @@ class WeddingDocumentController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $documents = $this->mergedDocuments($request)
+        $documents = $this->uploadedDocuments($request)
             ->values();
 
         return WeddingDocumentResource::collection($documents);
@@ -28,8 +27,8 @@ class WeddingDocumentController extends Controller
 
     public function summary(Request $request): JsonResponse
     {
-        $documents = $this->mergedDocuments($request);
-        $usedBytes = (int) $documents->sum(fn ($document) => (int) ($document->file_size ?? 0));
+        $documents = $this->uploadedDocuments($request);
+        $usedBytes = (int) $documents->sum(fn (WeddingDocument $document) => (int) ($document->file_size ?? 0));
         $quotaBytes = WeddingDocument::STORAGE_QUOTA_BYTES;
 
         $counts = [
@@ -54,8 +53,10 @@ class WeddingDocumentController extends Controller
 
     public function store(Request $request): WeddingDocumentResource
     {
+        $maxKilobytes = (int) floor(WeddingDocument::MAX_UPLOAD_BYTES / 1024);
+
         $data = $request->validate([
-            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,heic,heif', 'max:10240'],
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,heic,heif', 'max:'.$maxKilobytes],
             'category' => ['nullable', 'string', Rule::in(array_keys(WeddingDocument::$categoryOptions))],
             'document_folder_id' => [
                 'nullable',
@@ -66,10 +67,10 @@ class WeddingDocumentController extends Controller
 
         /** @var UploadedFile $file */
         $file = $data['file'];
-        $usedBytes = $this->mergedDocuments($request)->sum(fn ($document) => (int) ($document->file_size ?? 0));
+        $usedBytes = $this->uploadedDocuments($request)->sum(fn (WeddingDocument $document) => (int) ($document->file_size ?? 0));
 
         if (($usedBytes + $file->getSize()) > WeddingDocument::STORAGE_QUOTA_BYTES) {
-            abort(422, 'Kuota penyimpanan 500MB sudah penuh.');
+            abort(422, 'Kuota penyimpanan 5MB sudah penuh.');
         }
 
         $path = $file->store('wedding-documents/'.$request->user()->id, 'public');
@@ -145,9 +146,11 @@ class WeddingDocumentController extends Controller
     }
 
     /**
+     * Only real user uploads (no seeded / checklist sample files).
+     *
      * @return Collection<int, WeddingDocument>
      */
-    private function mergedDocuments(Request $request): Collection
+    private function uploadedDocuments(Request $request): Collection
     {
         $category = $request->string('category')->toString();
         $folderId = $request->integer('folder_id');
@@ -172,57 +175,11 @@ class WeddingDocumentController extends Controller
                 $document->setAttribute('source', 'uploaded');
             });
 
-        $attachments = collect();
-
-        if ($folderId <= 0) {
-            $attachments = CustomerPreparationTaskAttachment::query()
-                ->with('preparationTask:id,title')
-                ->where('user_id', $request->user()->id)
-                ->get()
-                ->map(function (CustomerPreparationTaskAttachment $attachment) use ($category, $search): ?WeddingDocument {
-                    $taskTitle = $attachment->preparationTask?->title ?? '';
-                    $matchedCategory = WeddingDocument::matchCategory($attachment->file_name, $taskTitle);
-
-                    if ($category !== '' && $category !== 'all' && $matchedCategory !== $category) {
-                        return null;
-                    }
-
-                    if ($search !== '') {
-                        $haystack = strtolower($attachment->file_name.' '.$taskTitle);
-                        if (! str_contains($haystack, strtolower($search))) {
-                            return null;
-                        }
-                    }
-
-                    $document = new WeddingDocument([
-                        'user_id' => $attachment->user_id,
-                        'document_folder_id' => null,
-                        'file_name' => $attachment->file_name,
-                        'file_path' => $attachment->file_path,
-                        'file_size' => $attachment->file_size ?? 0,
-                        'mime_type' => $attachment->mime_type,
-                        'category' => $matchedCategory,
-                    ]);
-                    $document->id = -1 * (int) $attachment->id;
-                    $document->created_at = $attachment->created_at;
-                    $document->updated_at = $attachment->updated_at;
-                    $document->setAttribute('source', 'checklist');
-                    $document->setAttribute('task_title', $taskTitle);
-                    $document->setRelation('folder', null);
-
-                    return $document;
-                })
-                ->filter()
-                ->values();
-        }
-
-        $merged = $uploaded->concat($attachments);
-
         return match ($sort) {
-            'oldest' => $merged->sortBy('created_at'),
-            'name' => $merged->sortBy(fn (WeddingDocument $document) => strtolower($document->file_name)),
-            'name_desc' => $merged->sortByDesc(fn (WeddingDocument $document) => strtolower($document->file_name)),
-            default => $merged->sortByDesc('created_at'),
+            'oldest' => $uploaded->sortBy('created_at'),
+            'name' => $uploaded->sortBy(fn (WeddingDocument $document) => strtolower($document->file_name)),
+            'name_desc' => $uploaded->sortByDesc(fn (WeddingDocument $document) => strtolower($document->file_name)),
+            default => $uploaded->sortByDesc('created_at'),
         };
     }
 }

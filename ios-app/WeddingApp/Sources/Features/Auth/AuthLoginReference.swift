@@ -1,17 +1,17 @@
 import SwiftUI
 
 enum LoginPalette {
-    static let background = Color(red: 0.96, green: 0.94, blue: 0.88)
-    static let green = Color(red: 0.26, green: 0.36, blue: 0.19)
-    static let greenDark = Color(red: 0.22, green: 0.32, blue: 0.16)
-    static let greenLight = Color(red: 0.72, green: 0.77, blue: 0.64)
-    static let gold = Color(red: 0.78, green: 0.61, blue: 0.32)
-    static let textPrimary = Color(red: 0.18, green: 0.24, blue: 0.18)
-    static let textSecondary = Color(red: 0.35, green: 0.36, blue: 0.41)
-    static let placeholder = Color(red: 0.58, green: 0.59, blue: 0.63)
-    static let border = Color(red: 0.70, green: 0.76, blue: 0.66)
-    static let divider = Color(red: 0.80, green: 0.80, blue: 0.78)
-    static let sheet = Color(red: 1.00, green: 0.995, blue: 0.985)
+    static var background: Color { AppTheme.cream }
+    static var green: Color { AppTheme.sageDark }
+    static var greenDark: Color { AppTheme.sageDark }
+    static var greenLight: Color { AppTheme.lightSage }
+    static var gold: Color { AppTheme.gold }
+    static var textPrimary: Color { AppTheme.ink }
+    static var textSecondary: Color { AppTheme.ink.opacity(0.55) }
+    static var placeholder: Color { AppTheme.ink.opacity(0.32) }
+    static var border: Color { AppTheme.sage.opacity(0.28) }
+    static var divider: Color { AppTheme.sage.opacity(0.16) }
+    static var sheet: Color { AppTheme.surface }
 }
 
 enum AuthLoginLayout {
@@ -28,14 +28,55 @@ struct LoginReferenceBackground: View {
     var body: some View {
         LinearGradient(
             colors: [
-                Color(red: 0.93, green: 0.90, blue: 0.83),
-                Color(red: 1.00, green: 0.995, blue: 0.98),
-                Color(red: 0.97, green: 0.98, blue: 0.93),
+                AppTheme.cream,
+                AppTheme.surface,
+                AppTheme.lightSage.opacity(0.55),
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
         .ignoresSafeArea()
+    }
+}
+
+/// Glass treatment for the curved auth form sheet (matches `premiumGlassCard` materials).
+struct LoginSheetGlassBackground: View {
+    var body: some View {
+        ZStack {
+            LoginSheetShape()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            AppTheme.surface.opacity(0.96),
+                            AppTheme.cream.opacity(0.92),
+                            AppTheme.lightSage.opacity(0.45),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            LoginSheetShape()
+                .fill(.ultraThinMaterial)
+                .opacity(0.40)
+        }
+        .overlay {
+            LoginSheetShape()
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.72),
+                            AppTheme.sage.opacity(0.14),
+                            AppTheme.gold.opacity(0.10),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        }
+        .shadow(color: AppTheme.sageDark.opacity(0.09), radius: 22, y: -8)
+        .shadow(color: AppTheme.gold.opacity(0.05), radius: 8, y: -2)
     }
 }
 
@@ -80,27 +121,6 @@ struct LoginHeroSection: View {
                     .padding(.top, topInset + 88)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .zIndex(2)
-
-                Image("FloralHeader")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geometry.size.width * 0.30)
-                    .scaleEffect(x: -1, y: 1)
-                    .rotationEffect(.degrees(-7))
-                    .opacity(0.86)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                    .offset(x: -42, y: 46)
-                    .zIndex(1)
-
-                Image("FloralHeader")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geometry.size.width * 0.20)
-                    .rotationEffect(.degrees(12))
-                    .opacity(0.62)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-                    .offset(x: 44, y: 64)
-                    .zIndex(1)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
@@ -114,8 +134,8 @@ struct LoginHeroBrand: View {
                 .frame(width: 54, height: 54)
 
             Text(L10n.Auth.appName)
-                .font(AppFont.semibold(25))
-                .foregroundStyle(LoginPalette.green)
+                .font(.system(size: 26, weight: .semibold, design: .serif))
+                .foregroundStyle(AppTheme.sageDark)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
 
@@ -134,7 +154,7 @@ struct LoginHeroBrand: View {
             }
 
             Text(L10n.Auth.heroTagline)
-                .font(AppFont.regular(11))
+                .font(.system(size: 12, weight: .regular, design: .rounded))
                 .foregroundStyle(LoginPalette.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(5)
@@ -215,50 +235,50 @@ struct LoginBadge: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(LoginPalette.greenLight.opacity(0.78))
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            AppTheme.lightSage.opacity(0.85),
+                            AppTheme.sage.opacity(0.55),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .frame(width: 76, height: 76)
                 .overlay {
                     Circle()
-                        .stroke(Color.white.opacity(0.95), lineWidth: 7)
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.35)
                 }
+                .overlay {
+                    Circle()
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.85),
+                                    AppTheme.gold.opacity(0.25),
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 2
+                        )
+                }
+                .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 14, y: 6)
 
             Image(systemName: systemImage)
                 .font(.system(size: 29, weight: .light))
-                .foregroundStyle(.white.opacity(0.96))
+                .foregroundStyle(AppTheme.sageDark.opacity(0.92))
 
             if let overlaySystemImage {
                 Image(systemName: overlaySystemImage)
                     .font(.system(size: 9, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.96))
+                    .foregroundStyle(AppTheme.gold)
                     .offset(y: -1)
             }
         }
         .accessibilityHidden(true)
-    }
-}
-
-struct AuthLoginSheetFlorals: View {
-    var body: some View {
-        HStack(alignment: .bottom) {
-            Image("FloralHeader")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 150)
-                .scaleEffect(x: -1, y: -1)
-                .rotationEffect(.degrees(6))
-                .offset(x: -30, y: 22)
-
-            Spacer()
-
-            Image("FloralHeader")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 168)
-                .scaleEffect(x: 1, y: -1)
-                .rotationEffect(.degrees(-8))
-                .offset(x: 38, y: 22)
-        }
-        .allowsHitTesting(false)
     }
 }
 
@@ -273,20 +293,23 @@ struct LoginInputField: View {
     var focusedField: FocusState<AuthFormField?>.Binding
     var onSubmit: (() -> Void)?
 
+    private let cornerRadius: CGFloat = 16
+
     var body: some View {
         HStack(spacing: 18) {
             Image(systemName: icon)
-                .font(.system(size: 19, weight: .regular))
-                .foregroundStyle(LoginPalette.green)
+                .font(.system(size: 18, weight: .regular))
+                .foregroundStyle(AppTheme.sageDark.opacity(0.78))
                 .frame(width: 28)
 
             TextField(
                 "",
                 text: $text,
                 prompt: Text(placeholder)
+                    .font(.system(size: 14, weight: .regular, design: .rounded))
                     .foregroundStyle(LoginPalette.placeholder)
             )
-            .font(AppFont.regular(14))
+            .font(.system(size: 14, weight: .regular, design: .rounded))
             .foregroundStyle(LoginPalette.textPrimary)
             .keyboardType(keyboardType)
             .textContentType(textContentType)
@@ -296,15 +319,34 @@ struct LoginInputField: View {
             .focused(focusedField, equals: fieldFocus)
             .onSubmit { onSubmit?() }
         }
-        .frame(height: 48)
+        .frame(height: 50)
         .padding(.horizontal, 18)
-        .background(Color.white.opacity(0.62), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background {
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(AppTheme.cream.opacity(0.55))
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.55)
+            }
+        }
         .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(LoginPalette.border.opacity(0.82), lineWidth: 1.1)
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.72),
+                            AppTheme.sage.opacity(0.18),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
                 .allowsHitTesting(false)
         }
-        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 4)
+        .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .onTapGesture {
             focusedField.wrappedValue = fieldFocus
         }
@@ -321,12 +363,13 @@ struct LoginPasswordField: View {
     var onSubmit: (() -> Void)?
 
     @State private var isVisible = false
+    private let cornerRadius: CGFloat = 16
 
     var body: some View {
         HStack(spacing: 18) {
             Image(systemName: "lock")
-                .font(.system(size: 19, weight: .regular))
-                .foregroundStyle(LoginPalette.green)
+                .font(.system(size: 18, weight: .regular))
+                .foregroundStyle(AppTheme.sageDark.opacity(0.78))
                 .frame(width: 28)
 
             Group {
@@ -335,6 +378,7 @@ struct LoginPasswordField: View {
                         "",
                         text: $text,
                         prompt: Text(placeholder)
+                            .font(.system(size: 14, weight: .regular, design: .rounded))
                             .foregroundStyle(LoginPalette.placeholder)
                     )
                 } else {
@@ -342,11 +386,12 @@ struct LoginPasswordField: View {
                         "",
                         text: $text,
                         prompt: Text(placeholder)
+                            .font(.system(size: 14, weight: .regular, design: .rounded))
                             .foregroundStyle(LoginPalette.placeholder)
                     )
                 }
             }
-            .font(AppFont.regular(14))
+            .font(.system(size: 14, weight: .regular, design: .rounded))
             .foregroundStyle(LoginPalette.textPrimary)
             .textContentType(textContentType)
             .textInputAutocapitalization(.never)
@@ -359,21 +404,40 @@ struct LoginPasswordField: View {
                 isVisible.toggle()
             } label: {
                 Image(systemName: isVisible ? "eye.slash" : "eye")
-                    .font(.system(size: 21, weight: .regular))
-                    .foregroundStyle(Color.black.opacity(0.86))
+                    .font(.system(size: 18, weight: .regular))
+                    .foregroundStyle(AppTheme.sageDark.opacity(0.55))
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
         }
-        .frame(height: 48)
+        .frame(height: 50)
         .padding(.horizontal, 18)
-        .background(Color.white.opacity(0.62), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background {
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(AppTheme.cream.opacity(0.55))
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.55)
+            }
+        }
         .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(LoginPalette.border.opacity(0.82), lineWidth: 1.1)
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.72),
+                            AppTheme.sage.opacity(0.18),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
                 .allowsHitTesting(false)
         }
-        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 4)
+        .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .onTapGesture {
             focusedField.wrappedValue = fieldFocus
         }
@@ -396,7 +460,7 @@ struct LoginPrimaryButton: View {
                         .tint(.white)
                 } else {
                     Text(title)
-                        .font(AppFont.semibold(15))
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                         .minimumScaleFactor(0.76)
@@ -405,22 +469,24 @@ struct LoginPrimaryButton: View {
                 Spacer()
 
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 24, weight: .light))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 20, weight: .light))
+                    .foregroundStyle(.white.opacity(0.92))
             }
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity)
-            .frame(height: 48)
+            .frame(height: 52)
             .background(
                 LinearGradient(
                     colors: isDisabled
-                        ? [LoginPalette.green.opacity(0.72), LoginPalette.greenDark.opacity(0.68)]
-                        : [Color(red: 0.38, green: 0.49, blue: 0.26), Color(red: 0.24, green: 0.34, blue: 0.17)],
-                    startPoint: .leading,
-                    endPoint: .trailing
+                        ? [AppTheme.sage.opacity(0.55), AppTheme.sageDark.opacity(0.48)]
+                        : [AppTheme.sage, AppTheme.sageDark],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 ),
-                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
             )
+            .shadow(color: AppTheme.sageDark.opacity(isDisabled ? 0.06 : 0.18), radius: isDisabled ? 8 : 16, y: isDisabled ? 3 : 8)
+            .shadow(color: AppTheme.gold.opacity(isDisabled ? 0 : 0.08), radius: 6, y: 2)
         }
         .buttonStyle(LoginPressButtonStyle())
         .disabled(isDisabled || isLoading)
@@ -434,7 +500,7 @@ struct LoginDivider: View {
         HStack(spacing: 22) {
             line
             Text(text)
-                .font(AppFont.regular(13))
+                .font(.system(size: 13, weight: .regular, design: .rounded))
                 .foregroundStyle(LoginPalette.textSecondary)
                 .lineLimit(1)
             line
@@ -467,24 +533,44 @@ struct LoginSocialButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 13) {
+            HStack(spacing: 12) {
                 providerIcon
-                    .frame(width: 24, height: 24)
+                    .frame(width: 22, height: 22)
 
                 Text(provider.title)
-                    .font(AppFont.semibold(15))
-                    .foregroundStyle(Color.black)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(AppTheme.ink.opacity(0.82))
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 46)
-            .background(Color.white.opacity(0.56), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .frame(height: 48)
+            .background {
+                ZStack {
+                    Capsule(style: .continuous)
+                        .fill(AppTheme.cream.opacity(0.50))
+                    Capsule(style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.60)
+                }
+            }
             .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.black.opacity(0.13), lineWidth: 1)
+                Capsule(style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.75),
+                                AppTheme.sage.opacity(0.16),
+                                AppTheme.gold.opacity(0.08),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
                     .allowsHitTesting(false)
             }
+            .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 12, y: 5)
         }
         .buttonStyle(LoginPressButtonStyle())
         .disabled(isDisabled)
@@ -496,11 +582,11 @@ struct LoginSocialButton: View {
         switch provider {
         case .apple:
             Image(systemName: "apple.logo")
-                .font(.system(size: 24, weight: .semibold))
-                .foregroundStyle(Color.black)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(AppTheme.ink)
         case .google:
             Text("G")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundStyle(
                     LinearGradient(
                         colors: [
@@ -532,15 +618,21 @@ struct AuthLoginBackButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "chevron.left")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(LoginPalette.green)
-                .frame(width: 36, height: 36)
-                .background(Color.white.opacity(0.88), in: Circle())
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(AppTheme.sageDark)
+                .frame(width: 38, height: 38)
+                .background {
+                    ZStack {
+                        Circle().fill(AppTheme.cream.opacity(0.65))
+                        Circle().fill(.ultraThinMaterial).opacity(0.55)
+                    }
+                }
                 .overlay {
                     Circle()
-                        .stroke(LoginPalette.border.opacity(0.55), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.70), lineWidth: 1)
                         .allowsHitTesting(false)
                 }
+                .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 10, y: 4)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(L10n.Auth.back)

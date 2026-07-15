@@ -137,12 +137,12 @@ struct TaskDetailView: View {
                 }
             }
 
-            Text("Detail Tugas")
+            Text(L10n.Checklist.detailTitle)
                 .font(.system(size: 32, weight: .bold, design: .serif))
                 .foregroundStyle(AppTheme.sageDark)
 
-            Text("Kelola dan pantau detail tugas persiapan\npernikahan Anda.")
-                .font(.system(size: 12, weight: .regular, design: .serif))
+            Text(L10n.Checklist.detailSubtitle)
+                .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.gold)
                 .lineSpacing(2)
         }
@@ -154,7 +154,15 @@ struct TaskDetailView: View {
             .font(.system(size: 12, weight: .regular))
             .foregroundStyle(AppTheme.ink.opacity(0.7))
             .frame(width: 40, height: 40)
-            .background(.white.opacity(0.86), in: Circle())
+            .background {
+                Circle()
+                    .fill(Color.white.opacity(0.78))
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .overlay {
+                Circle()
+                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+            }
             .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 10, y: 5)
     }
 
@@ -182,22 +190,17 @@ struct TaskDetailView: View {
             }
 
             HStack(alignment: .top, spacing: 12) {
-                infoCell(icon: "hourglass", label: "Kategori", value: eventTitle, tint: AppTheme.sageDark)
-                infoCell(icon: "flag.fill", label: "Prioritas", value: priorityStyle.label, tint: priorityStyle.color, valueTint: priorityStyle.color)
+                infoCell(icon: "hourglass", label: L10n.Checklist.detailCategory, value: eventTitle, tint: AppTheme.sageDark)
+                infoCell(icon: "flag.fill", label: L10n.Checklist.detailPriority, value: priorityStyle.label, tint: priorityStyle.color, valueTint: priorityStyle.color)
             }
 
             HStack(alignment: .top, spacing: 12) {
-                infoCell(icon: "calendar", label: "Tanggal Dibuat", value: Self.displayDate(fromISO: createdAt) ?? "-", tint: AppTheme.sageDark)
-                infoCell(icon: "calendar", label: "Target Selesai", value: Self.displayDate(dueDate) ?? "-", tint: AppTheme.sageDark)
+                infoCell(icon: "calendar", label: L10n.Checklist.detailCreated, value: Self.displayDate(fromISO: createdAt) ?? "-", tint: AppTheme.sageDark)
+                infoCell(icon: "calendar", label: L10n.Checklist.detailDue, value: Self.displayDate(dueDate) ?? "-", tint: AppTheme.sageDark)
             }
         }
         .padding(18)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 16, y: 8)
+        .premiumGlassCard(cornerRadius: 22)
     }
 
     private var statusBadge: some View {
@@ -244,7 +247,7 @@ struct TaskDetailView: View {
 
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitleText("Deskripsi")
+            sectionTitleText(L10n.Common.description)
 
             Text(descriptionText ?? "")
                 .font(AppFont.regular(13))
@@ -258,7 +261,7 @@ struct TaskDetailView: View {
 
     private var subTasksSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitleText("Sub Tugas")
+            sectionTitleText(L10n.Checklist.taskSubTasks)
 
             VStack(spacing: 12) {
                 ForEach(sortedSubTasks) { sub in
@@ -280,7 +283,7 @@ struct TaskDetailView: View {
                             Spacer()
 
                             if sub.statusValue == .done {
-                                Text("Selesai")
+                                Text(L10n.Checklist.statusDone)
                                     .font(AppFont.medium(10))
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 10)
@@ -297,11 +300,7 @@ struct TaskDetailView: View {
                 }
             }
             .padding(16)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
         }
     }
 
@@ -309,7 +308,7 @@ struct TaskDetailView: View {
 
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitleText("Catatan")
+            sectionTitleText(L10n.Common.notes)
 
             Text(notesText ?? "")
                 .font(AppFont.regular(12))
@@ -325,7 +324,7 @@ struct TaskDetailView: View {
 
     private var attachmentsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitleText("Lampiran")
+            sectionTitleText(L10n.Checklist.attachments)
 
             VStack(spacing: 10) {
                 ForEach(attachments) { attachment in
@@ -364,11 +363,7 @@ struct TaskDetailView: View {
             }
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     // MARK: - Bottom Bar
@@ -382,7 +377,7 @@ struct TaskDetailView: View {
             HStack(spacing: 8) {
                 Image(systemName: status == .done ? "arrow.uturn.backward.circle" : "checkmark.circle")
                     .font(.system(size: 17, weight: .semibold))
-                Text(status == .done ? "Tandai Belum Selesai" : "Tandai Selesai")
+                Text(status == .done ? L10n.Checklist.markUndone : L10n.Checklist.markDone)
                     .font(AppFont.medium(16))
             }
             .foregroundStyle(.white)
@@ -409,11 +404,11 @@ struct TaskDetailView: View {
         switch status {
         case .done:
             if let date = Self.displayDate(dueDate) {
-                return "Selesai pada \(date)"
+                return L10n.Checklist.statusDoneOn(date)
             }
-            return "Selesai"
-        case .inProgress: return "Sedang dikerjakan"
-        case .pending: return "Belum dimulai"
+            return L10n.Checklist.statusDone
+        case .inProgress: return L10n.Checklist.statusInProgress
+        case .pending: return L10n.Checklist.statusPending
         }
     }
 
@@ -472,13 +467,13 @@ struct TaskDetailView: View {
         switch sub.statusValue {
         case .done:
             if let date = Self.displayDate(sub.completedAt) {
-                return "Selesai pada \(date)"
+                return L10n.Checklist.statusDoneOn(date)
             }
-            return "Selesai"
+            return L10n.Checklist.statusDone
         case .inProgress:
-            return "In Progress"
+            return L10n.Checklist.statusInProgress
         case .pending:
-            return "Belum Mulai"
+            return L10n.Checklist.statusPending
         }
     }
 
@@ -494,7 +489,7 @@ struct TaskDetailView: View {
     private func attachmentMeta(_ attachment: PreparationTaskAttachment) -> String {
         let size = Self.formatFileSize(attachment.fileSize ?? 0)
         let uploaded = Self.displayDate(fromISO: attachment.createdAt) ?? "-"
-        return "\(size) · Diunggah \(uploaded)"
+        return L10n.Checklist.uploadedMeta(size, uploaded)
     }
 
     private static func formatFileSize(_ bytes: Int) -> String {
@@ -508,9 +503,9 @@ struct TaskDetailView: View {
 
     private static func label(for status: PreparationTask.Status) -> String {
         switch status {
-        case .done: return "Selesai"
-        case .inProgress: return "In Progress"
-        case .pending: return "Belum Mulai"
+        case .done: return L10n.Checklist.statusDone
+        case .inProgress: return L10n.Checklist.statusInProgress
+        case .pending: return L10n.Checklist.statusPending
         }
     }
 
@@ -601,10 +596,11 @@ private struct TaskEditSheet: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
-                        fieldGroup("Judul Tugas") {
-                            TextField("Judul tugas", text: $title, axis: .vertical)
+                        fieldGroup(L10n.Checklist.taskTitle) {
+                            TextField(L10n.Checklist.taskTitlePlaceholder, text: $title, axis: .vertical)
                                 .font(AppFont.medium(15))
                                 .foregroundStyle(AppTheme.ink)
+                                .tint(AppTheme.sageDark)
                                 .textFieldStyle(.plain)
                         }
 
@@ -612,17 +608,19 @@ private struct TaskEditSheet: View {
 
                         dueDateSection
 
-                        fieldGroup("Deskripsi") {
-                            TextField("Tulis deskripsi tugas", text: $description, axis: .vertical)
+                        fieldGroup(L10n.Common.description) {
+                            TextField(L10n.Checklist.taskDescriptionPlaceholder, text: $description, axis: .vertical)
                                 .font(AppFont.regular(14))
                                 .foregroundStyle(AppTheme.ink)
+                                .tint(AppTheme.sageDark)
                                 .lineLimit(3 ... 8)
                         }
 
-                        fieldGroup("Catatan") {
-                            TextField("Tambahkan catatan", text: $notes, axis: .vertical)
+                        fieldGroup(L10n.Common.notes) {
+                            TextField(L10n.Common.notes, text: $notes, axis: .vertical)
                                 .font(AppFont.regular(14))
                                 .foregroundStyle(AppTheme.ink)
+                                .tint(AppTheme.sageDark)
                                 .lineLimit(2 ... 6)
                         }
 
@@ -635,15 +633,15 @@ private struct TaskEditSheet: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Edit Tugas")
+            .navigationTitle(L10n.Checklist.editTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") { dismiss() }
+                    Button(L10n.Common.cancel) { dismiss() }
                         .foregroundStyle(AppTheme.ink.opacity(0.7))
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Simpan") { save() }
+                    Button(L10n.Common.save) { save() }
                         .font(AppFont.medium(15))
                         .foregroundStyle(AppTheme.sageDark)
                         .disabled(isSaving || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -654,7 +652,7 @@ private struct TaskEditSheet: View {
 
     private var prioritySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Prioritas")
+            Text(L10n.Checklist.taskPriority)
                 .font(AppFont.medium(13))
                 .foregroundStyle(AppTheme.ink.opacity(0.6))
 
@@ -684,7 +682,7 @@ private struct TaskEditSheet: View {
     private var dueDateSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Toggle(isOn: $hasDueDate.animation()) {
-                Text("Target Selesai")
+                Text(L10n.Checklist.taskDueDate)
                     .font(AppFont.medium(13))
                     .foregroundStyle(AppTheme.ink.opacity(0.6))
             }
@@ -698,11 +696,7 @@ private struct TaskEditSheet: View {
             }
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .background(editFieldBackground(cornerRadius: 16))
     }
 
     private func fieldGroup<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -714,12 +708,18 @@ private struct TaskEditSheet: View {
             content()
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-                }
+                .background(editFieldBackground(cornerRadius: 16))
         }
+    }
+
+    private func editFieldBackground(cornerRadius: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(AppTheme.surface.opacity(0.96))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+            }
+            .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 8, y: 3)
     }
 
     private func save() {
@@ -758,7 +758,7 @@ private struct TaskEditSheet: View {
                 ))
                 dismiss()
             } catch {
-                errorMessage = "Gagal menyimpan perubahan. Coba lagi."
+                errorMessage = L10n.Checklist.taskSaveError
                 isSaving = false
             }
         }

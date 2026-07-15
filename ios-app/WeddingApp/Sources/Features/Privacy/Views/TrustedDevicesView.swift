@@ -18,7 +18,7 @@ struct TrustedDevicesView: View {
                     if let errorMessage = viewModel.errorMessage, viewModel.devices.isEmpty {
                         VStack(spacing: 10) {
                             Text(errorMessage).font(AppFont.regular(13)).foregroundStyle(.red)
-                            Button("Coba lagi") { Task { await viewModel.retry() } }
+                            Button(L10n.Common.tryAgain) { Task { await viewModel.retry() } }
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -87,7 +87,7 @@ struct TrustedDevicesView: View {
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
                     if device.isCurrent == true {
-                        Text("Perangkat ini")
+                        Text(L10n.Sessions.thisDevice)
                             .font(AppFont.medium(11))
                             .foregroundStyle(AppTheme.sageDark)
                     }
@@ -112,6 +112,6 @@ struct TrustedDevicesView: View {
             }
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 }

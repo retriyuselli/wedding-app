@@ -244,6 +244,47 @@ enum AppTextSizePreference: String, CaseIterable, Identifiable {
     }
 }
 
+enum AppCountdownFontPreference: String, CaseIterable, Identifiable {
+    case stencil
+    case poppins
+    case rounded
+    case serif
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .stencil: return L10n.Settings.countdownFontStencil
+        case .poppins: return L10n.Settings.countdownFontPoppins
+        case .rounded: return L10n.Settings.countdownFontRounded
+        case .serif: return L10n.Settings.countdownFontSerif
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .stencil: return L10n.Settings.countdownFontStencilSub
+        case .poppins: return L10n.Settings.countdownFontPoppinsSub
+        case .rounded: return L10n.Settings.countdownFontRoundedSub
+        case .serif: return L10n.Settings.countdownFontSerifSub
+        }
+    }
+
+    func font(size: CGFloat) -> Font {
+        let scaled = size * AppearanceStore.currentTextScale
+        switch self {
+        case .stencil:
+            return .custom("SairaStencilOne-Regular", size: scaled, relativeTo: .largeTitle)
+        case .poppins:
+            return .custom("Poppins-Bold", size: scaled, relativeTo: .largeTitle)
+        case .rounded:
+            return .system(size: scaled, weight: .bold, design: .rounded)
+        case .serif:
+            return .system(size: scaled, weight: .semibold, design: .serif)
+        }
+    }
+}
+
 @MainActor
 final class AppearanceStore: ObservableObject {
     static let shared = AppearanceStore()
@@ -252,14 +293,20 @@ final class AppearanceStore: ObservableObject {
     nonisolated(unsafe) static var currentTextScale: CGFloat = 1.0
     /// Dibaca dari `AppTheme` / background tanpa hop MainActor.
     nonisolated(unsafe) static var currentPalette: AppColorPalette = .sage
+    /// Dibaca dari `AppTheme` agar warna tidak ikut trait flip dari material.
+    nonisolated(unsafe) static var currentTheme: AppAppearanceMode = .system
+    /// Dibaca dari `AppFont.countdown` tanpa hop MainActor.
+    nonisolated(unsafe) static var currentCountdownFont: AppCountdownFontPreference = .stencil
 
     @Published private(set) var theme: AppAppearanceMode
     @Published private(set) var colorPalette: AppColorPalette
     @Published private(set) var textSize: AppTextSizePreference
+    @Published private(set) var countdownFont: AppCountdownFontPreference
 
     private let themeKey = "app_theme_preference"
     private let paletteKey = "app_color_palette"
     private let textSizeKey = "app_text_size_preference"
+    private let countdownFontKey = "app_countdown_font_preference"
 
     var textScale: CGFloat { textSize.scale }
 
@@ -285,13 +332,23 @@ final class AppearanceStore: ObservableObject {
             textSize = .medium
         }
 
+        if let raw = UserDefaults.standard.string(forKey: countdownFontKey),
+           let value = AppCountdownFontPreference(rawValue: raw) {
+            countdownFont = value
+        } else {
+            countdownFont = .stencil
+        }
+
         Self.currentTextScale = textSize.scale
         Self.currentPalette = colorPalette
+        Self.currentTheme = theme
+        Self.currentCountdownFont = countdownFont
     }
 
     func selectTheme(_ preference: AppAppearanceMode) {
         guard theme != preference else { return }
         theme = preference
+        Self.currentTheme = preference
         UserDefaults.standard.set(preference.rawValue, forKey: themeKey)
     }
 
@@ -307,6 +364,13 @@ final class AppearanceStore: ObservableObject {
         textSize = preference
         Self.currentTextScale = preference.scale
         UserDefaults.standard.set(preference.rawValue, forKey: textSizeKey)
+    }
+
+    func selectCountdownFont(_ preference: AppCountdownFontPreference) {
+        guard countdownFont != preference else { return }
+        countdownFont = preference
+        Self.currentCountdownFont = preference
+        UserDefaults.standard.set(preference.rawValue, forKey: countdownFontKey)
     }
 }
 

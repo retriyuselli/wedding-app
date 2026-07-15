@@ -41,15 +41,15 @@ struct LanguageSettingsView: View {
                 Text(language.flag)
                     .font(.system(size: 26))
                     .frame(width: 44, height: 44)
-                    .background(AppTheme.lightSage, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(AppTheme.iconChipFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(language.label)
                         .font(AppFont.medium(15))
-                        .foregroundStyle(AppTheme.ink)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                     Text(language.isAvailable ? language.nativeSubtitle : L10n.Common.comingSoon)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.inkMuted(0.6))
                 }
 
                 Spacer(minLength: 8)
@@ -57,29 +57,28 @@ struct LanguageSettingsView: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.sageMuted(0.95))
                 } else if !language.isAvailable {
                     Text(L10n.Common.soon)
                         .font(AppFont.medium(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.4))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(AppTheme.mist, in: Capsule())
+                        .background(AppTheme.chipIdleFill, in: Capsule())
                 } else {
                     Image(systemName: "circle")
                         .font(.system(size: 20))
-                        .foregroundStyle(AppTheme.ink.opacity(0.2))
+                        .foregroundStyle(AppTheme.inkMuted(0.35))
                 }
             }
             .padding(14)
-            .background(
-                (isSelected ? AppTheme.lightSage.opacity(0.5) : AppTheme.surface),
-                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(isSelected ? 0.3 : 0.10), lineWidth: 1)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(AppTheme.nestedGlassFill)
+                }
             }
+            .premiumGlassCard(cornerRadius: 18)
         }
         .buttonStyle(.plain)
         .disabled(!language.isAvailable)
@@ -90,14 +89,14 @@ struct LanguageSettingsView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "globe")
                 .font(.system(size: 18))
-                .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                .foregroundStyle(AppTheme.sageMuted(0.9))
 
             Text(L10n.Language.info)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .foregroundStyle(AppTheme.inkMuted(0.65))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 }

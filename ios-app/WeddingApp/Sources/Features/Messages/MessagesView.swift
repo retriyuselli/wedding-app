@@ -104,9 +104,7 @@ struct MessagesView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppTheme.ink.opacity(0.8))
+                    circleButton("arrow.left")
                 }
                 .buttonStyle(.plain)
 
@@ -144,13 +142,20 @@ struct MessagesView: View {
     private func circleButton(_ icon: String, isActive: Bool = false, badge: Int = 0) -> some View {
         ZStack(alignment: .topTrailing) {
             Image(systemName: icon)
-                .font(.system(size: 17, weight: .regular))
-                .foregroundStyle(isActive ? AppTheme.sageDark : AppTheme.ink.opacity(0.72))
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(isActive ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.82))
                 .frame(width: 42, height: 42)
-                .background((isActive ? AppTheme.lightSage : .white).opacity(0.86), in: Circle())
+                .background {
+                    Circle()
+                        .fill((isActive ? AppTheme.lightSage : Color.white).opacity(0.78))
+                        .background(.ultraThinMaterial, in: Circle())
+                }
                 .overlay {
                     Circle()
-                        .stroke(AppTheme.sage.opacity(isActive ? 0.35 : 0), lineWidth: 1)
+                        .stroke(
+                            isActive ? AppTheme.sage.opacity(0.35) : Color.white.opacity(0.65),
+                            lineWidth: 1
+                        )
                 }
                 .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
 
@@ -176,12 +181,7 @@ struct MessagesView: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.07), radius: 14, y: 7)
+        .premiumGlassCard(cornerRadius: 22)
     }
 
     private func statItem(label: String, value: String, tint: Color = AppTheme.sageDark) -> some View {
@@ -199,7 +199,7 @@ struct MessagesView: View {
 
     private var activeFilterRow: some View {
         HStack {
-            Text("Menampilkan pesan belum dibaca")
+            Text(L10n.Messages.unreadBanner)
                 .font(AppFont.medium(12))
                 .foregroundStyle(AppTheme.sageDark)
             Spacer()
@@ -240,12 +240,12 @@ struct MessagesView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(AppTheme.surface, in: Capsule())
+        .premiumGlassCard(cornerRadius: 24)
         .overlay {
             Capsule()
                 .stroke(
-                    isSearchFocused ? AppTheme.sageDark.opacity(0.35) : AppTheme.sage.opacity(0.10),
-                    lineWidth: isSearchFocused ? 1.5 : 1
+                    isSearchFocused ? AppTheme.sageDark.opacity(0.35) : Color.clear,
+                    lineWidth: isSearchFocused ? 1.5 : 0
                 )
         }
     }
@@ -275,12 +275,12 @@ struct MessagesView: View {
     private var threadListSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text(isSearching || filter.isActive ? "Hasil Pencarian" : "Percakapan")
-                    .font(AppFont.semibold(18))
+                Text(isSearching || filter.isActive ? L10n.Messages.searchResults : L10n.Messages.conversations)
+                    .font(.system(size: 18, weight: .semibold, design: .serif))
                     .foregroundStyle(AppTheme.sageDark)
                 Spacer()
                 if isSearching {
-                    Text("\(filteredThreads.count) chat")
+                    Text(L10n.Messages.chatCount(filteredThreads.count))
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
                 }
@@ -317,7 +317,7 @@ struct MessagesView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .premiumGlassCard(cornerRadius: 22)
     }
 }
 
@@ -339,7 +339,20 @@ private struct MessageCategoryChip: View {
             .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
-            .background(isSelected ? AppTheme.sageDark : AppTheme.lightSage, in: Capsule())
+            .background {
+                if isSelected {
+                    Capsule().fill(AppTheme.sageDark)
+                } else {
+                    Capsule()
+                        .fill(AppTheme.lightSage.opacity(0.85))
+                        .background(.ultraThinMaterial, in: Capsule())
+                }
+            }
+            .overlay {
+                if !isSelected {
+                    Capsule().stroke(Color.white.opacity(0.55), lineWidth: 1)
+                }
+            }
         }
         .buttonStyle(.plain)
     }
@@ -385,7 +398,7 @@ private struct MessageThreadRow: View {
                 }
 
                 HStack(alignment: .top) {
-                    Text(thread.lastMessage ?? "Belum ada pesan")
+                    Text(thread.lastMessage ?? L10n.Messages.noMessage)
                         .font(AppFont.regular(12))
                         .foregroundStyle(thread.hasUnread ? AppTheme.ink.opacity(0.75) : AppTheme.ink.opacity(0.45))
                         .lineLimit(2)
@@ -411,12 +424,13 @@ private struct MessageThreadRow: View {
             }
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .premiumGlassCard(cornerRadius: 22)
         .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(thread.hasUnread ? 0.18 : 0.10), lineWidth: 1)
+            if thread.hasUnread {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(AppTheme.sage.opacity(0.22), lineWidth: 1)
+            }
         }
-        .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 12, y: 6)
     }
 }
 
@@ -510,7 +524,7 @@ struct MessageDetailView: View {
                 Text(thread.name)
                     .font(AppFont.semibold(14))
                     .foregroundStyle(AppTheme.ink)
-                Text(thread.isOnline ? "Online" : "Offline")
+                Text(thread.isOnline ? L10n.Messages.online : L10n.Messages.offline)
                     .font(AppFont.regular(11))
                     .foregroundStyle(thread.isOnline ? AppTheme.sage : AppTheme.ink.opacity(0.45))
             }
@@ -519,9 +533,16 @@ struct MessageDetailView: View {
 
             Image(systemName: "ellipsis")
                 .font(.system(size: 16))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .foregroundStyle(AppTheme.sageDark.opacity(0.72))
                 .frame(width: 36, height: 36)
-                .background(.white.opacity(0.86), in: Circle())
+                .background {
+                    Circle()
+                        .fill(Color.white.opacity(0.78))
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .overlay {
+                    Circle().stroke(Color.white.opacity(0.65), lineWidth: 1)
+                }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

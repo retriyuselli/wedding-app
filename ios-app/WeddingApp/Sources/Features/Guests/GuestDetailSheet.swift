@@ -183,18 +183,26 @@ struct GuestDetailSheet: View {
         HStack(spacing: 14) {
             Image(systemName: current.segment.listIcon)
                 .font(.system(size: 22, weight: .regular))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 56, height: 56)
-                .background(AppTheme.sage.opacity(0.12), in: Circle())
+                .background {
+                    Circle()
+                        .fill(AppTheme.iconChipFill)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .overlay {
+                    Circle()
+                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(current.name)
                     .font(AppFont.medium(18))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnGlass)
 
                 Text(current.segment.title)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.45))
             }
 
             Spacer(minLength: 0)
@@ -218,20 +226,24 @@ struct GuestDetailSheet: View {
             }
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private func contactActionButton(systemName: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 40, height: 40)
-                .background(AppTheme.sage.opacity(0.12), in: Circle())
+                .background {
+                    Circle()
+                        .fill(AppTheme.iconChipFill)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .overlay {
+                    Circle()
+                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
         }
         .buttonStyle(.plain)
     }
@@ -240,7 +252,7 @@ struct GuestDetailSheet: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L10n.Guest.rsvpStatus)
                 .font(AppFont.medium(15))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             HStack(spacing: 8) {
                 ForEach(RsvpKind.allCases, id: \.self) { kind in
@@ -254,7 +266,9 @@ struct GuestDetailSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(
-                                selected ? AnyShapeStyle(kind.color) : AnyShapeStyle(kind.badgeBackground),
+                                selected
+                                    ? AnyShapeStyle(rsvpSelectedFill(for: kind))
+                                    : AnyShapeStyle(kind.badgeBackground),
                                 in: Capsule()
                             )
                     }
@@ -271,14 +285,19 @@ struct GuestDetailSheet: View {
             if let meta = rsvpMetaText {
                 Text(meta)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(AppTheme.inkMuted(0.4))
             }
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        .premiumGlassCard(cornerRadius: 20)
+    }
+
+    /// Solid selected fills so white labels stay readable in dark mode (sageDark/gold tokens lighten otherwise).
+    private func rsvpSelectedFill(for kind: RsvpKind) -> Color {
+        switch kind {
+        case .confirmed: return AppTheme.brandGradientEnd
+        case .pending: return AppTheme.goldDark
+        case .absent: return AppTheme.statusMutedSelected
         }
     }
 
@@ -286,7 +305,7 @@ struct GuestDetailSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L10n.Guest.detailSection)
                 .font(AppFont.medium(15))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             switch current {
             case .guest(let guest):
@@ -317,11 +336,7 @@ struct GuestDetailSheet: View {
             }
         }
         .padding(16)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     @ViewBuilder
@@ -331,11 +346,11 @@ struct GuestDetailSheet: View {
             HStack(alignment: .top) {
                 Text(label)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.45))
                     .frame(width: 100, alignment: .leading)
                 Text(trimmed)
                     .font(AppFont.medium(13))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -349,15 +364,15 @@ struct GuestDetailSheet: View {
                 HStack(alignment: .top) {
                     Text(label)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.inkMuted(0.45))
                         .frame(width: 100, alignment: .leading)
                     Text(trimmed)
                         .font(AppFont.medium(13))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.sageMuted(0.9))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Image(systemName: "arrow.up.right")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(AppTheme.sage.opacity(0.7))
+                        .foregroundStyle(AppTheme.inkMuted(0.5))
                 }
             }
             .buttonStyle(.plain)

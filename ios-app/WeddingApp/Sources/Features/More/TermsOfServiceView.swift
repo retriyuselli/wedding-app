@@ -51,13 +51,20 @@ struct TermsOfServiceView: View {
                         .foregroundStyle(selectedLanguage == language ? .white : AppTheme.sageDark)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 10)
-                        .background(
-                            selectedLanguage == language ? AppTheme.sageDark : AppTheme.surface,
-                            in: Capsule()
-                        )
+                        .background {
+                            if selectedLanguage == language {
+                                Capsule().fill(AppTheme.sageDark)
+                            } else {
+                                Capsule()
+                                    .fill(Color.white.opacity(0.72))
+                                    .background(.ultraThinMaterial, in: Capsule())
+                            }
+                        }
                         .overlay {
-                            Capsule()
-                                .stroke(AppTheme.sage.opacity(selectedLanguage == language ? 0 : 0.14), lineWidth: 1)
+                            if selectedLanguage != language {
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                            }
                         }
                 }
                 .buttonStyle(.plain)
@@ -89,11 +96,7 @@ struct TermsOfServiceView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.lightSage.opacity(0.5), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private func sectionCard(_ section: PrivacyPolicySection) -> some View {
@@ -131,11 +134,7 @@ struct TermsOfServiceView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var contactCard: some View {
@@ -173,7 +172,7 @@ struct TermsOfServiceView: View {
             }
         }
         .padding(16)
-        .background(AppTheme.lightSage.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private var webVersionCard: some View {
@@ -189,11 +188,7 @@ struct TermsOfServiceView: View {
             }
             .foregroundStyle(AppTheme.sageDark)
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 16)
         }
         .buttonStyle(.plain)
     }

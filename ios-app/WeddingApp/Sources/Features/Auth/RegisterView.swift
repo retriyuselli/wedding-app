@@ -52,7 +52,7 @@ struct RegisterView: View {
         }
         .background(LoginPalette.background)
         .toolbar(.hidden, for: .navigationBar)
-        .tint(LoginPalette.green)
+        .tint(AppTheme.sageDark)
         .onAppear {
             session.resetTransientUIState()
         }
@@ -140,12 +140,7 @@ private struct RegisterFormSheet: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            LoginSheetShape()
-                .fill(LoginPalette.sheet)
-                .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: -8)
-                .overlay(alignment: .bottom) {
-                    AuthLoginSheetFlorals()
-                }
+            LoginSheetGlassBackground()
 
             VStack(spacing: 0) {
                 LoginBadge(systemImage: "person.badge.plus", overlaySystemImage: nil)
@@ -153,19 +148,19 @@ private struct RegisterFormSheet: View {
 
                 HStack(spacing: 8) {
                     Text(L10n.Auth.createAccount)
-                        .font(AppFont.semibold(27))
-                        .foregroundStyle(LoginPalette.green)
+                        .font(.system(size: 26, weight: .semibold, design: .serif))
+                        .foregroundStyle(AppTheme.sageDark)
 
                     Image(systemName: "heart")
-                        .font(.system(size: 19, weight: .light))
-                        .foregroundStyle(LoginPalette.gold)
+                        .font(.system(size: 18, weight: .light))
+                        .foregroundStyle(AppTheme.gold)
                         .offset(y: 2)
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
 
                 Text(L10n.Auth.tagline)
-                    .font(AppFont.regular(12))
+                    .font(.system(size: 13, weight: .regular, design: .rounded))
                     .foregroundStyle(LoginPalette.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.top, 5)
@@ -255,16 +250,16 @@ private struct RegisterFormSheet: View {
                 Button(action: onLogin) {
                     HStack(spacing: 8) {
                         Text(L10n.Auth.haveAccount)
-                            .font(AppFont.regular(13))
+                            .font(.system(size: 13, weight: .regular, design: .rounded))
                             .foregroundStyle(LoginPalette.textSecondary)
 
                         Text(L10n.Auth.login)
-                            .font(AppFont.semibold(13))
-                            .foregroundStyle(LoginPalette.green)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(AppTheme.sageDark)
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(LoginPalette.green)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(AppTheme.sageDark)
                     }
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)

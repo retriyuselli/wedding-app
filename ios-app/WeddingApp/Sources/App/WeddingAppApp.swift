@@ -45,6 +45,8 @@ struct WeddingAppApp: App {
                 .environmentObject(session)
                 .modifier(AppLanguageModifier())
                 .modifier(AppAppearanceModifier())
+                // Outside appearance remounts so splash isn't discarded mid-animation.
+                .splashScreenOverlay()
                 .onAppear {
                     GoogleSignInService.shared.configureIfNeeded()
                 }

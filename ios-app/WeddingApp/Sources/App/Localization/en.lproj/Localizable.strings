@@ -93,7 +93,7 @@
 "more.planning_section" = "My Planning";
 "more.account_section" = "Account & Settings";
 "more.wedding_detail" = "Wedding Details";
-"more.wedding_detail_sub" = "Date, location, and key information";
+"more.wedding_detail_sub" = "Each event’s date, venue, and guest estimate";
 "more.couple" = "Couple";
 "more.couple_sub" = "Bride and groom information";
 "more.saved_vendors" = "Saved Vendors";
@@ -122,7 +122,15 @@
 "reminders.push_toggle" = "Push notifications";
 "reminders.push_toggle_sub" = "Turn app notifications on or off";
 "reminders.open_settings" = "Open iOS Settings";
-"reminders.info" = "Notification permissions are managed by iOS. After changing permission in Settings, the status on this page updates automatically.";
+"reminders.info" = "Tap the test button to preview a system banner. Remote push (message replies, etc.) needs a physical iPhone and APNs backend.";
+"reminders.test_button" = "Send test notification";
+"reminders.test_title" = "Wedding App";
+"reminders.test_body_local" = "This is a sample notification banner on your iPhone.";
+"reminders.test_needs_permission" = "Allow notifications first, then try again.";
+"reminders.test_denied" = "Notifications are off. Enable them in iOS Settings.";
+"reminders.test_failed" = "Couldn't show the test notification.";
+"reminders.test_local_only" = "Local banner scheduled. Remote push isn't available yet (check login, token, or API).";
+"reminders.test_remote_sent" = "Local banner scheduled. Remote push sent to %d device(s).";
 "more.help" = "Help & FAQ";
 "more.help_sub" = "Help center and common questions";
 "more.about" = "About Wedding App";
@@ -135,6 +143,12 @@
 "more.logout_message" = "Are you sure you want to log out?";
 "more.date_not_set" = "Date not set";
 "more.location_not_set" = "Location not set";
+"more.email_not_set" = "Email not set";
+"more.joined_today" = "just joined";
+"more.joined_days" = "%d days";
+"more.joined_months" = "%d months";
+"more.joined_years" = "%d years";
+"more.joined_years_months" = "%d years %d months";
 
 /* Language */
 "language.title" = "Language";
@@ -183,6 +197,18 @@
 "settings.text_size_preview" = "Preview";
 "settings.text_size_preview_sample" = "Your wedding plans, clearer and more comfortable.";
 "settings.text_size_info" = "Text size applies across the app. Some decorative titles may keep a fixed size.";
+"settings.countdown" = "Countdown";
+"settings.countdown_chooser_sub" = "Choose the countdown number font on Home";
+"settings.countdown_font_stencil" = "Stencil";
+"settings.countdown_font_stencil_sub" = "Classic iPhone stencil look";
+"settings.countdown_font_poppins" = "Poppins";
+"settings.countdown_font_poppins_sub" = "Bold and modern";
+"settings.countdown_font_rounded" = "Rounded";
+"settings.countdown_font_rounded_sub" = "Soft and friendly";
+"settings.countdown_font_serif" = "Serif";
+"settings.countdown_font_serif_sub" = "Classic and elegant";
+"settings.countdown_preview" = "Preview";
+"settings.countdown_info" = "This font only applies to the countdown digits on Home.";
 "settings.edit_profile" = "Edit profile";
 "settings.edit_profile_sub" = "Name, photo, and account details";
 "settings.privacy_security" = "Privacy & security";
@@ -193,6 +219,15 @@
 "dashboard.welcome" = "Welcome to";
 "dashboard.plan_together" = "Plan beautifully. Together.";
 "dashboard.days_to_go" = "days to go";
+"dashboard.countdown_title" = "Countdown to Our Big Day";
+"dashboard.countdown_label" = "Countdown";
+"dashboard.countdown_big_day" = "Our Big Day · Resepsi";
+"dashboard.countdown_encourage" = "Keep going.\nEvery day brings you closer to forever.";
+"dashboard.countdown_progress" = "%d%% toward reception";
+"dashboard.countdown_days" = "Days";
+"dashboard.countdown_hours" = "Hours";
+"dashboard.countdown_minutes" = "Minutes";
+"dashboard.countdown_seconds" = "Seconds";
 "dashboard.wedding_progress" = "Wedding Progress";
 "dashboard.next_up" = "Next Up";
 "dashboard.completed" = "Completed";
@@ -312,6 +347,24 @@
 "checklist.tasks_completed" = "%d of %d tasks completed";
 "checklist.empty_title" = "No checklist yet";
 "checklist.empty_sub" = "Preparation tasks will appear once your events and checklist data are available.";
+"checklist.add_task" = "Add Task";
+"checklist.add_task_title" = "Add Task";
+"checklist.add_task_subtitle" = "Create a new preparation task for your wedding events.";
+"checklist.task_title" = "Task Title";
+"checklist.task_title_placeholder" = "e.g. Book photographer";
+"checklist.task_event" = "Event";
+"checklist.task_event_placeholder" = "Select event";
+"checklist.task_priority" = "Priority";
+"checklist.task_due_date" = "Due Date";
+"checklist.task_description" = "Description";
+"checklist.task_description_placeholder" = "Task details (optional)";
+"checklist.task_save" = "Save Task";
+"checklist.task_create_error" = "Couldn't add the task. Please try again.";
+"checklist.task_sub_tasks" = "Sub Tasks";
+"checklist.task_sub_tasks_hint" = "Optional. Break this task into smaller steps.";
+"checklist.task_sub_task_placeholder" = "e.g. Contact vendor";
+"checklist.task_add_sub_task" = "Add sub task";
+"checklist.no_events" = "No events yet. Add an event in Wedding Details first.";
 
 /* Budget */
 "budget.title" = "Budget";
@@ -514,6 +567,10 @@
 "vendor.found" = "%d vendors found";
 "vendor.not_found" = "No vendors found";
 "vendor.not_found_sub" = "Try another keyword or change category.";
+"vendor.partner_notice_title" = "Vendor catalog source";
+"vendor.partner_notice_body" = "The vendor catalog in Wedding App is powered by our partner at paketpernikahan.co.id. You can still search, save, and compare vendors right here.";
+"vendor.partner_notice_cta" = "Got it";
+"vendor.partner_footnote" = "Powered by paketpernikahan.co.id";
 
 /* Inspiration */
 "inspiration.title" = "Inspiration & Ideas";
@@ -537,7 +594,7 @@
 "documents.storage_used" = "%@ of %d MB used";
 "documents.upload" = "Upload Document";
 "documents.upload_hint" = "Tap to select or drag file here";
-"documents.upload_limit" = "PDF, JPG, PNG max 10MB";
+"documents.upload_limit" = "PDF, JPG, PNG max 1MB";
 "documents.new_folder" = "Create\nNew Folder";
 "documents.recent" = "Recent Documents";
 "documents.security_note" = "Your documents are secure and only accessible by you.";
@@ -668,6 +725,54 @@
 "couple.culture_placeholder" = "e.g. Javanese tradition, Garden Romantic";
 "couple.save" = "Save Couple";
 
+/* Onboarding */
+"onboarding.step_label" = "Step %d of %d";
+"onboarding.next" = "Next";
+"onboarding.back" = "Back";
+"onboarding.finish" = "Start Planning";
+
+"onboarding.names_eyebrow" = "Couple names";
+"onboarding.names_title" = "What should we call you?";
+"onboarding.names_subtitle" = "These nicknames will appear on invitations and your wedding dashboard.";
+"onboarding.bride_label" = "Bride's nickname";
+"onboarding.groom_label" = "Groom's nickname";
+"onboarding.bride_placeholder" = "e.g. Retri";
+"onboarding.groom_placeholder" = "e.g. Rama";
+
+"onboarding.events_eyebrow" = "Wedding events";
+"onboarding.events_title" = "Which events are you planning?";
+"onboarding.events_subtitle" = "Pick one or more. You can change dates and details later.";
+"onboarding.events_hint" = "Select at least one event to continue.";
+"onboarding.event_lamaran" = "Engagement";
+"onboarding.event_pengajian" = "Pengajian";
+"onboarding.event_akad" = "Akad";
+"onboarding.event_resepsi" = "Reception";
+
+"onboarding.date_eyebrow" = "Schedule";
+"onboarding.date_title" = "Date & venue for each event";
+"onboarding.date_subtitle" = "Fill in the date and location for every event you selected.";
+"onboarding.date_for_event" = "Date";
+"onboarding.location_for_event" = "Location";
+"onboarding.location_eyebrow" = "Venue";
+"onboarding.location_title" = "Where will each event be held?";
+"onboarding.location_subtitle" = "Add a venue for every event you selected.";
+"onboarding.location_label" = "Venue";
+"onboarding.location_placeholder" = "e.g. Home / Balai Kartini";
+
+"onboarding.culture_eyebrow" = "Tradition";
+"onboarding.culture_title" = "Which culture fits you?";
+"onboarding.culture_subtitle" = "Helps us personalize inspiration and checklist suggestions.";
+
+"onboarding.extras_eyebrow" = "Optional";
+"onboarding.extras_title" = "A few more details";
+"onboarding.extras_subtitle" = "You can skip these for now and edit them later anytime.";
+"onboarding.guests_label" = "Estimated guests";
+"onboarding.guests_placeholder" = "e.g. 300";
+"onboarding.guests_for_event" = "Guests for %@";
+"onboarding.budget_label" = "Estimated budget (IDR)";
+"onboarding.budget_placeholder" = "e.g. 150000000";
+"onboarding.extras_hint" = "Guest estimates and budget are optional. Tap Start Planning when you’re ready.";
+
 /* Wedding Detail */
 "wedding_detail.title" = "Wedding Details";
 "wedding_detail.subtitle" = "Complete information about your\nwedding plan.";
@@ -686,6 +791,9 @@
 "wedding_detail.no_events_sub" = "Add your wedding events from the edit page.";
 "wedding_detail.attending" = "Attending";
 "wedding_detail.time_not_set" = "Time not set";
+"wedding_detail.estimated_guests" = "Estimated guests";
+"wedding_detail.estimated_guests_value" = "%@ guests";
+"wedding_detail.estimated_guests_not_set" = "Guest estimate not set";
 "wedding_detail.default_location" = "Lake Maceyhaven, Indonesia";
 "wedding_detail.default_couple" = "Eliane & Jaeden";
 "wedding_detail.default_date" = "23 June 2027";
@@ -697,3 +805,285 @@
 "inspiration_category.makeup" = "Makeup";
 "inspiration_category.catering" = "Catering";
 "inspiration_category.venue" = "Wedding Venue";
+
+/* Hardcode cleanup */
+
+/* Auth 2FA & brand */
+"auth.brand_wedding" = "Wedding";
+"auth.brand_app" = "App";
+"auth.two_factor_title" = "Two-step verification";
+"auth.two_factor_message" = "Enter the 6-digit code from your authenticator app or SMS.";
+"auth.two_factor_code_placeholder" = "6-digit code";
+"auth.two_factor_verifying" = "Verifying…";
+"auth.two_factor_verify" = "Verify";
+
+/* Dashboard fallbacks */
+"dashboard.default_couple" = "Wedding Couple";
+"dashboard.default_venue" = "Wedding venue";
+"dashboard.set_date" = "Set date";
+"dashboard.upcoming" = "Upcoming";
+"dashboard.today" = "Today";
+"dashboard.in_days" = "In %d days";
+
+/* Vendor extras */
+"vendor.filter_verified_chip" = "Verified";
+"vendor.filter_saved_chip" = "Saved";
+"vendor.loading_categories" = "Loading categories…";
+"vendor.results_filtered" = "Filtered Results";
+"vendor.all_vendors" = "All Vendors";
+"vendor.request_cta_title" = "Can't find the right match?";
+"vendor.request_cta_sub" = "Send your requirements and vendors will\nreach out to you.";
+"vendor.send_request" = "Send\nRequest";
+"vendor.send_request_short" = "Send Request";
+"vendor.request_form_hint" = "Tell us what you need. Our team will help find the right partners.";
+"vendor.request_category_title" = "Vendor Type";
+"vendor.request_category_placeholder" = "e.g. Decoration, Catering";
+"vendor.request_city_title" = "City";
+"vendor.request_city_placeholder" = "e.g. Jakarta";
+"vendor.request_budget_title" = "Budget";
+"vendor.request_budget_placeholder" = "e.g. 50 million";
+"vendor.request_sent_title" = "Request Sent";
+"vendor.request_sent_message" = "Your request has been sent. Our team will contact you soon.";
+"vendor.request_notes_title" = "Requirement Details";
+"vendor.request_notes_placeholder" = "Describe your needs, preferences, and event timing…";
+"vendor.request_msg_category" = "Type: %@";
+"vendor.request_msg_location" = "Location: %@";
+"vendor.request_msg_budget" = "Budget: %@";
+"vendor.request_msg_detail" = "Details: %@";
+"vendor.filter_title" = "Filter Vendors";
+"vendor.reload_categories" = "Reload Categories";
+"vendor.no_categories" = "No vendor categories yet.";
+"vendor.province" = "Province";
+"vendor.no_provinces" = "No provinces available.";
+"vendor.city_section" = "City / Regency";
+"vendor.no_cities" = "No cities available.";
+"vendor.filter_verified_title" = "Verified Only";
+"vendor.filter_verified_sub" = "Show only verified vendors";
+"vendor.filter_saved_title" = "Saved Only";
+"vendor.filter_saved_sub" = "Show only vendors you've saved";
+"vendor.review_count" = "(%d reviews)";
+"vendor.package_count" = "%d packages";
+"vendor.package_count_title" = "%d Packages";
+"vendor.from_price" = "· from %@";
+"vendor.from_price_title" = "From %@";
+"vendor.featured" = "Featured";
+"vendor.about" = "About Vendor";
+"vendor.contact" = "Contact";
+"vendor.packages" = "Packages";
+"vendor.show_less" = "Collapse";
+"vendor.show_more" = "Show";
+"vendor.no_packages" = "No packages available yet.";
+"vendor.more_packages" = "+%d more packages";
+"vendor.not_found_detail" = "Vendor not found.";
+"vendor.invalid" = "Invalid vendor.";
+"vendor.pax_range" = "%d–%d pax";
+"vendor.pax_max" = "≤ %d pax";
+"vendor.hours" = "%d hours";
+"vendor.exclusions" = "Not Included";
+"vendor.sort_popular" = "Popular";
+"vendor.sort_newest" = "Newest";
+"vendor.all_provinces" = "All Provinces";
+"vendor.all_cities" = "All Cities";
+"vendor.saved_empty_title" = "No saved vendors yet";
+"vendor.saved_empty_message" = "Save your favorite vendors from the Vendor page.";
+
+/* Inspiration extras */
+"inspiration.likes_chip" = "%d+ likes";
+"inspiration.empty_saved_title" = "No saved inspiration yet";
+"inspiration.empty_saved_sub" = "Save ideas you love so they're easy to find again.";
+"inspiration.empty_search_title" = "No inspiration found";
+"inspiration.empty_search_sub" = "Try changing your search keywords or filters.";
+"inspiration.filter_title" = "Filter Inspiration";
+"inspiration.likes_section" = "Likes";
+"inspiration.filter_saved_only" = "Saved Only";
+"inspiration.filter_saved_only_sub" = "Show only inspiration you've saved";
+"inspiration.see_all_sub" = "See all inspiration";
+"inspiration.category_count" = "%d inspiration available";
+"inspiration.all_inspirations" = "All Inspiration";
+"inspiration.category_empty_title" = "No inspiration yet";
+"inspiration.category_empty_message" = "No content in this category yet.";
+"inspiration.saved_empty_title" = "No saved inspiration yet";
+"inspiration.saved_empty_message" = "Save ideas from the Inspiration page to access them here.";
+"inspiration.likes_all" = "All";
+"inspiration.likes_200" = "200+";
+"inspiration.likes_500" = "500+";
+
+/* Documents extras */
+"documents.category_akad" = "Akad";
+"documents.category_resepsi" = "Reception";
+"documents.category_vendor" = "Vendor";
+"documents.category_finance" = "Finance";
+"documents.sort_newest" = "Newest";
+"documents.sort_oldest" = "Oldest";
+"documents.sort_name_asc" = "Name A–Z";
+"documents.sort_name_desc" = "Name Z–A";
+"documents.ready_to_open" = "Document ready to open";
+"documents.open_share" = "Open / Share";
+"documents.downloading" = "Downloading…";
+"documents.open_download" = "Open / Download";
+"documents.new_folder_alert_title" = "New Folder";
+"documents.folder_name_placeholder" = "Folder name";
+"documents.new_folder_message" = "Enter a name for the new folder.";
+"documents.all_folders" = "All folders";
+"documents.empty_filtered" = "No documents";
+"documents.folder_section" = "Folder";
+"documents.unknown_date" = "Unknown date";
+"documents.folder_name_empty" = "Folder name cannot be empty.";
+"documents.folder_created_title" = "Folder created";
+"documents.folder_created_message" = "Folder \"%@\" was created successfully.";
+"documents.upload_success_title" = "Upload successful";
+"documents.upload_success_message" = "Document uploaded successfully.";
+"documents.link_unavailable" = "Document link is unavailable.";
+
+/* Checklist extras */
+"checklist.fallback_section" = "Preparation";
+"checklist.show_less" = "Show less";
+"checklist.show_all" = "See all (%d)";
+"checklist.other_group" = "Other";
+"checklist.done_on" = "Done on %@";
+"checklist.detail_title" = "Task Detail";
+"checklist.detail_subtitle" = "View and manage preparation task details.";
+"checklist.detail_category" = "Category";
+"checklist.detail_priority" = "Priority";
+"checklist.detail_created" = "Created On";
+"checklist.detail_due" = "Due Date";
+"checklist.attachments" = "Attachments";
+"checklist.mark_done" = "Mark Done";
+"checklist.mark_undone" = "Undo Done";
+"checklist.status_pending" = "Not started";
+"checklist.status_in_progress" = "In progress";
+"checklist.status_done" = "Done";
+"checklist.status_done_on" = "Done on %@";
+"checklist.edit_title" = "Edit Task";
+"checklist.task_save_error" = "Couldn't save the task. Please try again.";
+"checklist.priority_high" = "High";
+"checklist.priority_medium" = "Medium";
+"checklist.priority_low" = "Low";
+
+/* Messages extras */
+"messages.unread_banner" = "Showing unread messages";
+"messages.search_results" = "Search Results";
+"messages.conversations" = "Conversations";
+"messages.chat_count" = "%d chats";
+"messages.no_message" = "No messages yet";
+"messages.online" = "Online";
+"messages.offline" = "Offline";
+"messages.category_vendor" = "Vendor";
+"messages.category_committee" = "Committee";
+"messages.category_support" = "Support";
+"messages.topic_account" = "Account & Login";
+"messages.topic_budget" = "Budget & Payments";
+"messages.topic_checklist" = "Checklist & Prep";
+"messages.topic_guests" = "Guests & Invites";
+"messages.topic_other" = "Other";
+"messages.just_now" = "Just now";
+"messages.yesterday" = "Yesterday";
+
+/* Events */
+"events.title" = "Wedding Events";
+"events.add_title" = "Add Event";
+"events.jenis" = "Event Type";
+"events.lamaran" = "Engagement";
+"events.pengajian" = "Pengajian";
+"events.akad" = "Akad Ceremony";
+"events.resepsi" = "Reception";
+"events.time_wib" = "%@ WIB";
+"events.time_range_wib" = "%@ – %@ WIB";
+"events.default_time_akad" = "10:00 – 11:00 WIB";
+"events.default_time_resepsi" = "11:30 – 15:00 WIB";
+"events.default_time_lamaran" = "14:00 – 16:00 WIB";
+"events.default_time_pengajian" = "09:00 – 11:00 WIB";
+
+/* Onboarding culture */
+"onboarding.culture_jawa" = "Javanese";
+"onboarding.culture_sunda" = "Sundanese";
+"onboarding.culture_batak" = "Batak";
+"onboarding.culture_melayu" = "Malay";
+"onboarding.culture_minang" = "Minangkabau";
+"onboarding.culture_bali" = "Balinese";
+"onboarding.culture_modern" = "Modern";
+"onboarding.culture_other" = "Other";
+
+/* Wedding detail edit */
+"wedding_edit.title" = "Edit Wedding Details";
+"wedding_edit.subtitle" = "Update your wedding plan information.";
+"wedding_edit.couple_section" = "Couple";
+"wedding_edit.bride_name" = "Bride's Name";
+"wedding_edit.groom_name" = "Groom's Name";
+"wedding_edit.happy_day" = "The Big Day";
+"wedding_edit.wedding_date" = "Wedding Date";
+"wedding_edit.concept_section" = "Concept";
+"wedding_edit.concept_placeholder" = "Choose or type a concept";
+"wedding_edit.notes_placeholder" = "Additional notes for the big day…";
+"wedding_edit.schedule_section" = "Event Schedule";
+"wedding_edit.add_event" = "Add Event";
+"wedding_edit.no_events_hint" = "No events yet. Add at least one.";
+"wedding_edit.event_time" = "Time";
+"wedding_edit.event_start" = "Start";
+"wedding_edit.event_end" = "End";
+"wedding_edit.event_location" = "Venue";
+"wedding_edit.event_location_placeholder" = "e.g. Multipurpose Hall";
+"wedding_edit.event_notes_placeholder" = "Event notes…";
+"wedding_edit.delete_event" = "Delete Event";
+"wedding_edit.delete_event_title" = "Delete event?";
+"wedding_edit.delete_event_message" = "Event \"%@\" will be removed from the schedule.";
+"wedding_edit.save_changes" = "Save Changes";
+"wedding_edit.concept_garden" = "Garden Romantic";
+"wedding_edit.concept_classic" = "Classic Elegant";
+"wedding_edit.concept_modern" = "Modern Minimalist";
+"wedding_edit.concept_traditional" = "Traditional";
+"wedding_edit.concept_rustic" = "Rustic Chic";
+"wedding_edit.concept_beach" = "Beach Wedding";
+
+/* About */
+"about.version" = "Version %@ (%@)";
+"about.section_about" = "About the App";
+"about.section_info" = "Information";
+"about.section_follow" = "Follow Us";
+"about.row_developer" = "Developer";
+"about.row_website" = "Website";
+"about.row_email" = "Email";
+"about.row_reviews" = "Rate the App";
+"about.row_privacy" = "Privacy Policy";
+"about.row_terms" = "Terms of Service";
+"about.reviews_unavailable_title" = "Reviews unavailable";
+"about.reviews_unavailable_message" = "Couldn't open the reviews page right now.";
+"about.rights" = "All rights reserved.";
+
+/* Help FAQ chrome */
+"help.search_placeholder" = "Search help topics…";
+"help.topics" = "Help Topics";
+"help.popular_faq" = "Popular FAQ";
+"help.article_count" = "%d articles";
+"help.no_results_title" = "No results";
+"help.no_results_sub" = "Try another keyword or browse topics below.";
+"help.need_help" = "Still need help?";
+"help.contact_support" = "Contact Support";
+"help.email_support" = "Email Support";
+"help.faq_q1" = "How do I add guests?";
+"help.faq_a1" = "Open the Guests tab, then tap add to enter a new guest.";
+"help.faq_q2" = "How do I set the budget?";
+"help.faq_a2" = "In the Budget tab, set your total budget, allocate by category, and record expenses.";
+"help.faq_q3" = "How do I save a vendor?";
+"help.faq_a3" = "Open Vendors, open a vendor detail, then tap save. Saved vendors are in More.";
+"help.faq_q4" = "How do I change the app language?";
+"help.faq_a4" = "Go to More → Language, then choose Bahasa Indonesia or English.";
+"help.faq_q5" = "Is my data safe?";
+"help.faq_a5" = "Yes. Your data is protected, and you can manage privacy and account security in Privacy.";
+
+/* Privacy quick */
+"privacy.security_score" = "Security score: %d%%";
+"privacy.open_ios_settings" = "Open iOS Settings";
+"privacy.export_blurb" = "Download a copy of your account data. This may take a moment.";
+
+"vendor.request_msg_header" = "[Vendor Request]";
+"documents.empty_filtered_sub" = "No documents match this search or category.";
+"wedding_edit.event_count" = "%d events";
+"wedding_edit.all_types_added" = "All event types have already been added.";
+"wedding_edit.default_delete_hint" = "Default events can be removed. Tap Delete Event, then Save changes.";
+"help.contact_support_sub" = "Our team is ready to help you";
+"checklist.uploaded_meta" = "%@ · Uploaded %@";
+"dashboard.sample_venue_meeting" = "Venue Meeting";
+"dashboard.sample_tasting" = "Tasting Session";
+"dashboard.sample_fitting" = "Dress Fitting";
+"vendor.facilities" = "Facilities";

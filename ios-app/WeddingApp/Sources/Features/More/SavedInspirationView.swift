@@ -18,15 +18,15 @@ struct SavedInspirationView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
-                        title: "Inspirasi & Ide",
-                        subtitle: "Simpan inspirasi dan referensi"
+                        title: L10n.More.inspiration,
+                        subtitle: L10n.More.inspirationSub
                     )
 
                     if savedItems.isEmpty {
                         MoreEmptyState(
                             icon: "heart",
-                            title: "Belum ada inspirasi tersimpan",
-                            message: "Simpan ide pernikahan favorit dari halaman Inspirasi untuk referensi nanti."
+                            title: L10n.Inspiration.savedEmptyTitle,
+                            message: L10n.Inspiration.savedEmptyMessage
                         )
                     } else {
                         LazyVGrid(
@@ -94,7 +94,15 @@ private struct SavedInspirationCard: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(AppTheme.sageDark)
                         .frame(width: 28, height: 28)
-                        .background(.white.opacity(0.92), in: Circle())
+                        .background {
+                            Circle()
+                                .fill(Color.white.opacity(0.78))
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                        .overlay {
+                            Circle()
+                                .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                        }
                 }
                 .buttonStyle(.plain)
                 .padding(10)
@@ -129,11 +137,7 @@ private struct SavedInspirationCard: View {
             }
         }
         .padding(12)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     @ViewBuilder

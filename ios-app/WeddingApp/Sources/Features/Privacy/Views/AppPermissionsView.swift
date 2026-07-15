@@ -17,7 +17,7 @@ struct AppPermissionsView: View {
                     if let errorMessage = viewModel.errorMessage, viewModel.permissions.isEmpty {
                         VStack(spacing: 10) {
                             Text(errorMessage).font(AppFont.regular(13)).foregroundStyle(.red)
-                            Button("Coba lagi") { Task { await viewModel.retry() } }
+                            Button(L10n.Common.tryAgain) { Task { await viewModel.retry() } }
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -40,14 +40,14 @@ struct AppPermissionsView: View {
                                 .foregroundStyle(row.isGranted ? AppTheme.sageDark : Color.orange)
                         }
                         .padding(14)
-                        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .premiumGlassCard(cornerRadius: 16)
                     }
 
                     Button {
                         viewModel.openSystemSettings()
                         showSuccess = true
                     } label: {
-                        Text("Buka Pengaturan iOS")
+                        Text(L10n.Privacy.openIosSettings)
                             .font(AppFont.medium(15))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)

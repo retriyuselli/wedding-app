@@ -48,7 +48,7 @@ struct DataVisibilityView: View {
                         ))
                         .font(AppFont.medium(14))
                         .padding(14)
-                        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .premiumGlassCard(cornerRadius: 16)
 
                         Toggle("Izinkan vendor menghubungi", isOn: Binding(
                             get: { viewModel.settings?.allowVendorContact ?? true },
@@ -56,7 +56,7 @@ struct DataVisibilityView: View {
                         ))
                         .font(AppFont.medium(14))
                         .padding(14)
-                        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .premiumGlassCard(cornerRadius: 16)
 
                         Color.clear.frame(height: 80)
                     }
@@ -106,6 +106,6 @@ struct DataVisibilityView: View {
             .pickerStyle(.segmented)
         }
         .padding(14)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 }

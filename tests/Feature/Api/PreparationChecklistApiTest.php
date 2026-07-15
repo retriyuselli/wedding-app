@@ -78,8 +78,7 @@ class PreparationChecklistApiTest extends TestCase
         $this->assertSame('high', $detailTask['priority']);
         $this->assertSame('done', $detailTask['status']);
         $this->assertCount(5, $detailTask['sub_tasks']);
-        $this->assertCount(1, $detailTask['attachments']);
-        $this->assertStringContainsString('Daftar_Ketersediaan_Penghulu.pdf', $detailTask['attachments'][0]['file_name']);
+        $this->assertCount(0, $detailTask['attachments']);
 
         $eventIdsByJenis = collect($eventsResponse->json('data'))->pluck('id', 'jenis_acara');
 
@@ -99,7 +98,7 @@ class PreparationChecklistApiTest extends TestCase
         $this->assertNotNull($venueTask);
         $this->assertSame('high', $venueTask['priority']);
         $this->assertCount(4, $venueTask['sub_tasks']);
-        $this->assertCount(1, $venueTask['attachments']);
+        $this->assertCount(0, $venueTask['attachments']);
 
         $lamaranTask = $tasks->firstWhere('title', 'Menentukan tanggal & jam acara lamaran');
         $this->assertNotNull($lamaranTask);
@@ -111,6 +110,6 @@ class PreparationChecklistApiTest extends TestCase
 
         $autoDocumentTask = $tasks->firstWhere('title', 'Fotokopi KTP kedua mempelai');
         $this->assertNotNull($autoDocumentTask);
-        $this->assertNotEmpty($autoDocumentTask['attachments']);
+        $this->assertEmpty($autoDocumentTask['attachments']);
     }
 }

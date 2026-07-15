@@ -6,6 +6,7 @@ use App\Contracts\PushNotificationDriver;
 use App\Models\User;
 use App\Services\Push\ApnsPushNotificationDriver;
 use App\Services\Push\LogPushNotificationDriver;
+use App\Support\UserSettings;
 
 class PushNotificationService
 {
@@ -38,13 +39,9 @@ class PushNotificationService
 
     private function pushEnabledFor(User $user): bool
     {
-        $settings = $user->notification_settings ?? [];
+        $settings = UserSettings::forUser($user);
 
-        if (! array_key_exists('push', $settings)) {
-            return true;
-        }
-
-        return (bool) $settings['push'];
+        return (bool) ($settings['push_notifications'] ?? true);
     }
 
     public static function resolveDriver(): PushNotificationDriver

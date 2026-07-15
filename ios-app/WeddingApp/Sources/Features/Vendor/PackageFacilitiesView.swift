@@ -19,7 +19,7 @@ struct PackageFacilitiesView: View {
             if hasSections || hasHtml {
                 VStack(alignment: .leading, spacing: 12) {
                     if showsHeader {
-                        Text("Deskripsi")
+                        Text(L10n.Common.description)
                             .font(AppFont.semibold(18))
                             .foregroundStyle(AppTheme.ink)
                     }
@@ -34,20 +34,12 @@ struct PackageFacilitiesView: View {
                         }
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(AppTheme.sage.opacity(0.08), lineWidth: 1)
-                        }
+                        .premiumGlassCard(cornerRadius: 16)
                     } else if let itemHtml, hasHtml {
                         RichEditorHTMLView(html: itemHtml)
                             .padding(16)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(AppTheme.sage.opacity(0.08), lineWidth: 1)
-                            }
+                            .premiumGlassCard(cornerRadius: 16)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -216,7 +208,7 @@ struct PackageExclusionsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Tidak Termasuk")
+            Text(L10n.Vendor.exclusions)
                 .font(AppFont.semibold(14))
                 .foregroundStyle(AppTheme.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -249,10 +241,6 @@ struct PackageExclusionsView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.08), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 16)
     }
 }

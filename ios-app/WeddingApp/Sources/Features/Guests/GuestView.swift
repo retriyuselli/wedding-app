@@ -104,11 +104,11 @@ struct GuestView: View {
     @State private var sortOrder: GuestSortOrder = .numberAsc
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
-    @State private var visibleCount = 10
+    @State private var currentPage = 1
     @State private var showComingSoon = false
     @State private var comingSoonTitle = ""
 
-    private let pageSize = 10
+    private let pageSize = 5
 
     private var currentSegmentCount: Int {
         switch segment {
@@ -159,12 +159,24 @@ struct GuestView: View {
             }
     }
 
-    private var displayedRows: [GuestRowItem] {
-        Array(rows.prefix(visibleCount))
+    private var totalPages: Int {
+        max(1, Int(ceil(Double(rows.count) / Double(pageSize))))
     }
 
-    private var hasMoreRows: Bool {
-        visibleCount < rows.count
+    private var displayedRows: [GuestRowItem] {
+        let page = min(max(currentPage, 1), totalPages)
+        let start = (page - 1) * pageSize
+        guard !rows.isEmpty, start < rows.count else { return [] }
+        let end = min(start + pageSize, rows.count)
+        return Array(rows[start..<end])
+    }
+
+    private var pageRangeLabel: String {
+        guard !rows.isEmpty else { return "" }
+        let page = min(max(currentPage, 1), totalPages)
+        let start = (page - 1) * pageSize + 1
+        let end = min(page * pageSize, rows.count)
+        return "\(start)–\(end) / \(rows.count)"
     }
 
     private var totalGuests: Int { allRows.count }
@@ -237,6 +249,11 @@ struct GuestView: View {
             }
             .onChange(of: sortOrder) { _, _ in
                 resetPagination()
+            }
+            .onChange(of: rows.count) { _, _ in
+                if currentPage > totalPages {
+                    currentPage = totalPages
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
                 Task { await load() }
@@ -341,10 +358,10 @@ struct GuestView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.Guest.title)
                     .font(.system(size: 32, weight: .bold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
 
                 Text(L10n.Guest.subtitle)
-                    .font(.system(size: 12, weight: .regular, design: .serif))
+                    .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.gold)
                     .lineSpacing(2)
             }
@@ -375,45 +392,52 @@ struct GuestView: View {
                 } label: {
                     VStack(spacing: 4) {
                         Text(item.title)
-                            .font(AppFont.medium(13))
-                            .foregroundStyle(isSelected ? AppTheme.sageDark : AppTheme.ink.opacity(0.45))
+                            .font(AppFont.semibold(13))
+                            .foregroundStyle(isSelected ? AppTheme.labelOnLightSurface : AppTheme.inkMuted(0.55))
                         Text("\(count)")
-                            .font(AppFont.regular(11))
-                            .foregroundStyle(isSelected ? AppTheme.gold : AppTheme.ink.opacity(0.35))
+                            .font(AppFont.medium(11))
+                            .foregroundStyle(isSelected ? AppTheme.accentOnLightSurface : AppTheme.inkMuted(0.4))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(
-                        isSelected ? AppTheme.surface : Color.clear,
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    )
+                    .background {
+                        if isSelected {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(AppTheme.selectedChipFill)
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                    }
                     .overlay {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(isSelected ? AppTheme.sage.opacity(0.18) : Color.clear, lineWidth: 1)
+                            .stroke(isSelected ? AppTheme.iconChipStroke : Color.clear, lineWidth: 1)
                     }
+                    .shadow(color: AppTheme.sageDark.opacity(isSelected ? 0.06 : 0), radius: 8, y: 3)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(4)
-        .background(AppTheme.lightSage.opacity(0.7), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(AppTheme.chipIdleFill)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+        }
     }
 
     private var statsCard: some View {
         HStack(spacing: 0) {
-            statItem(icon: "person.2", tint: AppTheme.sageDark, label: L10n.Guest.totalGuests, value: totalGuests, sub: L10n.Guest.people, subTint: AppTheme.ink.opacity(0.4))
-            statItem(icon: "checkmark.circle", tint: AppTheme.sageDark, label: L10n.Common.confirmed, value: confirmedGuests, sub: "\(percent(confirmedGuests))%", subTint: AppTheme.ink.opacity(0.4))
+            statItem(icon: "person.2", tint: AppTheme.iconOnChip, label: L10n.Guest.totalGuests, value: totalGuests, sub: L10n.Guest.people, subTint: AppTheme.inkMuted(0.4))
+            statItem(icon: "checkmark.circle", tint: AppTheme.iconOnChip, label: L10n.Common.confirmed, value: confirmedGuests, sub: "\(percent(confirmedGuests))%", subTint: AppTheme.inkMuted(0.4))
             statItem(icon: "hourglass", tint: AppTheme.gold, label: L10n.Common.pending, value: pendingGuests, sub: "\(percent(pendingGuests))%", subTint: AppTheme.gold)
-            statItem(icon: "xmark.circle", tint: AppTheme.ink.opacity(0.45), label: L10n.Common.notAttending, value: absentGuests, sub: "\(percent(absentGuests))%", subTint: AppTheme.ink.opacity(0.4))
+            statItem(icon: "xmark.circle", tint: AppTheme.statusMuted, label: L10n.Common.notAttending, value: absentGuests, sub: "\(percent(absentGuests))%", subTint: AppTheme.statusMuted)
         }
         .padding(.vertical, 16)
         .padding(.horizontal, 6)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 16, y: 8)
+        .premiumGlassCard(cornerRadius: 28)
     }
 
     private func statItem(icon: String, tint: Color, label: String, value: Int, sub: String, subTint: Color) -> some View {
@@ -422,17 +446,26 @@ struct GuestView: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(tint)
                 .frame(width: 38, height: 38)
-                .background(AppTheme.sage.opacity(0.10), in: Circle())
+                .background {
+                    Circle()
+                        .fill(AppTheme.iconChipFill)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .overlay {
+                    Circle()
+                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
 
             Text(label)
-                .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .font(AppFont.medium(11))
+                .foregroundStyle(AppTheme.inkMuted(0.55))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
             Text("\(value)")
-                .font(AppFont.medium(21))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(AppFont.semibold(21))
+                .monospacedDigit()
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             Text(sub)
                 .font(AppFont.regular(10))
@@ -445,12 +478,12 @@ struct GuestView: View {
         VStack(spacing: 16) {
             HStack {
                 Text(L10n.Guest.rsvpOverview)
-                    .font(AppFont.medium(16))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(.system(size: 16, weight: .semibold, design: .serif))
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Spacer()
                 Text(segment.title)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.inkMuted(0.45))
             }
 
             HStack(spacing: 18) {
@@ -458,7 +491,7 @@ struct GuestView: View {
                     segments: [
                         (Double(confirmedGuests), AppTheme.sageDark),
                         (Double(pendingGuests), AppTheme.gold),
-                        (Double(absentGuests), AppTheme.mist),
+                        (Double(absentGuests), AppTheme.statusMuted),
                     ]
                 )
                 .frame(width: 92, height: 92)
@@ -466,17 +499,12 @@ struct GuestView: View {
                 VStack(spacing: 12) {
                     legendRow(color: AppTheme.sageDark, title: L10n.Common.confirmed, value: confirmedGuests, percent: percent(confirmedGuests))
                     legendRow(color: AppTheme.gold, title: L10n.Common.pending, value: pendingGuests, percent: percent(pendingGuests))
-                    legendRow(color: AppTheme.mist, title: L10n.Common.notAttending, value: absentGuests, percent: percent(absentGuests))
+                    legendRow(color: AppTheme.statusMuted, title: L10n.Common.notAttending, value: absentGuests, percent: percent(absentGuests))
                 }
             }
         }
         .padding(18)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 16, y: 8)
+        .premiumGlassCard(cornerRadius: 28)
     }
 
     private func legendRow(color: Color, title: String, value: Int, percent: Int) -> some View {
@@ -485,11 +513,11 @@ struct GuestView: View {
                 Circle().fill(color).frame(width: 9, height: 9)
                 Text(title)
                     .font(AppFont.regular(13))
-                    .foregroundStyle(AppTheme.ink.opacity(0.7))
+                    .foregroundStyle(AppTheme.inkMuted(0.7))
                 Spacer()
                 Text("\(value) (\(percent)%)")
-                    .font(AppFont.medium(13))
-                    .foregroundStyle(AppTheme.ink.opacity(0.7))
+                    .font(AppFont.semibold(13))
+                    .foregroundStyle(AppTheme.inkMuted(0.7))
             }
             ProgressBarLine(progress: totalGuests == 0 ? 0 : Double(value) / Double(totalGuests), color: color)
                 .frame(height: 4)
@@ -505,6 +533,7 @@ struct GuestView: View {
                 chip(title: L10n.Common.notAttending, kind: .absent)
             }
             .padding(.horizontal, 2)
+            .padding(.vertical, 2)
         }
     }
 
@@ -515,14 +544,34 @@ struct GuestView: View {
             withAnimation(.easeInOut(duration: 0.2)) { selectedFilter = kind }
         } label: {
             Text(title)
-                .font(AppFont.medium(13))
-                .foregroundStyle(isSelected ? .white : AppTheme.ink.opacity(0.6))
+                .font(AppFont.semibold(13))
+                .foregroundStyle(isSelected ? .white : AppTheme.sageMuted(0.72))
                 .padding(.horizontal, 16)
-                .padding(.vertical, 9)
-                .background(
-                    isSelected ? AnyShapeStyle(AppTheme.sageDark) : AnyShapeStyle(AppTheme.lightSage),
-                    in: Capsule()
-                )
+                .padding(.vertical, 10)
+                .background {
+                    if isSelected {
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [AppTheme.sage, AppTheme.brandGradientEnd],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    } else {
+                        Capsule()
+                            .fill(AppTheme.chipIdleFill)
+                            .background(.ultraThinMaterial, in: Capsule())
+                    }
+                }
+                .overlay {
+                    Capsule()
+                        .stroke(
+                            isSelected ? Color.white.opacity(0.2) : AppTheme.iconChipStroke,
+                            lineWidth: 1
+                        )
+                }
+                .shadow(color: AppTheme.sageDark.opacity(isSelected ? 0.14 : 0.05), radius: isSelected ? 10 : 6, y: 3)
         }
         .buttonStyle(.plain)
     }
@@ -532,9 +581,10 @@ struct GuestView: View {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 14))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(AppTheme.inkMuted(0.4))
                 TextField(L10n.Guest.searchPlaceholder, text: $searchText)
                     .font(AppFont.regular(13))
+                    .foregroundStyle(AppTheme.ink)
                     .focused($isSearchFocused)
                     .submitLabel(.search)
                     .onSubmit {
@@ -542,9 +592,8 @@ struct GuestView: View {
                     }
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(.white.opacity(0.9), in: Capsule())
-            .overlay { Capsule().stroke(AppTheme.sage.opacity(0.12), lineWidth: 1) }
+            .padding(.vertical, 12)
+            .premiumGlassCard(cornerRadius: 16)
 
             Menu {
                 Button {
@@ -573,15 +622,24 @@ struct GuestView: View {
                 Group {
                     if isExcelBusy || isDeletingAll {
                         ProgressView()
-                            .tint(AppTheme.sageDark)
+                            .tint(AppTheme.iconOnChip)
                     } else {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(AppTheme.sageDark)
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(AppTheme.iconOnChip)
                     }
                 }
-                .frame(width: 42, height: 42)
-                .background(AppTheme.lightSage, in: Circle())
+                .frame(width: 44, height: 44)
+                .background {
+                    Circle()
+                        .fill(AppTheme.iconChipFill)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .overlay {
+                    Circle()
+                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
+                .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .disabled(isExcelBusy || isDeletingAll)
 
@@ -590,11 +648,19 @@ struct GuestView: View {
                 showAddSheet = true
             } label: {
                 Label(segment.addTitle, systemImage: "plus")
-                    .font(AppFont.medium(13))
+                    .font(AppFont.semibold(13))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 11)
-                    .background(AppTheme.sageDark, in: Capsule())
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            colors: [AppTheme.sage, AppTheme.brandGradientEnd],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        in: Capsule()
+                    )
+                    .shadow(color: AppTheme.sageDark.opacity(0.16), radius: 10, y: 4)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -605,8 +671,8 @@ struct GuestView: View {
     private var listHeader: some View {
         HStack {
             Text(L10n.Guest.listCount(segment.title, rows.count))
-                .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(.system(size: 14, weight: .semibold, design: .serif))
+                .foregroundStyle(AppTheme.titleOnGlass)
             Spacer()
             Menu {
                 ForEach(GuestSortOrder.allCases) { order in
@@ -622,7 +688,7 @@ struct GuestView: View {
                 }
             } label: {
                 Label(sortOrder.label, systemImage: "chevron.down")
-                    .font(AppFont.regular(12))
+                    .font(AppFont.medium(12))
                     .labelStyle(.titleAndIcon)
                     .foregroundStyle(AppTheme.gold)
             }
@@ -683,30 +749,84 @@ struct GuestView: View {
                     )
                 }
 
-                if hasMoreRows {
-                    Button {
-                        dismissSearchKeyboard()
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            visibleCount = min(visibleCount + pageSize, rows.count)
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Text(L10n.Guest.loadMore)
-                                .font(AppFont.semibold(14))
-                            Text(L10n.Guest.showingCount(displayedRows.count, rows.count))
-                                .font(AppFont.regular(12))
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .foregroundStyle(AppTheme.sageDark)
-                        .background(AppTheme.lightSage, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 4)
+                if totalPages > 1 {
+                    guestPaginationControls
+                        .padding(.top, 8)
                 }
             }
         }
+    }
+
+    private var guestPaginationControls: some View {
+        VStack(spacing: 10) {
+            Text(pageRangeLabel)
+                .font(AppFont.regular(12))
+                .foregroundStyle(AppTheme.inkMuted(0.5))
+
+            HStack(spacing: 8) {
+                pageNavButton(systemName: "chevron.left", disabled: currentPage <= 1) {
+                    goToPage(currentPage - 1)
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(1...totalPages, id: \.self) { page in
+                            Button {
+                                goToPage(page)
+                            } label: {
+                                Text("\(page)")
+                                    .font(AppFont.semibold(13))
+                                    .foregroundStyle(page == currentPage ? .white : AppTheme.iconOnChip)
+                                    .frame(minWidth: 36, minHeight: 36)
+                                    .background {
+                                        if page == currentPage {
+                                            Circle().fill(AppTheme.brandGradientEnd)
+                                        } else {
+                                            Circle()
+                                                .fill(AppTheme.chipIdleFill)
+                                                .background(.ultraThinMaterial, in: Circle())
+                                        }
+                                    }
+                                    .overlay {
+                                        Circle().stroke(
+                                            page == currentPage ? Color.white.opacity(0.2) : AppTheme.iconChipStroke,
+                                            lineWidth: 1
+                                        )
+                                    }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 2)
+                    .padding(.vertical, 2)
+                }
+
+                pageNavButton(systemName: "chevron.right", disabled: currentPage >= totalPages) {
+                    goToPage(currentPage + 1)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 10)
+            .premiumGlassCard(cornerRadius: 18)
+        }
+    }
+
+    private func pageNavButton(systemName: String, disabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(disabled ? AppTheme.inkMuted(0.28) : AppTheme.iconOnChip)
+                .frame(width: 36, height: 36)
+                .background {
+                    Circle()
+                        .fill(AppTheme.iconChipFill)
+                }
+                .overlay {
+                    Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
     }
 
     private var actionBar: some View {
@@ -742,12 +862,7 @@ struct GuestView: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 12, y: 6)
+        .premiumGlassCard(cornerRadius: 22)
         .padding(.top, 4)
     }
 
@@ -760,16 +875,26 @@ struct GuestView: View {
         Button(action: action) {
             VStack(spacing: 5) {
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(AppTheme.iconOnChip)
+                    .frame(width: 36, height: 36)
+                    .background {
+                        Circle()
+                            .fill(AppTheme.iconChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    }
                 Text(title)
-                    .font(AppFont.medium(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.75))
+                    .font(AppFont.semibold(11))
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Text(sub)
                     .font(AppFont.regular(9))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(AppTheme.inkMuted(0.45))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -783,7 +908,14 @@ struct GuestView: View {
     }
 
     private func resetPagination() {
-        visibleCount = pageSize
+        currentPage = 1
+    }
+
+    private func goToPage(_ page: Int) {
+        dismissSearchKeyboard()
+        withAnimation(.easeInOut(duration: 0.2)) {
+            currentPage = min(max(1, page), totalPages)
+        }
     }
 
     private func load() async {
@@ -958,7 +1090,7 @@ enum RsvpKind: CaseIterable, Hashable {
         switch self {
         case .confirmed: return AppTheme.sageDark
         case .pending: return AppTheme.gold
-        case .absent: return AppTheme.ink.opacity(0.5)
+        case .absent: return AppTheme.statusMuted
         }
     }
 
@@ -966,7 +1098,7 @@ enum RsvpKind: CaseIterable, Hashable {
         switch self {
         case .confirmed: return AppTheme.sage.opacity(0.16)
         case .pending: return AppTheme.gold.opacity(0.16)
-        case .absent: return AppTheme.mist.opacity(0.7)
+        case .absent: return AppTheme.statusMuted.opacity(0.18)
         }
     }
 
@@ -1044,31 +1176,37 @@ private struct GuestRow: View {
             Button(action: onOpenDetail) {
                 HStack(spacing: 12) {
                     ZStack {
-                        Circle()
-                            .fill(AppTheme.sage.opacity(0.12))
-                            .frame(width: 44, height: 44)
-
                         if let no = item.no {
                             Text("\(no)")
-                                .font(AppFont.medium(13))
-                                .foregroundStyle(AppTheme.sageDark)
+                                .font(AppFont.semibold(13))
+                                .foregroundStyle(AppTheme.iconOnChip)
                         } else {
                             Image(systemName: iconName)
                                 .font(.system(size: 16, weight: .regular))
-                                .foregroundStyle(AppTheme.sageDark)
+                                .foregroundStyle(AppTheme.iconOnChip)
                         }
+                    }
+                    .frame(width: 44, height: 44)
+                    .background {
+                        Circle()
+                            .fill(AppTheme.iconChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(item.name)
-                            .font(AppFont.medium(14))
-                            .foregroundStyle(AppTheme.ink)
+                            .font(AppFont.semibold(14))
+                            .foregroundStyle(AppTheme.titleOnGlass)
                             .lineLimit(1)
 
                         if let subtitle = item.subtitle, !subtitle.isEmpty {
                             Text(subtitle)
                                 .font(AppFont.regular(11))
-                                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                                .foregroundStyle(AppTheme.inkMuted(0.45))
                                 .lineLimit(1)
                         }
                     }
@@ -1090,7 +1228,7 @@ private struct GuestRow: View {
             Button(action: onOpenDetail) {
                 HStack(spacing: 6) {
                     Text(item.kind.label)
-                        .font(AppFont.medium(11))
+                        .font(AppFont.semibold(11))
                         .foregroundStyle(item.kind.color)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -1098,28 +1236,31 @@ private struct GuestRow: View {
 
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(AppTheme.ink.opacity(0.28))
+                        .foregroundStyle(AppTheme.inkMuted(0.28))
                 }
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
-        .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 5)
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private func contactButton(systemName: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(AppTheme.sageDark.opacity(0.7))
+                .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 30, height: 30)
-                .background(AppTheme.sage.opacity(0.10), in: Circle())
+                .background {
+                    Circle()
+                        .fill(AppTheme.iconChipFill)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .overlay {
+                    Circle()
+                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
         }
         .buttonStyle(.borderless)
     }
@@ -1128,28 +1269,34 @@ private struct GuestRow: View {
 private struct DonutChart: View {
     let segments: [(value: Double, color: Color)]
 
-    private var total: Double { max(segments.reduce(0) { $0 + $1.value }, 0.0001) }
+    private var total: Double { segments.reduce(0) { $0 + $1.value } }
+    private var hasData: Bool { total > 0 }
 
     var body: some View {
         ZStack {
-            Circle().stroke(AppTheme.mist.opacity(0.5), lineWidth: 14)
+            // Visible empty track so the ring never disappears on cream or dark glass.
+            Circle()
+                .stroke(AppTheme.donutTrack, lineWidth: 14)
 
-            ForEach(Array(cumulative.enumerated()), id: \.offset) { _, seg in
-                Circle()
-                    .trim(from: seg.start, to: seg.end)
-                    .stroke(seg.color, style: StrokeStyle(lineWidth: 14, lineCap: .butt))
-                    .rotationEffect(.degrees(-90))
+            if hasData {
+                ForEach(Array(cumulative.enumerated()), id: \.offset) { _, seg in
+                    Circle()
+                        .trim(from: seg.start, to: seg.end)
+                        .stroke(seg.color, style: StrokeStyle(lineWidth: 14, lineCap: .butt))
+                        .rotationEffect(.degrees(-90))
+                }
             }
         }
     }
 
     private var cumulative: [(start: Double, end: Double, color: Color)] {
+        let divisor = max(total, 0.0001)
         var running = 0.0
         var result: [(Double, Double, Color)] = []
-        for seg in segments {
-            let start = running / total
+        for seg in segments where seg.value > 0 {
+            let start = running / divisor
             running += seg.value
-            let end = running / total
+            let end = running / divisor
             result.append((start, end, seg.color))
         }
         return result
@@ -1163,7 +1310,7 @@ private struct ProgressBarLine: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
-                Capsule().fill(AppTheme.mist.opacity(0.7))
+                Capsule().fill(AppTheme.progressTrack)
                 Capsule().fill(color)
                     .frame(width: max(0, min(1, progress)) * proxy.size.width)
             }
@@ -1191,7 +1338,7 @@ private struct AddGuestEntrySheet: View {
     @State private var errorMessage: String?
     @FocusState private var focusedField: Field?
 
-    private enum Field {
+    private enum Field: Hashable {
         case name
         case phone
         case email
@@ -1202,72 +1349,257 @@ private struct AddGuestEntrySheet: View {
         case catatan
     }
 
+    private var canSave: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isLoading
+    }
+
     var body: some View {
         NavigationStack {
-            Form {
-                if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
-                }
+            ZStack {
+                LuxuryWeddingBackground()
 
-                Section {
-                    HStack {
-                        Text(L10n.Guest.sequenceNumber)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Text("\(nextSequenceNumber)")
-                            .foregroundStyle(.secondary)
-                    }
-
-                    TextField(L10n.Guest.name, text: $name)
-                        .focused($focusedField, equals: .name)
-                    TextField(L10n.Guest.phone, text: $phone)
-                        .keyboardType(.phonePad)
-                        .focused($focusedField, equals: .phone)
-
-                    switch segment {
-                    case .guests:
-                        TextField(L10n.Guest.email, text: $email)
-                            .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
-                            .focused($focusedField, equals: .email)
-                        TextField(L10n.Guest.tableNumberField, text: $tableNumber)
-                            .focused($focusedField, equals: .table)
-                        TextField(L10n.Guest.notes, text: $catatan, axis: .vertical)
-                            .lineLimit(2...4)
-                            .focused($focusedField, equals: .catatan)
-                    case .vip:
-                        TextField(L10n.Guest.position, text: $jabatan)
-                            .focused($focusedField, equals: .jabatan)
-                        TextField(L10n.Guest.institution, text: $instansi)
-                            .focused($focusedField, equals: .instansi)
-                        Picker(L10n.Guest.category, selection: $kategori) {
-                            ForEach(VipGuest.kategoriOptions, id: \.key) { option in
-                                Text(option.labelKey.localized).tag(option.key)
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 18) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(segment.addTitle)
+                                    .font(.system(size: 24, weight: .semibold, design: .serif))
+                                    .foregroundStyle(AppTheme.sageDark)
+                                Text(segment.title)
+                                    .font(AppFont.regular(13))
+                                    .foregroundStyle(AppTheme.ink.opacity(0.5))
                             }
+
+                            sequenceRow
+
+                            fieldGroup(L10n.Guest.name) {
+                                TextField(L10n.Guest.name, text: $name)
+                                    .font(AppFont.medium(15))
+                                    .foregroundStyle(AppTheme.ink)
+                                    .tint(AppTheme.sageDark)
+                                    .textFieldStyle(.plain)
+                                    .textContentType(.name)
+                                    .focused($focusedField, equals: .name)
+                                    .submitLabel(.next)
+                                    .onSubmit { focusedField = .phone }
+                            }
+                            .id(Field.name)
+
+                            fieldGroup(L10n.Guest.phone) {
+                                TextField(L10n.Guest.phone, text: $phone)
+                                    .font(AppFont.medium(15))
+                                    .foregroundStyle(AppTheme.ink)
+                                    .tint(AppTheme.sageDark)
+                                    .textFieldStyle(.plain)
+                                    .keyboardType(.phonePad)
+                                    .textContentType(.telephoneNumber)
+                                    .focused($focusedField, equals: .phone)
+                            }
+                            .id(Field.phone)
+
+                            segmentFields
+
+                            if let errorMessage {
+                                Text(errorMessage)
+                                    .font(AppFont.regular(12))
+                                    .foregroundStyle(AppTheme.peachDark)
+                            }
+
+                            Button {
+                                Task { await save() }
+                            } label: {
+                                HStack(spacing: 8) {
+                                    if isLoading {
+                                        ProgressView().tint(.white)
+                                    } else {
+                                        Image(systemName: "checkmark.circle.fill")
+                                        Text(L10n.Common.save)
+                                            .font(AppFont.semibold(16))
+                                    }
+                                }
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 15)
+                                .background(
+                                    canSave ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.4),
+                                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(!canSave)
+                            .id("saveButton")
                         }
-                        TextField(L10n.Guest.notes, text: $catatan, axis: .vertical)
-                            .lineLimit(2...4)
-                            .focused($focusedField, equals: .catatan)
-                    case .family:
-                        TextField(L10n.Guest.familyRole, text: $role)
-                            .focused($focusedField, equals: .role)
+                        .padding(20)
+                        .padding(.bottom, 36)
+                    }
+                    .scrollDismissesKeyboard(.interactively)
+                    .onChange(of: focusedField) { _, field in
+                        guard let field else { return }
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            proxy.scrollTo(field, anchor: .center)
+                        }
                     }
                 }
             }
-            .navigationTitle(segment.addTitle)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.cancel) { dismiss() }
+                        .font(AppFont.medium(15))
+                        .foregroundStyle(AppTheme.ink.opacity(0.7))
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.Common.save) { Task { await save() } }
-                        .disabled(isLoading || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(L10n.Common.done) {
+                        focusedField = nil
+                    }
+                    .font(AppFont.semibold(15))
+                    .foregroundStyle(AppTheme.sageDark)
                 }
             }
             .onAppear {
                 focusedField = .name
             }
         }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+
+    private var sequenceRow: some View {
+        HStack {
+            Text(L10n.Guest.sequenceNumber)
+                .font(AppFont.medium(13))
+                .foregroundStyle(AppTheme.ink.opacity(0.6))
+            Spacer()
+            Text("\(nextSequenceNumber)")
+                .font(AppFont.semibold(15))
+                .foregroundStyle(AppTheme.sageDark)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(AppTheme.lightSage.opacity(0.55), in: Capsule())
+        }
+        .padding(16)
+        .background(inputFieldBackground(cornerRadius: 16))
+    }
+
+    @ViewBuilder
+    private var segmentFields: some View {
+        switch segment {
+        case .guests:
+            fieldGroup(L10n.Guest.email) {
+                TextField(L10n.Guest.email, text: $email)
+                    .font(AppFont.medium(15))
+                    .foregroundStyle(AppTheme.ink)
+                    .tint(AppTheme.sageDark)
+                    .textFieldStyle(.plain)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .textContentType(.emailAddress)
+                    .autocorrectionDisabled()
+                    .focused($focusedField, equals: .email)
+                    .submitLabel(.next)
+                    .onSubmit { focusedField = .table }
+            }
+            .id(Field.email)
+
+            fieldGroup(L10n.Guest.tableNumberField) {
+                TextField(L10n.Guest.tableNumberField, text: $tableNumber)
+                    .font(AppFont.medium(15))
+                    .foregroundStyle(AppTheme.ink)
+                    .tint(AppTheme.sageDark)
+                    .textFieldStyle(.plain)
+                    .focused($focusedField, equals: .table)
+                    .submitLabel(.next)
+                    .onSubmit { focusedField = .catatan }
+            }
+            .id(Field.table)
+
+            fieldGroup(L10n.Guest.notes) {
+                TextField(L10n.Guest.notes, text: $catatan, axis: .vertical)
+                    .font(AppFont.regular(14))
+                    .foregroundStyle(AppTheme.ink)
+                    .tint(AppTheme.sageDark)
+                    .lineLimit(3 ... 6)
+                    .focused($focusedField, equals: .catatan)
+            }
+            .id(Field.catatan)
+
+        case .vip:
+            fieldGroup(L10n.Guest.position) {
+                TextField(L10n.Guest.position, text: $jabatan)
+                    .font(AppFont.medium(15))
+                    .foregroundStyle(AppTheme.ink)
+                    .tint(AppTheme.sageDark)
+                    .textFieldStyle(.plain)
+                    .focused($focusedField, equals: .jabatan)
+                    .submitLabel(.next)
+                    .onSubmit { focusedField = .instansi }
+            }
+            .id(Field.jabatan)
+
+            fieldGroup(L10n.Guest.institution) {
+                TextField(L10n.Guest.institution, text: $instansi)
+                    .font(AppFont.medium(15))
+                    .foregroundStyle(AppTheme.ink)
+                    .tint(AppTheme.sageDark)
+                    .textFieldStyle(.plain)
+                    .focused($focusedField, equals: .instansi)
+            }
+            .id(Field.instansi)
+
+            fieldGroup(L10n.Guest.category) {
+                Picker(L10n.Guest.category, selection: $kategori) {
+                    ForEach(VipGuest.kategoriOptions, id: \.key) { option in
+                        Text(option.labelKey.localized).tag(option.key)
+                    }
+                }
+                .labelsHidden()
+                .tint(AppTheme.sageDark)
+            }
+
+            fieldGroup(L10n.Guest.notes) {
+                TextField(L10n.Guest.notes, text: $catatan, axis: .vertical)
+                    .font(AppFont.regular(14))
+                    .foregroundStyle(AppTheme.ink)
+                    .tint(AppTheme.sageDark)
+                    .lineLimit(3 ... 6)
+                    .focused($focusedField, equals: .catatan)
+            }
+            .id(Field.catatan)
+
+        case .family:
+            fieldGroup(L10n.Guest.familyRole) {
+                TextField(L10n.Guest.familyRole, text: $role)
+                    .font(AppFont.medium(15))
+                    .foregroundStyle(AppTheme.ink)
+                    .tint(AppTheme.sageDark)
+                    .textFieldStyle(.plain)
+                    .focused($focusedField, equals: .role)
+            }
+            .id(Field.role)
+        }
+    }
+
+    private func fieldGroup<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(AppFont.medium(13))
+                .foregroundStyle(AppTheme.ink.opacity(0.6))
+
+            content()
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(inputFieldBackground(cornerRadius: 16))
+        }
+    }
+
+    private func inputFieldBackground(cornerRadius: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(AppTheme.surface.opacity(0.96))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+            }
+            .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 8, y: 3)
     }
 
     private func save() async {
@@ -1276,6 +1608,7 @@ private struct AddGuestEntrySheet: View {
         defer { isLoading = false }
 
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
 
         do {
             switch segment {

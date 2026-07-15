@@ -266,9 +266,17 @@ struct AddExpenseView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.72))
+                    .foregroundStyle(AppTheme.iconOnChip)
                     .frame(width: 42, height: 42)
-                    .background(.white.opacity(0.86), in: Circle())
+                    .background {
+                        Circle()
+                            .fill(AppTheme.iconChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    }
                     .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
@@ -278,10 +286,10 @@ struct AddExpenseView: View {
             VStack(spacing: 4) {
                 Text(isEditing ? L10n.Budget.editExpense : L10n.Budget.addExpense)
                     .font(AppFont.medium(18))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Text(isEditing ? L10n.Budget.editExpenseFormSub : L10n.Budget.addExpenseFormSub)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.captionOnGlass)
                     .multilineTextAlignment(.center)
             }
 
@@ -313,7 +321,7 @@ struct AddExpenseView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
-            .background(fieldBackground)
+            .premiumGlassCard(cornerRadius: 18)
         }
     }
 
@@ -351,7 +359,7 @@ struct AddExpenseView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
-        .background(fieldBackground)
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private var isOverdueUnpaid: Bool {
@@ -427,7 +435,7 @@ struct AddExpenseView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
-        .background(fieldBackground)
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private var proofSizeErrorView: some View {
@@ -540,15 +548,15 @@ struct AddExpenseView: View {
                 fieldIcon(icon)
                 Text(title)
                     .font(AppFont.regular(14))
-                    .foregroundStyle(isPlaceholder ? AppTheme.ink.opacity(0.35) : AppTheme.ink)
+                    .foregroundStyle(isPlaceholder ? AppTheme.inkMuted(0.45) : AppTheme.titleOnGlass)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.25))
+                    .foregroundStyle(AppTheme.inkMuted(0.35))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
-            .background(fieldBackground)
+            .premiumGlassCard(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -565,21 +573,23 @@ struct AddExpenseView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
-        .background(fieldBackground)
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private func fieldIcon(_ name: String) -> some View {
         Image(systemName: name)
             .font(.system(size: 16, weight: .regular))
-            .foregroundStyle(AppTheme.ink.opacity(0.45))
+            .foregroundStyle(AppTheme.iconOnChip)
             .frame(width: 36, height: 36)
-            .background(AppTheme.mist.opacity(0.65), in: Circle())
-    }
-
-    private var fieldBackground: some View {
-        RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(.white)
-            .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 4)
+            .background {
+                Circle()
+                    .fill(AppTheme.iconChipFill)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .overlay {
+                Circle()
+                    .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+            }
     }
 
     private var parsedAmount: Double? {

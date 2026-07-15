@@ -65,6 +65,8 @@ targets:
           - Poppins-Medium.ttf
           - Poppins-SemiBold.ttf
           - Poppins-Bold.ttf
+          - SairaStencilOne-Regular.ttf
+          - CormorantGaramond.ttf
         UIBackgroundModes:
           - remote-notification
     settings:

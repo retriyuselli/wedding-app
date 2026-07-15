@@ -33,9 +33,17 @@ struct MoreSubpageNavigationHeader: View {
                 } label: {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.ink.opacity(0.72))
+                        .foregroundStyle(AppTheme.iconOnChip)
                         .frame(width: 42, height: 42)
-                        .background(.white.opacity(0.86), in: Circle())
+                        .background {
+                            Circle()
+                                .fill(AppTheme.iconChipFill)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                        .overlay {
+                            Circle()
+                                .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                        }
                         .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
                 }
                 .buttonStyle(.plain)
@@ -44,11 +52,11 @@ struct MoreSubpageNavigationHeader: View {
 
                 VStack(spacing: 4) {
                     Text(title)
-                        .font(AppFont.medium(18))
+                        .font(.system(size: 18, weight: .semibold, design: .serif))
                         .foregroundStyle(AppTheme.sageDark)
                     Text(subtitle)
-                        .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .font(.system(size: 12, weight: .regular, design: .rounded))
+                        .foregroundStyle(AppTheme.inkMuted(0.5))
                         .multilineTextAlignment(.center)
                 }
 
@@ -67,18 +75,14 @@ struct MoreFormSection<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(AppFont.medium(14))
+                .font(.system(size: 14, weight: .semibold, design: .serif))
                 .foregroundStyle(AppTheme.sageDark)
 
             VStack(spacing: 10) {
                 content()
             }
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 20)
         }
     }
 }
@@ -95,8 +99,8 @@ struct MoreInputRow: View {
             MoreFieldIcon(name: icon)
 
             TextField(placeholder, text: $text, axis: axis)
-                .font(AppFont.regular(14))
-                .foregroundStyle(AppTheme.ink)
+                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .foregroundStyle(AppTheme.titleOnGlass)
                 .lineLimit(axis == .vertical ? 3...5 : 1...1)
                 .keyboardType(keyboard)
         }
@@ -112,16 +116,29 @@ struct MoreFieldIcon: View {
     var body: some View {
         Image(systemName: name)
             .font(.system(size: 16, weight: .regular))
-            .foregroundStyle(AppTheme.ink.opacity(0.45))
+            .foregroundStyle(AppTheme.iconOnChip)
             .frame(width: 36, height: 36)
-            .background(AppTheme.mist.opacity(0.65), in: Circle())
+            .background {
+                Circle()
+                    .fill(AppTheme.iconChipFill)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .overlay {
+                Circle()
+                    .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+            }
     }
 }
 
 struct MoreFieldBackground: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(AppTheme.lightSage.opacity(0.35))
+            .fill(AppTheme.nestedGlassFill)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+            }
     }
 }
 
@@ -134,25 +151,31 @@ struct MoreEmptyState: View {
         VStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 34, weight: .light))
-                .foregroundStyle(AppTheme.sage.opacity(0.65))
+                .foregroundStyle(AppTheme.iconOnChip)
+                .frame(width: 64, height: 64)
+                .background {
+                    Circle()
+                        .fill(AppTheme.iconChipFill)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .overlay {
+                    Circle()
+                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
 
             Text(title)
-                .font(AppFont.medium(16))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(.system(size: 16, weight: .semibold, design: .serif))
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             Text(message)
-                .font(AppFont.regular(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .font(.system(size: 13, weight: .regular, design: .rounded))
+                .foregroundStyle(AppTheme.captionOnGlass)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 36)
         .padding(.horizontal, 20)
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 28)
     }
 }
 
@@ -173,12 +196,26 @@ struct MorePrimaryButton: View {
                         .font(.system(size: 16, weight: .semibold))
                 }
                 Text(title)
-                    .font(AppFont.medium(16))
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(isEnabled ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(
+                        isEnabled
+                            ? AnyShapeStyle(
+                                LinearGradient(
+                                    colors: [AppTheme.sage, AppTheme.sageDark],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            : AnyShapeStyle(AppTheme.sageDark.opacity(0.45))
+                    )
+            }
+            .shadow(color: AppTheme.sageDark.opacity(isEnabled ? 0.18 : 0), radius: 14, y: 6)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled || isLoading)

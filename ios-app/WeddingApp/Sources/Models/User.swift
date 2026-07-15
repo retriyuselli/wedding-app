@@ -9,7 +9,27 @@ struct User: Codable, Identifiable {
     let hasSocialLogin: Bool?
     let twoFactorEnabled: Bool?
     let passwordChangedAt: String?
+    let createdAt: String?
     let updatedAt: String?
+
+    /// First registration / join day for the account.
+    var joinedAtDate: Date? {
+        guard let createdAt else { return nil }
+        if let day = DateFormatter.calendarDate(from: createdAt) {
+            return day
+        }
+        let isoFractional = ISO8601DateFormatter()
+        isoFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = isoFractional.date(from: createdAt) {
+            return Calendar.current.startOfDay(for: date)
+        }
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime]
+        if let date = iso.date(from: createdAt) {
+            return Calendar.current.startOfDay(for: date)
+        }
+        return nil
+    }
 }
 
 struct AuthResponse: Codable {

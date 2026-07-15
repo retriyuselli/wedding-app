@@ -4,11 +4,10 @@ import UserNotifications
 
 struct RemindersPreferencesView: View {
     @ObservedObject private var pushManager = PushNotificationManager.shared
+    @State private var isSendingTest = false
 
     private var isAuthorized: Bool {
-        pushManager.authorizationStatus == .authorized
-            || pushManager.authorizationStatus == .provisional
-            || pushManager.authorizationStatus == .ephemeral
+        pushManager.isAuthorized
     }
 
     private var statusTitle: String {
@@ -56,6 +55,15 @@ struct RemindersPreferencesView: View {
 
                     preferenceCard
 
+                    testBannerButton
+
+                    if let message = pushManager.lastTestMessage {
+                        Text(message)
+                            .font(AppFont.regular(12))
+                            .foregroundStyle(AppTheme.inkMuted(0.55))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
                     openSettingsButton
 
                     infoCard
@@ -69,9 +77,17 @@ struct RemindersPreferencesView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task {
             await pushManager.refreshAuthorizationStatus()
+            if isAuthorized {
+                await pushManager.syncDeviceTokenIfPossible()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
-            Task { await pushManager.refreshAuthorizationStatus() }
+            Task {
+                await pushManager.refreshAuthorizationStatus()
+                if pushManager.isAuthorized {
+                    await pushManager.syncDeviceTokenIfPossible()
+                }
+            }
         }
     }
 
@@ -90,18 +106,14 @@ struct RemindersPreferencesView: View {
 
                 Text(statusSubtitle)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.inkMuted(0.55))
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer(minLength: 0)
         }
         .padding(16)
-        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.12), lineWidth: 1)
-        }
+        .premiumGlassCard(cornerRadius: 20)
     }
 
     private var preferenceCard: some View {
@@ -116,11 +128,11 @@ struct RemindersPreferencesView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L10n.Reminders.pushToggle)
                         .font(AppFont.medium(14))
-                        .foregroundStyle(AppTheme.ink)
+                        .foregroundStyle(AppTheme.titleOnGlass)
 
                     Text(L10n.Reminders.pushToggleSub)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -137,11 +149,37 @@ struct RemindersPreferencesView: View {
             }
             .padding(14)
         }
-        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
+        .premiumGlassCard(cornerRadius: 20)
+    }
+
+    private var testBannerButton: some View {
+        Button {
+            Task {
+                isSendingTest = true
+                await pushManager.sendTestBanner()
+                isSendingTest = false
+            }
+        } label: {
+            HStack(spacing: 10) {
+                if isSendingTest {
+                    ProgressView()
+                        .tint(AppTheme.sageDark)
+                } else {
+                    Image(systemName: "bell.and.waves.left.and.right")
+                        .font(.system(size: 15, weight: .medium))
+                }
+
+                Text(L10n.Reminders.testButton)
+                    .font(AppFont.medium(14))
+
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(AppTheme.sageDark)
+            .padding(14)
+            .premiumGlassCard(cornerRadius: 16)
         }
+        .buttonStyle(.plain)
+        .disabled(isSendingTest)
     }
 
     private var openSettingsButton: some View {
@@ -162,11 +200,7 @@ struct RemindersPreferencesView: View {
             }
             .foregroundStyle(AppTheme.sageDark)
             .padding(14)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(AppTheme.sage.opacity(0.10), lineWidth: 1)
-            }
+            .premiumGlassCard(cornerRadius: 16)
         }
         .buttonStyle(.plain)
     }
@@ -180,12 +214,12 @@ struct RemindersPreferencesView: View {
 
             Text(L10n.Reminders.info)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .foregroundStyle(AppTheme.inkMuted(0.55))
                 .fixedSize(horizontal: false, vertical: true)
                 .lineSpacing(3)
         }
         .padding(14)
-        .background(AppTheme.lightSage.opacity(0.4), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumGlassCard(cornerRadius: 16)
     }
 
     private func handleToggleChange(wantsEnabled: Bool) {
