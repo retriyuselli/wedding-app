@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Models\CustomerNotification;
-use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\CustomerNotification;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CustomerNotificationPolicy
 {
     use HandlesAuthorization;
-
+    
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:CustomerNotification');
@@ -25,7 +24,7 @@ class CustomerNotificationPolicy
 
     public function create(AuthUser $authUser): bool
     {
-        return $this->isSuperAdmin($authUser);
+        return $authUser->can('Create:CustomerNotification');
     }
 
     public function update(AuthUser $authUser, CustomerNotification $customerNotification): bool
@@ -65,7 +64,7 @@ class CustomerNotificationPolicy
 
     public function replicate(AuthUser $authUser, CustomerNotification $customerNotification): bool
     {
-        return $this->isSuperAdmin($authUser);
+        return $authUser->can('Replicate:CustomerNotification');
     }
 
     public function reorder(AuthUser $authUser): bool
@@ -73,8 +72,4 @@ class CustomerNotificationPolicy
         return $authUser->can('Reorder:CustomerNotification');
     }
 
-    private function isSuperAdmin(AuthUser $authUser): bool
-    {
-        return $authUser instanceof User && $authUser->isSuperAdmin();
-    }
 }
