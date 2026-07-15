@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\VipGuestResource;
 use App\Models\VipGuest;
 use App\Services\VipGuestExcelService;
+use App\Support\ExcelSupport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -84,20 +85,21 @@ class VipGuestController extends Controller
         return new VipGuestResource($record);
     }
 
-    public function downloadTemplate(): BinaryFileResponse
+    public function downloadTemplate()
     {
-        return app(VipGuestExcelService::class)->downloadTemplate();
+        try {
+            return app(VipGuestExcelService::class)->downloadTemplate();
+        } catch (\Throwable $exception) {
+            throw $exception instanceof \App\Exceptions\ExcelUnavailableException
+                ? $exception
+                : \App\Exceptions\ExcelUnavailableException::from($exception);
+        }
     }
 
     public function importExcel(Request $request): JsonResponse
     {
         $request->validate([
-            'spreadsheet' => [
-                'required',
-                'file',
-                'mimes:xlsx',
-                'max:5120',
-            ],
+            'spreadsheet' => ExcelSupport::spreadsheetUploadRules(),
         ]);
 
         $storedPath = $request->file('spreadsheet')->store('imports/vip-guests', 'local');
@@ -105,6 +107,10 @@ class VipGuestController extends Controller
 
         try {
             $result = app(VipGuestExcelService::class)->import($request->user(), $absolutePath);
+        } catch (\Throwable $exception) {
+            throw $exception instanceof \App\Exceptions\ExcelUnavailableException
+                ? $exception
+                : \App\Exceptions\ExcelUnavailableException::from($exception);
         } finally {
             Storage::disk('local')->delete($storedPath);
         }

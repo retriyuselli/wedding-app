@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\FamilyMember;
 use App\Models\User;
+use App\Support\ExcelSupport;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -26,6 +27,8 @@ class FamilyMemberExcelService
 
     public function downloadTemplate(): BinaryFileResponse
     {
+        ExcelSupport::ensureZipAvailable();
+
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Anggota Keluarga');
@@ -69,10 +72,7 @@ class FamilyMemberExcelService
 
         $spreadsheet->setActiveSheetIndex(0);
 
-        $tempPath = tempnam(sys_get_temp_dir(), 'family_member_template_');
-        $filePath = $tempPath.'.xlsx';
-        rename($tempPath, $filePath);
-
+        $filePath = ExcelSupport::makeTemporaryXlsxPath('family_member_template_');
         (new Xlsx($spreadsheet))->save($filePath);
 
         return response()->download(
@@ -87,6 +87,8 @@ class FamilyMemberExcelService
      */
     public function import(User $user, string $filePath): array
     {
+        ExcelSupport::ensureZipAvailable();
+
         $spreadsheet = IOFactory::load($filePath);
         $sheet = $spreadsheet->getSheetByName('Anggota Keluarga') ?? $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray(null, true, true, true);

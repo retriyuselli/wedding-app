@@ -1,6 +1,11 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+private struct ExcelTemplateShareItem: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
 enum GuestListSegment: String, CaseIterable, Identifiable {
     case guests
     case vip
@@ -97,8 +102,7 @@ struct GuestView: View {
     @State private var excelStatusTitle = ""
     @State private var excelStatusMessage: String?
     @State private var showExcelStatus = false
-    @State private var templateShareURL: URL?
-    @State private var showTemplateShare = false
+    @State private var templateShareItem: ExcelTemplateShareItem?
     @State private var selectedDetail: GuestDetailTarget?
     @State private var selectedFilter: RsvpKind? = nil
     @State private var sortOrder: GuestSortOrder = .numberAsc
@@ -278,37 +282,35 @@ struct GuestView: View {
                     familyMembers: familyMembers
                 )
             }
-            .sheet(isPresented: $showTemplateShare) {
-                if let templateShareURL {
-                    NavigationStack {
-                        VStack(spacing: 20) {
-                            Image(systemName: "doc.richtext")
-                                .font(.system(size: 40))
-                                .foregroundStyle(AppTheme.sageDark)
-                            Text(L10n.Guest.templateReady)
-                                .font(AppFont.medium(16))
-                                .foregroundStyle(AppTheme.ink)
-                            Text(templateShareURL.lastPathComponent)
-                                .font(AppFont.regular(13))
-                                .foregroundStyle(AppTheme.ink.opacity(0.5))
-                            ShareLink(item: templateShareURL) {
-                                Label(L10n.Guest.shareTemplate, systemImage: "square.and.arrow.up")
-                                    .font(AppFont.medium(15))
-                                    .foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            }
-                        }
-                        .padding(24)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button(L10n.Common.close) { showTemplateShare = false }
-                            }
+            .sheet(item: $templateShareItem) { item in
+                NavigationStack {
+                    VStack(spacing: 20) {
+                        Image(systemName: "doc.richtext")
+                            .font(.system(size: 40))
+                            .foregroundStyle(AppTheme.sageDark)
+                        Text(L10n.Guest.templateReady)
+                            .font(AppFont.medium(16))
+                            .foregroundStyle(AppTheme.ink)
+                        Text(item.url.lastPathComponent)
+                            .font(AppFont.regular(13))
+                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                        ShareLink(item: item.url) {
+                            Label(L10n.Guest.shareTemplate, systemImage: "square.and.arrow.up")
+                                .font(AppFont.medium(15))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                     }
-                    .presentationDetents([.medium])
+                    .padding(24)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(L10n.Common.close) { templateShareItem = nil }
+                        }
+                    }
                 }
+                .presentationDetents([.medium])
             }
             .fileImporter(
                 isPresented: $showExcelImporter,
@@ -604,7 +606,11 @@ struct GuestView: View {
                 .disabled(isExcelBusy || isDeletingAll)
 
                 Button {
-                    showExcelImporter = true
+                    Task { @MainActor in
+                        // Menu dismiss races the importer presentation on device/Release builds.
+                        try? await Task.sleep(for: .milliseconds(350))
+                        showExcelImporter = true
+                    }
                 } label: {
                     Label(L10n.Guest.uploadExcel, systemImage: "arrow.up.doc")
                 }
@@ -951,8 +957,7 @@ struct GuestView: View {
                 try FileManager.default.removeItem(at: url)
             }
             try downloaded.data.write(to: url, options: .atomic)
-            templateShareURL = url
-            showTemplateShare = true
+            templateShareItem = ExcelTemplateShareItem(url: url)
         } catch {
             guard !error.isRequestCancelled else { return }
             excelStatusTitle = L10n.Common.warning

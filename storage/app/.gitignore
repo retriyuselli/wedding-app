@@ -3,4 +3,7 @@
 !public/
 !apns/
 !apns/.gitignore
+!tmp/
+!tmp/excel/
+!tmp/excel/.gitignore
 !.gitignore

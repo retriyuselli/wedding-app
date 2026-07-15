@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Exceptions\ExcelUnavailableException;
 use App\Models\Guest;
 use App\Models\User;
+use App\Support\ExcelSupport;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -28,63 +30,68 @@ class GuestExcelService
 
     public function downloadTemplate(): BinaryFileResponse
     {
-        $spreadsheet = new Spreadsheet;
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Daftar Tamu');
-        $sheet->fromArray(self::TEMPLATE_HEADERS, null, 'A1');
-        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
-        $sheet->fromArray([
-            1,
-            'Bapak Contoh Nama',
-            '081234567890',
-            'contoh@email.com',
-            '12',
-            'menunggu',
-            'Contoh baris data. Hapus sebelum upload.',
-        ], null, 'A2');
+        try {
+            ExcelSupport::ensureZipAvailable();
 
-        foreach (range('A', 'G') as $column) {
-            $sheet->getColumnDimension($column)->setAutoSize(true);
+            $spreadsheet = new Spreadsheet;
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Daftar Tamu');
+            $sheet->fromArray(self::TEMPLATE_HEADERS, null, 'A1');
+            $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+            $sheet->fromArray([
+                1,
+                'Bapak Contoh Nama',
+                '081234567890',
+                'contoh@email.com',
+                '12',
+                'menunggu',
+                'Contoh baris data. Hapus sebelum upload.',
+            ], null, 'A2');
+
+            foreach (range('A', 'G') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+
+            $guideSheet = $spreadsheet->createSheet();
+            $guideSheet->setTitle('Petunjuk');
+            $guideSheet->fromArray([
+                ['Kolom', 'Wajib', 'Keterangan'],
+                ['No', 'Tidak', 'Nomor urut tampilan. Jika kosong, diisi otomatis berurutan.'],
+                ['Nama Lengkap', 'Ya', 'Nama tamu undangan.'],
+                ['Telepon', 'Tidak', 'Nomor telepon atau WhatsApp.'],
+                ['Email', 'Tidak', 'Alamat email tamu.'],
+                ['Nomor Meja', 'Tidak', 'Nomor meja duduk tamu.'],
+                ['Status RSVP', 'Tidak', 'Isi kode atau label RSVP (default: menunggu).'],
+                ['Catatan', 'Tidak', 'Catatan tambahan.'],
+                [],
+                ['Kode RSVP', 'Label'],
+                ...collect(Guest::$rsvpOptions)
+                    ->map(fn (string $label, string $key): array => [$key, $label])
+                    ->values()
+                    ->all(),
+            ], null, 'A1');
+            $guideSheet->getStyle('A1:C1')->getFont()->setBold(true);
+            $guideSheet->getStyle('A11:B11')->getFont()->setBold(true);
+
+            foreach (range('A', 'C') as $column) {
+                $guideSheet->getColumnDimension($column)->setAutoSize(true);
+            }
+
+            $spreadsheet->setActiveSheetIndex(0);
+
+            $filePath = ExcelSupport::makeTemporaryXlsxPath('guest_template_');
+            (new Xlsx($spreadsheet))->save($filePath);
+
+            return response()->download(
+                $filePath,
+                'template-daftar-tamu.xlsx',
+                ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            )->deleteFileAfterSend();
+        } catch (ExcelUnavailableException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            throw ExcelUnavailableException::from($exception);
         }
-
-        $guideSheet = $spreadsheet->createSheet();
-        $guideSheet->setTitle('Petunjuk');
-        $guideSheet->fromArray([
-            ['Kolom', 'Wajib', 'Keterangan'],
-            ['No', 'Tidak', 'Nomor urut tampilan. Jika kosong, diisi otomatis berurutan.'],
-            ['Nama Lengkap', 'Ya', 'Nama tamu undangan.'],
-            ['Telepon', 'Tidak', 'Nomor telepon atau WhatsApp.'],
-            ['Email', 'Tidak', 'Alamat email tamu.'],
-            ['Nomor Meja', 'Tidak', 'Nomor meja duduk tamu.'],
-            ['Status RSVP', 'Tidak', 'Isi kode atau label RSVP (default: menunggu).'],
-            ['Catatan', 'Tidak', 'Catatan tambahan.'],
-            [],
-            ['Kode RSVP', 'Label'],
-            ...collect(Guest::$rsvpOptions)
-                ->map(fn (string $label, string $key): array => [$key, $label])
-                ->values()
-                ->all(),
-        ], null, 'A1');
-        $guideSheet->getStyle('A1:C1')->getFont()->setBold(true);
-        $guideSheet->getStyle('A11:B11')->getFont()->setBold(true);
-
-        foreach (range('A', 'C') as $column) {
-            $guideSheet->getColumnDimension($column)->setAutoSize(true);
-        }
-
-        $spreadsheet->setActiveSheetIndex(0);
-
-        $tempPath = tempnam(sys_get_temp_dir(), 'guest_template_');
-        $filePath = $tempPath.'.xlsx';
-        rename($tempPath, $filePath);
-
-        (new Xlsx($spreadsheet))->save($filePath);
-
-        return response()->download(
-            $filePath,
-            'template-daftar-tamu.xlsx',
-            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-        )->deleteFileAfterSend();
     }
 
     /**
@@ -92,65 +99,73 @@ class GuestExcelService
      */
     public function import(User $user, string $filePath): array
     {
-        $spreadsheet = IOFactory::load($filePath);
-        $sheet = $spreadsheet->getSheetByName('Daftar Tamu') ?? $spreadsheet->getActiveSheet();
-        $rows = $sheet->toArray(null, true, true, true);
+        try {
+            ExcelSupport::ensureZipAvailable();
 
-        if ($rows === []) {
-            return [
-                'imported' => 0,
-                'skipped' => 0,
-                'errors' => ['File Excel kosong.'],
-            ];
-        }
+            $spreadsheet = IOFactory::load($filePath);
+            $sheet = $spreadsheet->getSheetByName('Daftar Tamu') ?? $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
 
-        $headerRow = array_shift($rows);
-        $columnMap = $this->resolveColumnMap($headerRow);
-
-        if (! in_array('name', $columnMap, true)) {
-            return [
-                'imported' => 0,
-                'skipped' => 0,
-                'errors' => ['Kolom "Nama Lengkap" tidak ditemukan. Gunakan template Excel yang disediakan.'],
-            ];
-        }
-
-        $imported = 0;
-        $skipped = 0;
-        $errors = [];
-        $nextNumber = ((int) $user->guests()->max('no')) + 1;
-
-        foreach ($rows as $rowNumber => $row) {
-            $lineNumber = is_int($rowNumber) ? $rowNumber : (int) $rowNumber;
-
-            try {
-                $payload = $this->mapRowToPayload($row, $columnMap, $nextNumber);
-
-                if ($payload === null) {
-                    continue;
-                }
-
-                if ($this->isExampleRow($payload)) {
-                    $skipped++;
-
-                    continue;
-                }
-
-                $user->guests()->create($payload);
-                $imported++;
-
-                if ($payload['no'] !== null) {
-                    $nextNumber = max($nextNumber, ((int) $payload['no']) + 1);
-                } else {
-                    $nextNumber++;
-                }
-            } catch (Throwable $exception) {
-                $skipped++;
-                $errors[] = "Baris {$lineNumber}: {$exception->getMessage()}";
+            if ($rows === []) {
+                return [
+                    'imported' => 0,
+                    'skipped' => 0,
+                    'errors' => ['File Excel kosong.'],
+                ];
             }
-        }
 
-        return compact('imported', 'skipped', 'errors');
+            $headerRow = array_shift($rows);
+            $columnMap = $this->resolveColumnMap($headerRow);
+
+            if (! in_array('name', $columnMap, true)) {
+                return [
+                    'imported' => 0,
+                    'skipped' => 0,
+                    'errors' => ['Kolom "Nama Lengkap" tidak ditemukan. Gunakan template Excel yang disediakan.'],
+                ];
+            }
+
+            $imported = 0;
+            $skipped = 0;
+            $errors = [];
+            $nextNumber = ((int) $user->guests()->max('no')) + 1;
+
+            foreach ($rows as $rowNumber => $row) {
+                $lineNumber = is_int($rowNumber) ? $rowNumber : (int) $rowNumber;
+
+                try {
+                    $payload = $this->mapRowToPayload($row, $columnMap, $nextNumber);
+
+                    if ($payload === null) {
+                        continue;
+                    }
+
+                    if ($this->isExampleRow($payload)) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $user->guests()->create($payload);
+                    $imported++;
+
+                    if ($payload['no'] !== null) {
+                        $nextNumber = max($nextNumber, ((int) $payload['no']) + 1);
+                    } else {
+                        $nextNumber++;
+                    }
+                } catch (Throwable $exception) {
+                    $skipped++;
+                    $errors[] = "Baris {$lineNumber}: {$exception->getMessage()}";
+                }
+            }
+
+            return compact('imported', 'skipped', 'errors');
+        } catch (ExcelUnavailableException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            throw ExcelUnavailableException::from($exception);
+        }
     }
 
     /**

@@ -130,9 +130,18 @@ final class APIClient {
         method: String = "GET",
         fallbackFileName: String
     ) async throws -> (data: Data, fileName: String) {
-        let (data, httpResponse) = try await send(path: path, method: method)
+        let (data, httpResponse) = try await send(
+            path: path,
+            method: method,
+            accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*"
+        )
 
         guard (200...299).contains(httpResponse.statusCode) else {
+            throw errorFromResponse(path: path, statusCode: httpResponse.statusCode, data: data)
+        }
+
+        let contentType = (httpResponse.value(forHTTPHeaderField: "Content-Type") ?? "").lowercased()
+        if contentType.contains("application/json") {
             throw errorFromResponse(path: path, statusCode: httpResponse.statusCode, data: data)
         }
 
@@ -172,7 +181,8 @@ final class APIClient {
         queryItems: [URLQueryItem]? = nil,
         json: [String: Any]? = nil,
         multipartBody: Data? = nil,
-        contentType: String? = nil
+        contentType: String? = nil,
+        accept: String = "application/json"
     ) async throws -> (Data, HTTPURLResponse) {
         await APIResolver.resolveIfNeeded()
 
@@ -192,7 +202,7 @@ final class APIClient {
 
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+        urlRequest.setValue(accept, forHTTPHeaderField: "Accept")
 
         if shouldAttachAuthorization(for: cleanPath), let token = KeychainStore.loadToken() {
             urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\VipGuest;
+use App\Support\ExcelSupport;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -29,6 +30,8 @@ class VipGuestExcelService
 
     public function downloadTemplate(): BinaryFileResponse
     {
+        ExcelSupport::ensureZipAvailable();
+
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Tamu VIP');
@@ -84,10 +87,7 @@ class VipGuestExcelService
 
         $spreadsheet->setActiveSheetIndex(0);
 
-        $tempPath = tempnam(sys_get_temp_dir(), 'vip_guest_template_');
-        $filePath = $tempPath.'.xlsx';
-        rename($tempPath, $filePath);
-
+        $filePath = ExcelSupport::makeTemporaryXlsxPath('vip_guest_template_');
         (new Xlsx($spreadsheet))->save($filePath);
 
         return response()->download(
@@ -102,6 +102,8 @@ class VipGuestExcelService
      */
     public function import(User $user, string $filePath): array
     {
+        ExcelSupport::ensureZipAvailable();
+
         $spreadsheet = IOFactory::load($filePath);
         $sheet = $spreadsheet->getSheetByName('Tamu VIP') ?? $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray(null, true, true, true);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\FamilyMemberResource;
 use App\Models\FamilyMember;
 use App\Services\FamilyMemberExcelService;
+use App\Support\ExcelSupport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -83,20 +84,21 @@ class FamilyMemberController extends Controller
         return new FamilyMemberResource($record);
     }
 
-    public function downloadTemplate(): BinaryFileResponse
+    public function downloadTemplate()
     {
-        return app(FamilyMemberExcelService::class)->downloadTemplate();
+        try {
+            return app(FamilyMemberExcelService::class)->downloadTemplate();
+        } catch (\Throwable $exception) {
+            throw $exception instanceof \App\Exceptions\ExcelUnavailableException
+                ? $exception
+                : \App\Exceptions\ExcelUnavailableException::from($exception);
+        }
     }
 
     public function importExcel(Request $request): JsonResponse
     {
         $request->validate([
-            'spreadsheet' => [
-                'required',
-                'file',
-                'mimes:xlsx',
-                'max:5120',
-            ],
+            'spreadsheet' => ExcelSupport::spreadsheetUploadRules(),
         ]);
 
         $storedPath = $request->file('spreadsheet')->store('imports/family-members', 'local');
@@ -104,6 +106,10 @@ class FamilyMemberController extends Controller
 
         try {
             $result = app(FamilyMemberExcelService::class)->import($request->user(), $absolutePath);
+        } catch (\Throwable $exception) {
+            throw $exception instanceof \App\Exceptions\ExcelUnavailableException
+                ? $exception
+                : \App\Exceptions\ExcelUnavailableException::from($exception);
         } finally {
             Storage::disk('local')->delete($storedPath);
         }
