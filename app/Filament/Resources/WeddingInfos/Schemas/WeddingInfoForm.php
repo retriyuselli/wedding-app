@@ -28,18 +28,52 @@ class WeddingInfoForm
                             ->columnSpanFull(),
                     ]),
 
-                Section::make('Pasangan')
-                    ->description('Nama mempelai yang tampil di undangan dan dashboard.')
+                Section::make('Mempelai Wanita')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('bride_name')
+                            ->label('Nama Panggilan')
+                            ->maxLength(255)
+                            ->placeholder('Contoh: Anya'),
+                        TextInput::make('bride_full_name')
+                            ->label('Nama Lengkap')
+                            ->maxLength(255)
+                            ->placeholder('Nama lengkap mempelai wanita'),
+                        TextInput::make('bride_phone')
+                            ->label('No. Telepon')
+                            ->tel()
+                            ->maxLength(50)
+                            ->placeholder('08xxxxxxxxxx'),
+                        TextInput::make('bride_father_name')
+                            ->label('Nama Ortu Laki-laki')
+                            ->maxLength(255),
+                        TextInput::make('bride_mother_name')
+                            ->label('Nama Ortu Perempuan')
+                            ->maxLength(255),
+                    ]),
+
+                Section::make('Mempelai Pria')
                     ->columns(2)
                     ->schema([
                         TextInput::make('groom_name')
-                            ->label('Nama Mempelai Pria')
+                            ->label('Nama Panggilan')
                             ->maxLength(255)
-                            ->placeholder('Nama lengkap atau panggilan'),
-                        TextInput::make('bride_name')
-                            ->label('Nama Mempelai Wanita')
+                            ->placeholder('Contoh: Afif'),
+                        TextInput::make('groom_full_name')
+                            ->label('Nama Lengkap')
                             ->maxLength(255)
-                            ->placeholder('Nama lengkap atau panggilan'),
+                            ->placeholder('Nama lengkap mempelai pria'),
+                        TextInput::make('groom_phone')
+                            ->label('No. Telepon')
+                            ->tel()
+                            ->maxLength(50)
+                            ->placeholder('08xxxxxxxxxx'),
+                        TextInput::make('groom_father_name')
+                            ->label('Nama Ortu Laki-laki')
+                            ->maxLength(255),
+                        TextInput::make('groom_mother_name')
+                            ->label('Nama Ortu Perempuan')
+                            ->maxLength(255),
                     ]),
 
                 Section::make('Konsep & Musik')

@@ -436,6 +436,9 @@ struct AddIncomingPaymentView: View {
                                 .font(AppFont.regular(14))
                                 .foregroundStyle(AppTheme.ink)
                                 .keyboardType(.numberPad)
+                                .onChange(of: amountText) { _, newValue in
+                                    amountText = CurrencyFormatter.formatAmountInput(newValue)
+                                }
                         }
                     }
 
@@ -573,7 +576,9 @@ struct AddIncomingPaymentView: View {
         guard let payment else { return }
 
         senderName = payment.senderName ?? ""
-        amountText = payment.amount > 0 ? String(Int(payment.amount)) : ""
+        amountText = payment.amount > 0
+            ? CurrencyFormatter.formatAmountInput(String(Int(payment.amount)))
+            : ""
         bankName = payment.bankName ?? ""
         descriptionText = payment.description ?? ""
         referenceNumber = payment.referenceNumber ?? ""

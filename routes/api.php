@@ -84,6 +84,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('wedding-info', [WeddingInfoController::class, 'show']);
         Route::put('wedding-info', [WeddingInfoController::class, 'update']);
+        Route::post('wedding-info/photo', [WeddingInfoController::class, 'uploadPhoto']);
 
         Route::get('wedding-budget/summary', [WeddingBudgetController::class, 'summary']);
         Route::get('wedding-budget', [WeddingBudgetController::class, 'show']);

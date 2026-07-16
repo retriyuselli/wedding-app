@@ -106,7 +106,7 @@ struct SplashScreenView: View {
     }
 }
 
-private struct WeddingRingAnimation: View {
+struct WeddingRingAnimation: View {
     var ringsApart: Bool
     var glowActive: Bool
     var shimmer: Bool
@@ -212,8 +212,8 @@ private struct WeddingRingAnimation: View {
 }
 
 struct SplashScreenOverlayModifier: ViewModifier {
-    var visibleSeconds: Double = 2.4
-    var fadeSeconds: Double = 0.45
+    var visibleSeconds: Double = 3.8
+    var fadeSeconds: Double = 0.55
 
     @State private var isVisible = true
     @State private var opacity: Double = 1
@@ -242,8 +242,8 @@ struct SplashScreenOverlayModifier: ViewModifier {
 
 extension View {
     func splashScreenOverlay(
-        visibleSeconds: Double = 2.4,
-        fadeSeconds: Double = 0.45
+        visibleSeconds: Double = 3.8,
+        fadeSeconds: Double = 0.55
     ) -> some View {
         modifier(
             SplashScreenOverlayModifier(

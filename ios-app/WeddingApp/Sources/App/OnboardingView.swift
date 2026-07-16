@@ -230,14 +230,14 @@ struct OnboardingView: View {
                         withAnimation { step -= 1 }
                     }
                     .font(AppFont.semibold(13))
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.65))
+                    .foregroundStyle(AppTheme.sageMuted(0.85))
                 }
             }
 
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(AppTheme.sage.opacity(0.14))
+                        .fill(AppTheme.progressTrack)
 
                     Capsule()
                         .fill(
@@ -273,14 +273,14 @@ struct OnboardingView: View {
                     }
                 }
                 .font(AppFont.semibold(16))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(
                     LinearGradient(
                         colors: canContinue && !isSaving
-                            ? [AppTheme.sage, AppTheme.sageDark]
-                            : [AppTheme.sage.opacity(0.45), AppTheme.sageDark.opacity(0.45)],
+                            ? [AppTheme.sage, AppTheme.brandGradientEnd]
+                            : [AppTheme.sage.opacity(0.45), AppTheme.brandGradientEnd.opacity(0.45)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
@@ -345,7 +345,7 @@ struct OnboardingView: View {
 
                 Text(L10n.Onboarding.eventsHint)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.55))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -367,17 +367,17 @@ struct OnboardingView: View {
             VStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(selected ? Color.white.opacity(0.22) : AppTheme.gold.opacity(0.14))
+                        .fill(selected ? Color.white.opacity(0.22) : AppTheme.iconChipFill)
                         .frame(width: 52, height: 52)
 
                     Image(systemName: event.iconName)
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(selected ? .white : AppTheme.gold)
+                        .foregroundStyle(selected ? Color.white : AppTheme.iconOnChip)
                 }
 
                 Text(event.title)
                     .font(AppFont.semibold(15))
-                    .foregroundStyle(selected ? .white : AppTheme.sageDark)
+                    .foregroundStyle(selected ? Color.white : AppTheme.titleOnGlass)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
             }
@@ -389,21 +389,21 @@ struct OnboardingView: View {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [AppTheme.sage, AppTheme.sageDark],
+                                colors: [AppTheme.sage, AppTheme.brandGradientEnd],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                 } else {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Color.white.opacity(0.72))
+                        .fill(AppTheme.nestedGlassFill)
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(
-                        selected ? Color.white.opacity(0.28) : AppTheme.gold.opacity(0.28),
+                        selected ? Color.white.opacity(0.28) : AppTheme.iconChipStroke,
                         lineWidth: 1
                     )
             }
@@ -433,17 +433,17 @@ struct OnboardingView: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(AppTheme.gold.opacity(0.14))
+                        .fill(AppTheme.iconChipFill)
                         .frame(width: 42, height: 42)
 
                     Image(systemName: kind.iconName)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.gold)
+                        .foregroundStyle(AppTheme.iconOnChip)
                 }
 
                 Text(kind.title)
                     .font(AppFont.semibold(16))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
 
                 Spacer(minLength: 0)
             }
@@ -451,7 +451,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.Onboarding.dateForEvent)
                     .font(AppFont.semibold(12))
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                    .foregroundStyle(AppTheme.sageMuted(0.85))
 
                 HStack {
                     Image(systemName: "calendar")
@@ -466,7 +466,7 @@ struct OnboardingView: View {
                     )
                     .labelsHidden()
                     .datePickerStyle(.compact)
-                    .tint(AppTheme.sageDark)
+                    .tint(AppTheme.sage)
 
                     Spacer(minLength: 0)
                 }
@@ -474,14 +474,14 @@ struct OnboardingView: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.55))
+                        .fill(AppTheme.nestedGlassFill)
                 )
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.Onboarding.locationForEvent)
                     .font(AppFont.semibold(12))
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                    .foregroundStyle(AppTheme.sageMuted(0.85))
 
                 HStack(spacing: 12) {
                     Image(systemName: "mappin.and.ellipse")
@@ -491,7 +491,7 @@ struct OnboardingView: View {
 
                     TextField(L10n.Onboarding.locationPlaceholder, text: locationBinding(for: kind))
                         .font(AppFont.medium(15))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                         .textInputAutocapitalization(.words)
                         .focused($focusedField, equals: .location(kind))
                         .submitLabel(.done)
@@ -501,7 +501,7 @@ struct OnboardingView: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.55))
+                        .fill(AppTheme.nestedGlassFill)
                 )
                 .contentShape(Rectangle())
                 .onTapGesture { focusedField = .location(kind) }
@@ -527,7 +527,7 @@ struct OnboardingView: View {
                     } label: {
                         Text(item)
                             .font(AppFont.semibold(15))
-                            .foregroundStyle(selected ? .white : AppTheme.sageDark)
+                            .foregroundStyle(selected ? Color.white : AppTheme.titleOnGlass)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background {
@@ -535,20 +535,20 @@ struct OnboardingView: View {
                                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                                         .fill(
                                             LinearGradient(
-                                                colors: [AppTheme.sage, AppTheme.sageDark],
+                                                colors: [AppTheme.sage, AppTheme.brandGradientEnd],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                             )
                                         )
                                 } else {
                                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .fill(Color.white.opacity(0.7))
+                                        .fill(AppTheme.nestedGlassFill)
                                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                                 }
                             }
                             .overlay {
                                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .stroke(Color.white.opacity(selected ? 0.2 : 0.55), lineWidth: 1)
+                                    .stroke(selected ? Color.white.opacity(0.2) : AppTheme.iconChipStroke, lineWidth: 1)
                             }
                             .shadow(color: AppTheme.sageDark.opacity(selected ? 0.14 : 0.05), radius: selected ? 10 : 6, y: 3)
                     }
@@ -587,7 +587,7 @@ struct OnboardingView: View {
 
                 Text(L10n.Onboarding.extrasHint)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.inkMuted(0.55))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -598,17 +598,17 @@ struct OnboardingView: View {
             HStack(spacing: 10) {
                 ZStack {
                     Circle()
-                        .fill(AppTheme.gold.opacity(0.14))
+                        .fill(AppTheme.iconChipFill)
                         .frame(width: 36, height: 36)
 
                     Image(systemName: kind.iconName)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(AppTheme.gold)
+                        .foregroundStyle(AppTheme.iconOnChip)
                 }
 
                 Text(L10n.Onboarding.guestsForEvent(kind.title))
                     .font(AppFont.semibold(14))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
 
                 Spacer(minLength: 0)
             }
@@ -621,7 +621,7 @@ struct OnboardingView: View {
 
                 TextField(L10n.Onboarding.guestsPlaceholder, text: guestsBinding(for: kind))
                     .font(AppFont.medium(16))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .keyboardType(.numberPad)
                     .textInputAutocapitalization(.never)
                     .focused($focusedField, equals: .guests(kind))
@@ -636,7 +636,7 @@ struct OnboardingView: View {
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color.white.opacity(0.55))
+                    .fill(AppTheme.nestedGlassFill)
             )
             .contentShape(Rectangle())
             .onTapGesture { focusedField = .guests(kind) }
@@ -664,12 +664,12 @@ struct OnboardingView: View {
                         .font(titleUsesSerif
                               ? .system(size: 28, weight: .bold, design: .serif)
                               : AppFont.bold(28))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(subtitle)
                         .font(AppFont.regular(14))
-                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .foregroundStyle(AppTheme.inkMuted(0.6))
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -694,7 +694,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AppFont.semibold(13))
-                .foregroundStyle(AppTheme.sageDark.opacity(0.8))
+                .foregroundStyle(AppTheme.sageMuted(0.9))
 
             HStack(spacing: 12) {
                 Image(systemName: icon)
@@ -704,7 +704,7 @@ struct OnboardingView: View {
 
                 TextField(placeholder, text: text)
                     .font(AppFont.medium(16))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .keyboardType(keyboard)
                     .textInputAutocapitalization(keyboard == .numberPad ? .never : .words)
                     .focused($focusedField, equals: field)

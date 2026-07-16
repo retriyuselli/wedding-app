@@ -39,6 +39,9 @@ struct EditCategoryAllocationView: View {
                                 .font(AppFont.regular(14))
                                 .foregroundStyle(AppTheme.ink)
                                 .keyboardType(.numberPad)
+                                .onChange(of: amountText) { _, newValue in
+                                    amountText = CurrencyFormatter.formatAmountInput(newValue)
+                                }
                         }
 
                         if shouldShowSuggestedAmount {
@@ -201,7 +204,7 @@ struct EditCategoryAllocationView: View {
             Spacer(minLength: 8)
 
             Button {
-                amountText = String(Int(suggestedRecordedAmount))
+                amountText = CurrencyFormatter.formatAmountInput(String(Int(suggestedRecordedAmount)))
             } label: {
                 Text(L10n.Budget.useSuggestedAmount)
                     .font(AppFont.medium(12))
@@ -217,14 +220,16 @@ struct EditCategoryAllocationView: View {
 
     private func populateIfNeeded() {
         if let allocation {
-            amountText = allocation.allocatedAmount > 0 ? String(Int(allocation.allocatedAmount)) : ""
+            amountText = allocation.allocatedAmount > 0
+                ? CurrencyFormatter.formatAmountInput(String(Int(allocation.allocatedAmount)))
+                : ""
             notes = allocation.notes ?? ""
             return
         }
 
         // Prefill new allocation from recorded expenses so the form is immediately actionable.
         if category.totalRecorded > 0 {
-            amountText = String(Int(category.totalRecorded))
+            amountText = CurrencyFormatter.formatAmountInput(String(Int(category.totalRecorded)))
         }
     }
 

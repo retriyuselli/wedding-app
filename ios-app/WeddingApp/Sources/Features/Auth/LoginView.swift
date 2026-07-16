@@ -6,45 +6,39 @@ struct LoginView: View {
     @State private var password = ""
     @State private var showRegister = false
     @State private var showForgotPassword = false
+    @State private var showTerms = false
     @State private var twoFactorCode = ""
+    @State private var appeared = false
     @FocusState private var focusedField: AuthFormField?
 
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
-                ZStack(alignment: .top) {
-                    LoginReferenceBackground()
+            ZStack {
+                LuxuryWeddingBackground()
 
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: -58) {
-                            LoginHeroSection(topInset: geometry.safeAreaInsets.top)
-                                .frame(height: AuthLoginLayout.heroHeight(for: geometry.size.height))
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        brandHeader
+                            .padding(.top, 28)
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 12)
 
-                            LoginFormSheet(
-                                email: $email,
-                                password: $password,
-                                focusedField: $focusedField,
-                                isLoading: session.isLoading,
-                                isEmailFormatInvalid: isEmailFormatInvalid,
-                                errorMessage: session.errorMessage,
-                                onForgotPassword: { showForgotPassword = true },
-                                onLogin: submitLogin,
-                                onApple: submitAppleLogin,
-                                onGoogle: submitGoogleLogin,
-                                onRegister: { showRegister = true }
-                            )
-                            .frame(minHeight: AuthLoginLayout.formSheetMinimumHeight(for: geometry))
-                            .padding(.horizontal, 0)
-                        }
-                        .padding(.bottom, max(18, geometry.safeAreaInsets.bottom + 8))
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: geometry.size.height + 72, alignment: .top)
+                        loginCard
+                            .padding(.top, 36)
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 18)
+
+                        termsFooter
+                            .padding(.top, 28)
+                            .padding(.bottom, 24)
+                            .opacity(appeared ? 1 : 0)
                     }
-                    .scrollDismissesKeyboard(.interactively)
+                    .padding(.horizontal, 28)
+                    .frame(maxWidth: 440)
+                    .frame(maxWidth: .infinity)
                 }
-                .ignoresSafeArea(.container, edges: [.top, .bottom])
+                .scrollDismissesKeyboard(.interactively)
             }
-            .background(LoginPalette.background)
             .toolbar(.hidden, for: .navigationBar)
             .tint(AppTheme.sageDark)
             .navigationDestination(isPresented: $showRegister) {
@@ -55,92 +49,236 @@ struct LoginView: View {
                     .presentationDetents([.height(390), .medium])
                     .presentationDragIndicator(.visible)
             }
+            .sheet(isPresented: $showTerms) {
+                NavigationStack {
+                    TermsOfServiceView()
+                }
+            }
             .sheet(isPresented: Binding(
                 get: { session.pendingTwoFactorToken != nil },
                 set: { if !$0 { session.cancelTwoFactorChallenge(); twoFactorCode = "" } }
             )) {
-                NavigationStack {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text(L10n.Auth.twoFactorTitle)
-                            .font(.system(size: 20, weight: .semibold, design: .serif))
-                            .foregroundStyle(AppTheme.sageDark)
-                        Text(session.pendingTwoFactorMessage ?? L10n.Auth.twoFactorMessage)
-                            .font(.system(size: 13, weight: .regular, design: .rounded))
-                            .foregroundStyle(AppTheme.ink.opacity(0.55))
-
-                        TextField(L10n.Auth.twoFactorCodePlaceholder, text: $twoFactorCode)
-                            .keyboardType(.numberPad)
-                            .font(.system(size: 16, weight: .regular, design: .rounded))
-                            .padding(14)
-                            .background {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(AppTheme.cream.opacity(0.55))
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(.ultraThinMaterial)
-                                        .opacity(0.55)
-                                }
-                            }
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
-                            }
-
-                        if let errorMessage = session.errorMessage {
-                            Text(errorMessage)
-                                .font(.system(size: 13, weight: .regular, design: .rounded))
-                                .foregroundStyle(.red)
-                        }
-
-                        Button {
-                            Task { await session.verifyTwoFactor(code: twoFactorCode) }
-                        } label: {
-                            Text(session.isLoading ? L10n.Auth.twoFactorVerifying : L10n.Auth.twoFactorVerify)
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(
-                                    LinearGradient(
-                                        colors: [AppTheme.sage, AppTheme.sageDark],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                )
-                                .shadow(color: AppTheme.sageDark.opacity(0.16), radius: 14, y: 6)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(twoFactorCode.count != 6 || session.isLoading)
-                        .opacity(twoFactorCode.count != 6 || session.isLoading ? 0.55 : 1)
-
-                        Spacer()
-                    }
-                    .padding(20)
-                    .premiumGlassCard(cornerRadius: 24)
-                    .padding(16)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button(L10n.Common.cancel) {
-                                session.cancelTwoFactorChallenge()
-                                twoFactorCode = ""
-                            }
-                        }
-                    }
-                }
-                .presentationDetents([.medium])
-                .presentationBackground(AppTheme.cream.opacity(0.95))
+                twoFactorSheet
             }
             .onAppear {
                 session.resetTransientUIState()
+                withAnimation(.easeOut(duration: 0.55)) {
+                    appeared = true
+                }
             }
-            .onChange(of: email) { _, _ in
-                session.errorMessage = nil
-            }
-            .onChange(of: password) { _, _ in
-                session.errorMessage = nil
+            .onChange(of: email) { _, _ in session.errorMessage = nil }
+            .onChange(of: password) { _, _ in session.errorMessage = nil }
+        }
+    }
+
+    private var brandHeader: some View {
+        VStack(spacing: 14) {
+            WeddingRingAnimation(
+                ringsApart: false,
+                glowActive: true,
+                shimmer: true
+            )
+            .frame(width: 120, height: 96)
+            .accessibilityHidden(true)
+
+            VStack(spacing: 8) {
+                HStack(spacing: 7) {
+                    Text(L10n.Auth.brandWedding)
+                        .foregroundStyle(AppTheme.sageDark)
+                    Text(L10n.Auth.brandApp)
+                        .foregroundStyle(AppTheme.goldDark)
+                }
+                .font(.system(size: 34, weight: .bold, design: .serif))
+                .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 8, y: 2)
+
+                Text(L10n.Dashboard.planTogether)
+                    .font(.system(size: 14, weight: .medium, design: .serif))
+                    .foregroundStyle(AppTheme.sageDark.opacity(0.72))
+                    .multilineTextAlignment(.center)
             }
         }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var loginCard: some View {
+        VStack(spacing: 18) {
+            VStack(spacing: 10) {
+                LoginInputField(
+                    icon: "envelope",
+                    placeholder: L10n.Auth.emailPlaceholder,
+                    text: $email,
+                    keyboardType: .emailAddress,
+                    textContentType: .username,
+                    submitLabel: .next,
+                    fieldFocus: .email,
+                    focusedField: $focusedField,
+                    onSubmit: { focusedField = .password }
+                )
+
+                LoginPasswordField(
+                    placeholder: L10n.Auth.passwordPlaceholder,
+                    text: $password,
+                    submitLabel: .go,
+                    fieldFocus: .password,
+                    focusedField: $focusedField,
+                    onSubmit: submitLogin
+                )
+            }
+
+            HStack {
+                if isEmailFormatInvalid {
+                    AuthNativeStatusMessage(message: L10n.Auth.invalidEmail, systemImage: "info.circle")
+                }
+
+                Spacer(minLength: 0)
+
+                Button {
+                    showForgotPassword = true
+                } label: {
+                    Text(L10n.Auth.forgotPassword)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(AppTheme.sageDark)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if let errorMessage = session.errorMessage {
+                AuthNativeStatusMessage(
+                    message: errorMessage,
+                    systemImage: "exclamationmark.circle.fill",
+                    tint: .red
+                )
+            }
+
+            LoginPrimaryButton(
+                title: L10n.Auth.login,
+                isLoading: session.isLoading,
+                isDisabled: email.isEmpty || password.isEmpty || isEmailFormatInvalid,
+                action: submitLogin
+            )
+
+            LoginDivider(text: L10n.Auth.or)
+
+            VStack(spacing: 10) {
+                LoginSocialButton(
+                    provider: .apple,
+                    title: L10n.Auth.continueApple,
+                    isDisabled: session.isLoading,
+                    action: submitAppleLogin
+                )
+                LoginSocialButton(
+                    provider: .google,
+                    title: L10n.Auth.continueGoogle,
+                    isDisabled: session.isLoading,
+                    action: submitGoogleLogin
+                )
+            }
+
+            Button {
+                showRegister = true
+            } label: {
+                HStack(spacing: 6) {
+                    Text(L10n.Auth.noAccount)
+                        .foregroundStyle(LoginPalette.textSecondary)
+                    Text(L10n.Auth.registerNow)
+                        .foregroundStyle(AppTheme.sageDark)
+                        .fontWeight(.semibold)
+                }
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+        .padding(22)
+        .premiumGlassCard(cornerRadius: 28)
+    }
+
+    private var termsFooter: some View {
+        Button {
+            showTerms = true
+        } label: {
+            (
+                Text(L10n.Auth.termsPrefix)
+                    .foregroundStyle(LoginPalette.textSecondary)
+                + Text(L10n.Auth.termsLink)
+                    .foregroundStyle(AppTheme.sageDark)
+                    .underline()
+                    .fontWeight(.semibold)
+                + Text(L10n.Auth.termsSuffix)
+                    .foregroundStyle(LoginPalette.textSecondary)
+            )
+            .font(.system(size: 12, weight: .medium, design: .rounded))
+            .multilineTextAlignment(.center)
+            .lineSpacing(3)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(L10n.Auth.termsPrefix)\(L10n.Auth.termsLink)\(L10n.Auth.termsSuffix)")
+    }
+
+    private var twoFactorSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(L10n.Auth.twoFactorTitle)
+                    .font(.system(size: 20, weight: .semibold, design: .serif))
+                    .foregroundStyle(AppTheme.sageDark)
+                Text(session.pendingTwoFactorMessage ?? L10n.Auth.twoFactorMessage)
+                    .font(.system(size: 13, weight: .regular, design: .rounded))
+                    .foregroundStyle(AppTheme.inkMuted(0.55))
+
+                TextField(L10n.Auth.twoFactorCodePlaceholder, text: $twoFactorCode)
+                    .keyboardType(.numberPad)
+                    .font(.system(size: 16, weight: .regular, design: .rounded))
+                    .padding(14)
+                    .background {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(AppTheme.nestedGlassFill)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+
+                if let errorMessage = session.errorMessage {
+                    Text(errorMessage)
+                        .font(.system(size: 13, weight: .regular, design: .rounded))
+                        .foregroundStyle(.red)
+                }
+
+                Button {
+                    Task { await session.verifyTwoFactor(code: twoFactorCode) }
+                } label: {
+                    Text(session.isLoading ? L10n.Auth.twoFactorVerifying : L10n.Auth.twoFactorVerify)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            LinearGradient(
+                                colors: [AppTheme.sage, AppTheme.sageDark],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(twoFactorCode.count != 6 || session.isLoading)
+                .opacity(twoFactorCode.count != 6 || session.isLoading ? 0.55 : 1)
+
+                Spacer()
+            }
+            .padding(20)
+            .premiumGlassCard(cornerRadius: 24)
+            .padding(16)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.Common.cancel) {
+                        session.cancelTwoFactorChallenge()
+                        twoFactorCode = ""
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .presentationBackground(AppTheme.cream.opacity(0.95))
     }
 
     private var isEmailFormatInvalid: Bool {
@@ -151,28 +289,19 @@ struct LoginView: View {
     }
 
     private func submitLogin() {
-        guard !email.isEmpty, !password.isEmpty, !isEmailFormatInvalid, !session.isLoading else {
-            return
-        }
-
+        guard !email.isEmpty, !password.isEmpty, !isEmailFormatInvalid, !session.isLoading else { return }
         focusedField = nil
         session.login(email: email, password: password)
     }
 
     private func submitAppleLogin() {
-        guard !session.isLoading else {
-            return
-        }
-
+        guard !session.isLoading else { return }
         focusedField = nil
         Task { await session.loginWithApple() }
     }
 
     private func submitGoogleLogin() {
-        guard !session.isLoading else {
-            return
-        }
-
+        guard !session.isLoading else { return }
         focusedField = nil
         Task { await session.loginWithGoogle() }
     }
@@ -204,16 +333,10 @@ private struct ForgotPasswordSheet: View {
                     .foregroundStyle(didSendRequest ? AppTheme.sageDark : AppTheme.gold)
                     .frame(width: 58, height: 58)
                     .background {
-                        ZStack {
-                            Circle().fill(AppTheme.lightSage.opacity(0.45))
-                            Circle().fill(.ultraThinMaterial).opacity(0.40)
-                        }
-                    }
-                    .overlay {
                         Circle()
-                            .stroke(Color.white.opacity(0.70), lineWidth: 1)
+                            .fill(AppTheme.iconChipFill)
+                            .background(.ultraThinMaterial, in: Circle())
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 10, y: 4)
 
                 Text(L10n.Auth.forgotTitle)
                     .font(.system(size: 22, weight: .semibold, design: .serif))
@@ -222,7 +345,7 @@ private struct ForgotPasswordSheet: View {
 
                 Text(L10n.Auth.forgotSubtitle)
                     .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(LoginPalette.textSecondary)
+                    .foregroundStyle(AppTheme.inkMuted(0.55))
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
                     .padding(.horizontal, 10)
@@ -272,27 +395,8 @@ private struct ForgotPasswordSheet: View {
         .padding(.horizontal, 28)
         .padding(.bottom, 22)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background {
-            LinearGradient(
-                colors: [
-                    AppTheme.surface.opacity(0.98),
-                    AppTheme.cream.opacity(0.94),
-                    AppTheme.lightSage.opacity(0.35),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            .overlay {
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.35)
-                    .ignoresSafeArea()
-            }
-        }
-        .onAppear {
-            focusedField = .email
-        }
+        .background(LuxuryWeddingBackground())
+        .onAppear { focusedField = .email }
         .onChange(of: email) { _, _ in
             statusMessage = nil
             didSendRequest = false
@@ -320,9 +424,7 @@ private struct ForgotPasswordSheet: View {
             statusMessage = L10n.Auth.invalidEmail
             return
         }
-        guard !isSubmitting else {
-            return
-        }
+        guard !isSubmitting else { return }
 
         focusedField = nil
         isSubmitting = true
@@ -348,139 +450,5 @@ private struct ForgotPasswordSheet: View {
                 }
             }
         }
-    }
-}
-
-private struct LoginFormSheet: View {
-    @Binding var email: String
-    @Binding var password: String
-    var focusedField: FocusState<AuthFormField?>.Binding
-    let isLoading: Bool
-    let isEmailFormatInvalid: Bool
-    let errorMessage: String?
-    let onForgotPassword: () -> Void
-    let onLogin: () -> Void
-    let onApple: () -> Void
-    let onGoogle: () -> Void
-    let onRegister: () -> Void
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            LoginSheetGlassBackground()
-
-            VStack(spacing: 0) {
-                LoginBadge()
-                    .offset(y: -5)
-                    .padding(.bottom, 0)
-
-                HStack(spacing: 8) {
-                    Text(L10n.Auth.welcome)
-                        .font(.system(size: 28, weight: .semibold, design: .serif))
-                        .foregroundStyle(AppTheme.sageDark)
-
-                    Image(systemName: "heart")
-                        .font(.system(size: 18, weight: .light))
-                        .foregroundStyle(AppTheme.gold)
-                        .offset(y: 2)
-                }
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
-
-                Text(L10n.Auth.loginSubtitle)
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(LoginPalette.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 5)
-                    .padding(.bottom, 12)
-
-                VStack(spacing: 9) {
-                    LoginInputField(
-                        icon: "envelope",
-                        placeholder: L10n.Auth.emailPlaceholder,
-                        text: $email,
-                        keyboardType: .emailAddress,
-                        textContentType: .username,
-                        submitLabel: .next,
-                        fieldFocus: .email,
-                        focusedField: focusedField,
-                        onSubmit: { focusedField.wrappedValue = .password }
-                    )
-
-                    LoginPasswordField(
-                        placeholder: L10n.Auth.passwordPlaceholder,
-                        text: $password,
-                        submitLabel: .go,
-                        fieldFocus: .password,
-                        focusedField: focusedField,
-                        onSubmit: onLogin
-                    )
-                }
-
-                if isEmailFormatInvalid {
-                    AuthNativeStatusMessage(message: L10n.Auth.invalidEmail, systemImage: "info.circle")
-                        .padding(.top, 10)
-                }
-
-                Button(action: onForgotPassword) {
-                    Text(L10n.Auth.forgotPassword)
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
-                        .foregroundStyle(AppTheme.sageDark)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 8)
-
-                if let errorMessage {
-                    AuthNativeStatusMessage(
-                        message: errorMessage,
-                        systemImage: "exclamationmark.circle.fill",
-                        tint: .red
-                    )
-                .padding(.top, 13)
-                }
-
-                LoginPrimaryButton(
-                    title: L10n.Auth.loginCta,
-                    isLoading: isLoading,
-                    isDisabled: email.isEmpty || password.isEmpty || isEmailFormatInvalid,
-                    action: onLogin
-                )
-                .padding(.top, 14)
-
-                LoginDivider(text: L10n.Auth.or)
-                    .padding(.top, 16)
-                    .padding(.bottom, 10)
-
-                HStack(spacing: 12) {
-                    LoginSocialButton(provider: .apple, isDisabled: isLoading, action: onApple)
-                    LoginSocialButton(provider: .google, isDisabled: isLoading, action: onGoogle)
-                }
-
-                Button(action: onRegister) {
-                    HStack(spacing: 8) {
-                        Text(L10n.Auth.noAccount)
-                            .font(.system(size: 13, weight: .regular, design: .rounded))
-                            .foregroundStyle(LoginPalette.textSecondary)
-
-                        Text(L10n.Auth.registerNow)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(AppTheme.sageDark)
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(AppTheme.sageDark)
-                    }
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 18)
-                .padding(.bottom, 28)
-            }
-            .padding(.horizontal, 34)
-            .padding(.top, 18)
-        }
-        .frame(maxWidth: .infinity)
     }
 }

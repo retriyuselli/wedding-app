@@ -83,6 +83,9 @@ enum L10n {
         static var continueGoogle: String { "auth.continue_google".localized }
         static var continuePhone: String { "auth.continue_phone".localized }
         static var or: String { "auth.or".localized }
+        static var termsPrefix: String { "auth.terms_prefix".localized }
+        static var termsLink: String { "auth.terms_link".localized }
+        static var termsSuffix: String { "auth.terms_suffix".localized }
         static var back: String { "auth.back".localized }
         static var googleNotConfigured: String { "auth.google_not_configured".localized }
         static var googleCannotOpen: String { "auth.google_cannot_open".localized }
@@ -938,7 +941,20 @@ enum L10n {
         static var cultureSection: String { "couple.culture_section".localized }
         static var bridePlaceholder: String { "couple.bride_placeholder".localized }
         static var groomPlaceholder: String { "couple.groom_placeholder".localized }
+        static var brideNicknamePlaceholder: String { "couple.bride_nickname_placeholder".localized }
+        static var groomNicknamePlaceholder: String { "couple.groom_nickname_placeholder".localized }
+        static var brideFullNamePlaceholder: String { "couple.bride_full_name_placeholder".localized }
+        static var groomFullNamePlaceholder: String { "couple.groom_full_name_placeholder".localized }
+        static var phonePlaceholder: String { "couple.phone_placeholder".localized }
+        static var fatherPlaceholder: String { "couple.father_placeholder".localized }
+        static var motherPlaceholder: String { "couple.mother_placeholder".localized }
         static var culturePlaceholder: String { "couple.culture_placeholder".localized }
+        static var photoSection: String { "couple.photo_section".localized }
+        static var photoUpload: String { "couple.photo_upload".localized }
+        static var photoChange: String { "couple.photo_change".localized }
+        static var photoHint: String { "couple.photo_hint".localized }
+        static var photoTooLarge: String { "couple.photo_too_large".localized }
+        static var photoReadError: String { "couple.photo_read_error".localized }
         static var save: String { "couple.save".localized }
     }
 

@@ -6,11 +6,13 @@ enum LoginPalette {
     static var greenDark: Color { AppTheme.sageDark }
     static var greenLight: Color { AppTheme.lightSage }
     static var gold: Color { AppTheme.gold }
-    static var textPrimary: Color { AppTheme.ink }
-    static var textSecondary: Color { AppTheme.ink.opacity(0.55) }
-    static var placeholder: Color { AppTheme.ink.opacity(0.32) }
-    static var border: Color { AppTheme.sage.opacity(0.28) }
-    static var divider: Color { AppTheme.sage.opacity(0.16) }
+    /// Primary field/copy color — solid ink so it stays readable on glass.
+    static var textPrimary: Color { AppTheme.titleOnGlass }
+    static var textSecondary: Color { AppTheme.inkMuted(0.78) }
+    static var placeholder: Color { AppTheme.inkMuted(0.62) }
+    static var icon: Color { AppTheme.sageDark }
+    static var border: Color { AppTheme.sage.opacity(0.42) }
+    static var divider: Color { AppTheme.sage.opacity(0.32) }
     static var sheet: Color { AppTheme.surface }
 }
 
@@ -298,18 +300,18 @@ struct LoginInputField: View {
     var body: some View {
         HStack(spacing: 18) {
             Image(systemName: icon)
-                .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(AppTheme.sageDark.opacity(0.78))
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(LoginPalette.icon)
                 .frame(width: 28)
 
             TextField(
                 "",
                 text: $text,
                 prompt: Text(placeholder)
-                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(LoginPalette.placeholder)
             )
-            .font(.system(size: 14, weight: .regular, design: .rounded))
+            .font(.system(size: 14, weight: .medium, design: .rounded))
             .foregroundStyle(LoginPalette.textPrimary)
             .keyboardType(keyboardType)
             .textContentType(textContentType)
@@ -324,25 +326,15 @@ struct LoginInputField: View {
         .background {
             ZStack {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(AppTheme.cream.opacity(0.55))
+                    .fill(Color.white.opacity(0.72))
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(.ultraThinMaterial)
-                    .opacity(0.55)
+                    .opacity(0.35)
             }
         }
         .overlay {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.72),
-                            AppTheme.sage.opacity(0.18),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
+                .stroke(LoginPalette.border, lineWidth: 1)
                 .allowsHitTesting(false)
         }
         .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 4)
@@ -368,8 +360,8 @@ struct LoginPasswordField: View {
     var body: some View {
         HStack(spacing: 18) {
             Image(systemName: "lock")
-                .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(AppTheme.sageDark.opacity(0.78))
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(LoginPalette.icon)
                 .frame(width: 28)
 
             Group {
@@ -378,7 +370,7 @@ struct LoginPasswordField: View {
                         "",
                         text: $text,
                         prompt: Text(placeholder)
-                            .font(.system(size: 14, weight: .regular, design: .rounded))
+                            .font(.system(size: 14, weight: .medium, design: .rounded))
                             .foregroundStyle(LoginPalette.placeholder)
                     )
                 } else {
@@ -386,12 +378,12 @@ struct LoginPasswordField: View {
                         "",
                         text: $text,
                         prompt: Text(placeholder)
-                            .font(.system(size: 14, weight: .regular, design: .rounded))
+                            .font(.system(size: 14, weight: .medium, design: .rounded))
                             .foregroundStyle(LoginPalette.placeholder)
                     )
                 }
             }
-            .font(.system(size: 14, weight: .regular, design: .rounded))
+            .font(.system(size: 14, weight: .medium, design: .rounded))
             .foregroundStyle(LoginPalette.textPrimary)
             .textContentType(textContentType)
             .textInputAutocapitalization(.never)
@@ -404,8 +396,8 @@ struct LoginPasswordField: View {
                 isVisible.toggle()
             } label: {
                 Image(systemName: isVisible ? "eye.slash" : "eye")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.55))
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(LoginPalette.icon.opacity(0.85))
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
@@ -415,25 +407,15 @@ struct LoginPasswordField: View {
         .background {
             ZStack {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(AppTheme.cream.opacity(0.55))
+                    .fill(Color.white.opacity(0.72))
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(.ultraThinMaterial)
-                    .opacity(0.55)
+                    .opacity(0.35)
             }
         }
         .overlay {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.72),
-                            AppTheme.sage.opacity(0.18),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
+                .stroke(LoginPalette.border, lineWidth: 1)
                 .allowsHitTesting(false)
         }
         .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 10, y: 4)
@@ -500,7 +482,7 @@ struct LoginDivider: View {
         HStack(spacing: 22) {
             line
             Text(text)
-                .font(.system(size: 13, weight: .regular, design: .rounded))
+                .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(LoginPalette.textSecondary)
                 .lineLimit(1)
             line
@@ -528,6 +510,7 @@ struct LoginSocialButton: View {
     }
 
     let provider: Provider
+    var title: String? = nil
     var isDisabled: Bool = false
     let action: () -> Void
 
@@ -537,37 +520,26 @@ struct LoginSocialButton: View {
                 providerIcon
                     .frame(width: 22, height: 22)
 
-                Text(provider.title)
+                Text(title ?? provider.title)
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(AppTheme.ink.opacity(0.82))
+                    .foregroundStyle(LoginPalette.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 48)
+            .frame(height: 50)
             .background {
                 ZStack {
-                    Capsule(style: .continuous)
-                        .fill(AppTheme.cream.opacity(0.50))
-                    Capsule(style: .continuous)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.78))
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(.ultraThinMaterial)
-                        .opacity(0.60)
+                        .opacity(0.30)
                 }
             }
             .overlay {
-                Capsule(style: .continuous)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.75),
-                                AppTheme.sage.opacity(0.16),
-                                AppTheme.gold.opacity(0.08),
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(LoginPalette.border, lineWidth: 1)
                     .allowsHitTesting(false)
             }
             .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 12, y: 5)

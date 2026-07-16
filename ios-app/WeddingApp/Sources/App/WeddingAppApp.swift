@@ -93,10 +93,15 @@ private struct AppLanguageModifier: ViewModifier {
 
 private struct AppAppearanceModifier: ViewModifier {
     @ObservedObject private var appearance = AppearanceStore.shared
+    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
             .preferredColorScheme(appearance.theme.preferredColorScheme)
             .id("appearance-\(appearance.colorPalette.rawValue)-\(appearance.theme.rawValue)-\(appearance.textSize.rawValue)")
+            .onAppear { AppTheme.updateCachedInterfaceStyle(from: colorScheme) }
+            .onChange(of: colorScheme) { _, newScheme in
+                AppTheme.updateCachedInterfaceStyle(from: newScheme)
+            }
     }
 }

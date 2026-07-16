@@ -339,22 +339,21 @@ enum AppTheme {
         case .dark:
             return true
         case .system:
-            let style = keyWindowInterfaceStyle() ?? traits.userInterfaceStyle
-            return style == .dark
+            // UIColor providers often run off the main thread — never touch
+            // UIApplication/UIWindow here. Prefer the SwiftUI-fed cache so we
+            // also avoid bogus .dark traits from .ultraThinMaterial.
+            if let cached = cachedSystemInterfaceStyle {
+                return cached == .dark
+            }
+            return traits.userInterfaceStyle == .dark
         }
     }
 
-    private static func keyWindowInterfaceStyle() -> UIUserInterfaceStyle? {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        for scene in scenes {
-            if let window = scene.windows.first(where: \.isKeyWindow) {
-                return window.traitCollection.userInterfaceStyle
-            }
-            if let style = scene.windows.first?.traitCollection.userInterfaceStyle {
-                return style
-            }
-        }
-        return scenes.first?.traitCollection.userInterfaceStyle
+    /// App-level interface style from SwiftUI `colorScheme` (main-thread updates only).
+    nonisolated(unsafe) private static var cachedSystemInterfaceStyle: UIUserInterfaceStyle?
+
+    static func updateCachedInterfaceStyle(from colorScheme: ColorScheme) {
+        cachedSystemInterfaceStyle = colorScheme == .dark ? .dark : .light
     }
 }
 

@@ -350,6 +350,14 @@ final class AppearanceStore: ObservableObject {
         theme = preference
         Self.currentTheme = preference
         UserDefaults.standard.set(preference.rawValue, forKey: themeKey)
+        switch preference {
+        case .light:
+            AppTheme.updateCachedInterfaceStyle(from: .light)
+        case .dark:
+            AppTheme.updateCachedInterfaceStyle(from: .dark)
+        case .system:
+            break
+        }
     }
 
     func selectColorPalette(_ palette: AppColorPalette) {

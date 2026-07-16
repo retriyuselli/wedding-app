@@ -86,6 +86,9 @@
 "auth.continue_google" = "Continue with Google";
 "auth.continue_phone" = "Continue with Phone Number";
 "auth.or" = "or";
+"auth.terms_prefix" = "By continuing, you agree to the ";
+"auth.terms_link" = "Terms and Conditions";
+"auth.terms_suffix" = " that apply";
 
 /* More */
 "more.title" = "More";
@@ -722,7 +725,20 @@
 "couple.culture_section" = "Culture / Concept";
 "couple.bride_placeholder" = "Bride's full name";
 "couple.groom_placeholder" = "Groom's full name";
+"couple.bride_nickname_placeholder" = "Bride's nickname";
+"couple.groom_nickname_placeholder" = "Groom's nickname";
+"couple.bride_full_name_placeholder" = "Bride's full name";
+"couple.groom_full_name_placeholder" = "Groom's full name";
+"couple.phone_placeholder" = "Phone number";
+"couple.father_placeholder" = "Father's name";
+"couple.mother_placeholder" = "Mother's name";
 "couple.culture_placeholder" = "e.g. Javanese tradition, Garden Romantic";
+"couple.photo_section" = "Couple Photo";
+"couple.photo_upload" = "Upload couple photo";
+"couple.photo_change" = "Change couple photo";
+"couple.photo_hint" = "JPG/PNG format, maximum 1 MB.";
+"couple.photo_too_large" = "Photo exceeds 1 MB. Please choose a smaller image.";
+"couple.photo_read_error" = "Couldn't read the photo. Please try again.";
 "couple.save" = "Save Couple";
 
 /* Onboarding */

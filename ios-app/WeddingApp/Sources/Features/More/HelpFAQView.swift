@@ -50,7 +50,7 @@ struct HelpFAQView: View {
                     HelpServiceHoursCard()
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .padding(.top, 32)
                 .padding(.bottom, 24)
             }
         }
