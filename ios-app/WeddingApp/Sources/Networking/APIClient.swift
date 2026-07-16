@@ -280,7 +280,7 @@ final class APIClient {
         if statusCode == 413 || body.localizedCaseInsensitiveContains("Content-Length")
             || body.localizedCaseInsensitiveContains("post_max_size")
             || body.localizedCaseInsensitiveContains("exceeds the limit") {
-            return .server("File terlalu besar untuk diunggah. Maksimal 1MB.")
+            return .server("File terlalu besar untuk diunggah. Maksimal 2MB.")
         }
 
         if !body.isEmpty {

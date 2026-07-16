@@ -30,12 +30,26 @@ class WeddingInfoController extends Controller
             'budaya' => ['nullable', 'string', 'max:100'],
             'songlist' => ['nullable', 'array'],
             'songlist.*' => ['string', 'max:255'],
+            'couple_photo' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        unset($data['couple_photo']);
+
+        foreach ($data as $key => $value) {
+            if (is_string($value) && trim($value) === '') {
+                $data[$key] = null;
+            }
+        }
 
         $info = $request->user()->weddingInfo()->updateOrCreate(
             ['user_id' => $request->user()->id],
             $data
         );
+
+        if ($request->hasFile('couple_photo')) {
+            $this->storeCouplePhoto($info, $request->file('couple_photo'));
+            $info->refresh();
+        }
 
         return new WeddingInfoResource($info);
     }
@@ -43,24 +57,29 @@ class WeddingInfoController extends Controller
     public function uploadPhoto(Request $request): WeddingInfoResource
     {
         $request->validate([
-            'couple_photo' => ['required', 'image', 'max:1024'],
+            'couple_photo' => ['required', 'image', 'max:2048'],
         ]);
 
         $info = $request->user()->weddingInfo()->firstOrCreate(
             ['user_id' => $request->user()->id]
         );
 
-        if ($info->couple_photo && ! str_starts_with($info->couple_photo, 'http')) {
+        $this->storeCouplePhoto($info, $request->file('couple_photo'));
+
+        return new WeddingInfoResource($info->fresh());
+    }
+
+    private function storeCouplePhoto($info, $file): void
+    {
+        if ($info->couple_photo && ! str_starts_with((string) $info->couple_photo, 'http')) {
             Storage::disk('public')->delete($info->couple_photo);
         }
 
-        $path = $request->file('couple_photo')->store(
-            'couple-photos/'.$request->user()->id,
+        $path = $file->store(
+            'couple-photos/'.$info->user_id,
             'public'
         );
 
         $info->update(['couple_photo' => $path]);
-
-        return new WeddingInfoResource($info->fresh());
     }
 }

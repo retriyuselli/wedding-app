@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct CoupleView: View {
     @Environment(\.dismiss) private var dismiss
@@ -22,7 +23,8 @@ struct CoupleView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    private let maxPhotoBytes = 1_024 * 1_024
+    /// Keep under PHP `post_max_size` (often 2M) after multipart overhead.
+    private let maxPhotoBytes = 1_850_000
 
     private var couplePreview: String {
         let bride = brideName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -197,23 +199,28 @@ struct CoupleView: View {
 
         do {
             let envelope: Envelope<WeddingInfo> = try await APIClient.shared.request("wedding-info")
-            let data = envelope.data
-            brideName = data.brideName ?? ""
-            brideFullName = data.brideFullName ?? ""
-            bridePhone = data.bridePhone ?? ""
-            brideFatherName = data.brideFatherName ?? ""
-            brideMotherName = data.brideMotherName ?? ""
-            groomName = data.groomName ?? ""
-            groomFullName = data.groomFullName ?? ""
-            groomPhone = data.groomPhone ?? ""
-            groomFatherName = data.groomFatherName ?? ""
-            groomMotherName = data.groomMotherName ?? ""
-            budaya = data.budaya ?? ""
-            if let urlString = data.couplePhotoUrl, let url = URL(string: urlString) {
-                couplePhotoURL = url
-            }
+            apply(envelope.data)
         } catch {
             errorMessage = error.userFacingMessage
+        }
+    }
+
+    private func apply(_ data: WeddingInfo) {
+        brideName = data.brideName ?? ""
+        brideFullName = data.brideFullName ?? ""
+        bridePhone = data.bridePhone ?? ""
+        brideFatherName = data.brideFatherName ?? ""
+        brideMotherName = data.brideMotherName ?? ""
+        groomName = data.groomName ?? ""
+        groomFullName = data.groomFullName ?? ""
+        groomPhone = data.groomPhone ?? ""
+        groomFatherName = data.groomFatherName ?? ""
+        groomMotherName = data.groomMotherName ?? ""
+        budaya = data.budaya ?? ""
+        if let urlString = data.couplePhotoUrl, let url = URL(string: urlString) {
+            couplePhotoURL = url
+        } else {
+            couplePhotoURL = nil
         }
     }
 
@@ -222,13 +229,51 @@ struct CoupleView: View {
         errorMessage = nil
         defer { isLoading = false }
 
-        var payload: [String: Any] = [:]
+        do {
+            let saved: WeddingInfo
+            if let photoFileData {
+                guard photoFileData.count <= maxPhotoBytes else {
+                    errorMessage = L10n.Couple.photoTooLarge
+                    return
+                }
 
+                let envelope: Envelope<WeddingInfo> = try await APIClient.shared.uploadMultipart(
+                    "wedding-info",
+                    method: "POST",
+                    fields: textFieldsForMultipart(),
+                    fileFieldName: "couple_photo",
+                    fileName: "couple.jpg",
+                    mimeType: "image/jpeg",
+                    fileData: photoFileData
+                )
+                saved = envelope.data
+                self.photoFileData = nil
+                self.selectedPhotoItem = nil
+            } else {
+                let envelope: Envelope<WeddingInfo> = try await APIClient.shared.request(
+                    "wedding-info",
+                    method: "PUT",
+                    json: textPayload()
+                )
+                saved = envelope.data
+            }
+
+            apply(saved)
+            if photoPreview != nil, saved.couplePhotoUrl != nil {
+                photoPreview = nil
+            }
+            dismiss()
+        } catch {
+            errorMessage = error.userFacingMessage
+        }
+    }
+
+    private func textPayload() -> [String: Any] {
+        var payload: [String: Any] = [:]
         func put(_ key: String, _ value: String) {
             let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
             payload[key] = trimmed.isEmpty ? NSNull() : trimmed
         }
-
         put("bride_name", brideName)
         put("bride_full_name", brideFullName)
         put("bride_phone", bridePhone)
@@ -240,39 +285,26 @@ struct CoupleView: View {
         put("groom_father_name", groomFatherName)
         put("groom_mother_name", groomMotherName)
         put("budaya", budaya)
+        return payload
+    }
 
-        do {
-            let _: Envelope<WeddingInfo> = try await APIClient.shared.request(
-                "wedding-info",
-                method: "PUT",
-                json: payload
-            )
-
-            if let photoFileData {
-                guard photoFileData.count <= maxPhotoBytes else {
-                    errorMessage = L10n.Couple.photoTooLarge
-                    return
-                }
-
-                let uploaded: Envelope<WeddingInfo> = try await APIClient.shared.uploadMultipart(
-                    "wedding-info/photo",
-                    method: "POST",
-                    fields: [:],
-                    fileFieldName: "couple_photo",
-                    fileName: "couple.jpg",
-                    mimeType: "image/jpeg",
-                    fileData: photoFileData
-                )
-                if let urlString = uploaded.data.couplePhotoUrl, let url = URL(string: urlString) {
-                    couplePhotoURL = url
-                }
-                self.photoFileData = nil
-            }
-
-            dismiss()
-        } catch {
-            errorMessage = error.userFacingMessage
+    private func textFieldsForMultipart() -> [String: String] {
+        func value(_ text: String) -> String {
+            text.trimmingCharacters(in: .whitespacesAndNewlines)
         }
+        return [
+            "bride_name": value(brideName),
+            "bride_full_name": value(brideFullName),
+            "bride_phone": value(bridePhone),
+            "bride_father_name": value(brideFatherName),
+            "bride_mother_name": value(brideMotherName),
+            "groom_name": value(groomName),
+            "groom_full_name": value(groomFullName),
+            "groom_phone": value(groomPhone),
+            "groom_father_name": value(groomFatherName),
+            "groom_mother_name": value(groomMotherName),
+            "budaya": value(budaya),
+        ]
     }
 
     @MainActor
@@ -280,8 +312,8 @@ struct CoupleView: View {
         guard let item else { return }
 
         do {
-            guard let data = try await item.loadTransferable(type: Data.self),
-                  let image = UIImage(data: data) else {
+            guard let picked = try await item.loadTransferable(type: CouplePickedImage.self),
+                  let image = UIImage(data: picked.data) else {
                 errorMessage = L10n.Couple.photoReadError
                 selectedPhotoItem = nil
                 return
@@ -305,13 +337,51 @@ struct CoupleView: View {
     }
 
     private func compressJPEG(_ image: UIImage, maxBytes: Int) -> Data? {
-        var quality: CGFloat = 0.9
-        var data = image.jpegData(compressionQuality: quality)
-        while let current = data, current.count > maxBytes, quality > 0.25 {
+        var working = image
+        if let resized = resizedForUpload(image) {
+            working = resized
+        }
+
+        var quality: CGFloat = 0.85
+        var data = working.jpegData(compressionQuality: quality)
+        while let current = data, current.count > maxBytes, quality > 0.2 {
             quality -= 0.1
-            data = image.jpegData(compressionQuality: quality)
+            data = working.jpegData(compressionQuality: quality)
         }
         guard let data, data.count <= maxBytes else { return nil }
         return data
+    }
+
+    private func resizedForUpload(_ image: UIImage) -> UIImage? {
+        let maxDimension: CGFloat = 1600
+        let size = image.size
+        let longest = max(size.width, size.height)
+        guard longest > maxDimension else { return image }
+
+        let scale = maxDimension / longest
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
+    }
+}
+
+private struct CouplePickedImage: Transferable {
+    let data: Data
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(importedContentType: .image) { data in
+            CouplePickedImage(data: data)
+        }
+        DataRepresentation(importedContentType: .jpeg) { data in
+            CouplePickedImage(data: data)
+        }
+        DataRepresentation(importedContentType: .heic) { data in
+            CouplePickedImage(data: data)
+        }
+        DataRepresentation(importedContentType: .png) { data in
+            CouplePickedImage(data: data)
+        }
     }
 }

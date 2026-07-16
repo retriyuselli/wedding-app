@@ -736,8 +736,8 @@
 "couple.photo_section" = "Couple Photo";
 "couple.photo_upload" = "Upload couple photo";
 "couple.photo_change" = "Change couple photo";
-"couple.photo_hint" = "JPG/PNG format, maximum 1 MB.";
-"couple.photo_too_large" = "Photo exceeds 1 MB. Please choose a smaller image.";
+"couple.photo_hint" = "JPG/PNG format, maximum 2 MB.";
+"couple.photo_too_large" = "Photo exceeds 2 MB. Please choose a smaller image.";
 "couple.photo_read_error" = "Couldn't read the photo. Please try again.";
 "couple.save" = "Save Couple";
 

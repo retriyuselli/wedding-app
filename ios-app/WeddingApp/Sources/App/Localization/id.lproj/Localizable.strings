@@ -736,8 +736,8 @@
 "couple.photo_section" = "Foto Pasangan";
 "couple.photo_upload" = "Unggah foto pasangan";
 "couple.photo_change" = "Ganti foto pasangan";
-"couple.photo_hint" = "Format JPG/PNG, maksimal 1 MB.";
-"couple.photo_too_large" = "Ukuran foto melebihi 1 MB. Pilih foto yang lebih kecil.";
+"couple.photo_hint" = "Format JPG/PNG, maksimal 2 MB.";
+"couple.photo_too_large" = "Ukuran foto melebihi 2 MB. Pilih foto yang lebih kecil.";
 "couple.photo_read_error" = "Gagal membaca foto. Coba lagi.";
 "couple.save" = "Simpan Pasangan";
 
