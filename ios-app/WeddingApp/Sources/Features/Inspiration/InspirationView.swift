@@ -2,6 +2,8 @@ import SwiftUI
 
 struct InspirationView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
 
     @State private var items: [InspirationItem] = []
     @State private var searchText = ""
@@ -12,8 +14,13 @@ struct InspirationView: View {
     @State private var showSavedOnly = false
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var showPaywall = false
     @ObservedObject private var savedStore = SavedInspirationStore.shared
     @ObservedObject private var likedStore = LikedInspirationStore.shared
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var filteredItems: [InspirationItem] {
         items
@@ -68,16 +75,35 @@ struct InspirationView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 28)
             }
+            .premiumContentLock(isPremium: isPremium, showPaywall: $showPaywall)
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
         .overlay {
-            if isLoading && items.isEmpty {
+            if isPremium && isLoading && items.isEmpty {
                 ProgressView()
             }
         }
-        .task { await load() }
-        .refreshable { await load() }
+        .task {
+            if isPremium {
+                await load()
+            } else {
+                await loadPreview()
+            }
+        }
+        .refreshable {
+            if isPremium {
+                await load()
+            } else {
+                await loadPreview()
+            }
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(onUnlocked: {
+                Task { await load() }
+            })
+            .environmentObject(session)
+        }
         .sheet(isPresented: $showFilterSheet) {
             InspirationFilterSheet(
                 filter: $draftFilter,
@@ -418,6 +444,27 @@ struct InspirationView: View {
         } catch {
             errorMessage = error.userFacingMessage
         }
+    }
+
+    private func loadPreview() async {
+        errorMessage = nil
+        if let envelope: Envelope<[InspirationItem]> = try? await APIClient.shared.request("inspirations"),
+           !envelope.data.isEmpty {
+            items = envelope.data
+            return
+        }
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let json = """
+        [
+          {"id":-1,"title":"Dekorasi Garden Soft","description":"Nuansa hijau sage dengan bunga putih","category":"dekorasi","likes":128,"views":400,"image_url":null,"thumbnail_symbol":"leaf.fill","is_saved":false,"is_liked":false},
+          {"id":-2,"title":"Gaun Modern Minimal","description":"Siluet clean untuk resepsi indoor","category":"gaun","likes":96,"views":310,"image_url":null,"thumbnail_symbol":"sparkles","is_saved":false,"is_liked":false},
+          {"id":-3,"title":"Makeup Natural Glow","description":"Look soft untuk sesi akad","category":"makeup","likes":84,"views":250,"image_url":null,"thumbnail_symbol":"paintbrush.pointed.fill","is_saved":false,"is_liked":false},
+          {"id":-4,"title":"Venue Outdoor Terrace","description":"Pemandangan terbuka saat golden hour","category":"venue","likes":112,"views":360,"image_url":null,"thumbnail_symbol":"building.2.fill","is_saved":false,"is_liked":false}
+        ]
+        """
+        items = (try? decoder.decode([InspirationItem].self, from: Data(json.utf8))) ?? []
     }
 }
 

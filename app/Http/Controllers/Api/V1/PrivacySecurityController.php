@@ -36,6 +36,8 @@ class PrivacySecurityController extends Controller
             'budget_visibility' => ['sometimes', 'string', 'in:private,couple'],
             'show_in_directory' => ['sometimes', 'boolean'],
             'allow_vendor_contact' => ['sometimes', 'boolean'],
+            'partner_user_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
+            'partner_email' => ['sometimes', 'nullable', 'email'],
         ]);
 
         return response()->json([

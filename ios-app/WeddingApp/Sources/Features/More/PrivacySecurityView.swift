@@ -123,6 +123,20 @@ struct PrivacySecurityView: View {
             .buttonStyle(.plain)
             divider
             NavigationLink {
+                SharedDirectoryView()
+            } label: {
+                rowContent(
+                    icon: "person.2",
+                    title: L10n.Privacy.directoryTitle,
+                    subtitle: L10n.Privacy.directorySubtitle
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            divider
+            NavigationLink {
                 RemindersPreferencesView()
             } label: {
                 rowContent(

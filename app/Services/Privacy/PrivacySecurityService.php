@@ -4,6 +4,7 @@ namespace App\Services\Privacy;
 
 use App\Models\User;
 use App\Support\PrivacySettings;
+use Illuminate\Validation\ValidationException;
 
 class PrivacySecurityService
 {
@@ -82,7 +83,7 @@ class PrivacySecurityService
      */
     public function visibility(User $user): array
     {
-        return PrivacySettings::forUser($user);
+        return $this->visibilityPayload($user);
     }
 
     /**
@@ -91,14 +92,92 @@ class PrivacySecurityService
      */
     public function updateVisibility(User $user, array $input): array
     {
+        if (array_key_exists('partner_email', $input)) {
+            $input[PrivacySettings::PartnerUserId] = $this->resolvePartnerUserId(
+                $user,
+                $input['partner_email'] ?? null,
+            );
+            unset($input['partner_email']);
+        }
+
         $validated = PrivacySettings::validatedPayload($input);
+
+        if (array_key_exists(PrivacySettings::PartnerUserId, $validated)) {
+            $partnerId = $validated[PrivacySettings::PartnerUserId];
+
+            if ($partnerId !== null) {
+                $this->assertPartnerCanBeLinked($user, $partnerId);
+            }
+        }
+
         $merged = array_merge(PrivacySettings::forUser($user), $validated);
 
         $user->update([
             'privacy_settings' => $merged,
         ]);
 
-        return PrivacySettings::forUser($user->fresh());
+        return $this->visibilityPayload($user->fresh());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function visibilityPayload(User $user): array
+    {
+        $settings = PrivacySettings::forUser($user);
+        $partnerId = PrivacySettings::partnerUserId($user);
+        $partner = $partnerId !== null
+            ? User::query()->whereKey($partnerId)->first(['id', 'name', 'email'])
+            : null;
+
+        $settings['partner_email'] = $partner?->email;
+        $settings['partner_name'] = $partner?->name;
+
+        return $settings;
+    }
+
+    private function resolvePartnerUserId(User $user, mixed $partnerEmail): ?int
+    {
+        if ($partnerEmail === null || $partnerEmail === '') {
+            return null;
+        }
+
+        $email = strtolower(trim((string) $partnerEmail));
+
+        if ($email === strtolower((string) $user->email)) {
+            throw ValidationException::withMessages([
+                'partner_email' => ['Tidak dapat menghubungkan akun Anda sendiri.'],
+            ]);
+        }
+
+        $partner = User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
+
+        if ($partner === null) {
+            throw ValidationException::withMessages([
+                'partner_email' => ['Email pasangan tidak ditemukan. Pastikan pasangan sudah mendaftar di Wedding App.'],
+            ]);
+        }
+
+        $this->assertPartnerCanBeLinked($user, $partner->id, 'partner_email');
+
+        return $partner->id;
+    }
+
+    private function assertPartnerCanBeLinked(User $user, int $partnerId, string $field = 'partner_user_id'): void
+    {
+        if ($partnerId === $user->id) {
+            throw ValidationException::withMessages([
+                $field => ['Tidak dapat menghubungkan akun Anda sendiri.'],
+            ]);
+        }
+
+        $partner = User::query()->whereKey($partnerId)->first();
+
+        if ($partner === null) {
+            throw ValidationException::withMessages([
+                $field => ['Akun pasangan tidak ditemukan.'],
+            ]);
+        }
     }
 
     /**

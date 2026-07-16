@@ -4,6 +4,8 @@ import UniformTypeIdentifiers
 
 struct CoupleView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
 
     @State private var brideName = ""
     @State private var brideFullName = ""
@@ -22,9 +24,16 @@ struct CoupleView: View {
     @State private var photoFileData: Data?
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var photoSizeWarning: String?
+    @State private var showPaywall = false
 
     /// Keep under PHP `post_max_size` (often 2M) after multipart overhead.
     private let maxPhotoBytes = 1_850_000
+    private let maxPhotoLimitBytes = 2 * 1_024 * 1_024
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var couplePreview: String {
         let bride = brideName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -86,21 +95,44 @@ struct CoupleView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 120)
             }
+            .premiumContentLock(isPremium: isPremium, showPaywall: $showPaywall)
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom) {
-            MorePrimaryButton(
-                title: L10n.Couple.save,
-                isLoading: isLoading,
-                isEnabled: canSave,
-                action: { Task { await save() } }
-            )
+            if isPremium {
+                MorePrimaryButton(
+                    title: L10n.Couple.save,
+                    isLoading: isLoading,
+                    isEnabled: canSave,
+                    action: { Task { await save() } }
+                )
+            }
         }
         .task { await load() }
         .onChange(of: selectedPhotoItem) { _, item in
             Task { await loadSelectedPhoto(item) }
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(onUnlocked: {
+                Task { await load() }
+            })
+            .environmentObject(session)
+        }
+    }
+
+    private var photoPickerLabel: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "photo.badge.plus")
+            Text(photoPreview == nil && couplePhotoURL == nil
+                  ? L10n.Couple.photoUpload
+                  : L10n.Couple.photoChange)
+        }
+        .font(AppFont.medium(14))
+        .foregroundStyle(AppTheme.sageDark)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(AppTheme.nestedGlassFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private var couplePreviewCard: some View {
@@ -129,25 +161,39 @@ struct CoupleView: View {
             VStack(spacing: 12) {
                 couplePhotoThumb(size: 112)
 
-                PhotosPicker(selection: $selectedPhotoItem, matching: .images, photoLibrary: .shared()) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "photo.badge.plus")
-                        Text(photoPreview == nil && couplePhotoURL == nil
-                              ? L10n.Couple.photoUpload
-                              : L10n.Couple.photoChange)
+                if PremiumGate.allows(session) {
+                    PhotosPicker(selection: $selectedPhotoItem, matching: .images, photoLibrary: .shared()) {
+                        photoPickerLabel
                     }
-                    .font(AppFont.medium(14))
-                    .foregroundStyle(AppTheme.sageDark)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(AppTheme.nestedGlassFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .buttonStyle(.plain)
+                } else {
+                    Button {
+                        showPaywall = true
+                    } label: {
+                        photoPickerLabel
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
 
                 Text(L10n.Couple.photoHint)
-                    .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.inkMuted(0.55))
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(AppTheme.inkMuted(0.72))
                     .frame(maxWidth: .infinity, alignment: .leading)
+
+                if let photoSizeWarning {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.orange)
+                        Text(photoSizeWarning)
+                            .font(AppFont.regular(12))
+                            .foregroundStyle(Color.red.opacity(0.9))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
             }
         }
     }
@@ -233,6 +279,7 @@ struct CoupleView: View {
             let saved: WeddingInfo
             if let photoFileData {
                 guard photoFileData.count <= maxPhotoBytes else {
+                    photoSizeWarning = L10n.Couple.photoTooLarge
                     errorMessage = L10n.Couple.photoTooLarge
                     return
                 }
@@ -314,12 +361,23 @@ struct CoupleView: View {
         do {
             guard let picked = try await item.loadTransferable(type: CouplePickedImage.self),
                   let image = UIImage(data: picked.data) else {
+                photoSizeWarning = nil
                 errorMessage = L10n.Couple.photoReadError
                 selectedPhotoItem = nil
                 return
             }
 
+            if picked.data.count > maxPhotoLimitBytes {
+                photoSizeWarning = L10n.Couple.photoTooLarge
+                errorMessage = L10n.Couple.photoTooLarge
+                selectedPhotoItem = nil
+                photoPreview = nil
+                photoFileData = nil
+                return
+            }
+
             guard let compressed = compressJPEG(image, maxBytes: maxPhotoBytes) else {
+                photoSizeWarning = L10n.Couple.photoTooLarge
                 errorMessage = L10n.Couple.photoTooLarge
                 selectedPhotoItem = nil
                 photoPreview = nil
@@ -329,8 +387,10 @@ struct CoupleView: View {
 
             photoPreview = image
             photoFileData = compressed
+            photoSizeWarning = nil
             errorMessage = nil
         } catch {
+            photoSizeWarning = nil
             errorMessage = L10n.Couple.photoReadError
             selectedPhotoItem = nil
         }

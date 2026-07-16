@@ -149,7 +149,7 @@ private struct RegisterFormSheet: View {
                 HStack(spacing: 8) {
                     Text(L10n.Auth.createAccount)
                         .font(.system(size: 26, weight: .semibold, design: .serif))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnGlass)
 
                     Image(systemName: "heart")
                         .font(.system(size: 18, weight: .light))
@@ -255,11 +255,11 @@ private struct RegisterFormSheet: View {
 
                         Text(L10n.Auth.login)
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(AppTheme.sageDark)
+                            .foregroundStyle(AppTheme.sageMuted(0.95))
 
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(AppTheme.sageDark)
+                            .foregroundStyle(AppTheme.sageMuted(0.95))
                     }
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)

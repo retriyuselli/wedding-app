@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AppPermissionController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\BudgetPaymentCategoryController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CustomerNotificationController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Api\V1\InspirationController;
 use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\PrivacySecurityController;
 use App\Http\Controllers\Api\V1\RegionController;
+use App\Http\Controllers\Api\V1\SharedPrivacyController;
 use App\Http\Controllers\Api\V1\TrustedDeviceController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
 use App\Http\Controllers\Api\V1\UserDataExportController;
@@ -41,10 +43,6 @@ Route::prefix('v1')->group(function () {
     Route::get('budget-payment-categories', [BudgetPaymentCategoryController::class, 'index']);
 
     Route::get('wedding-quotes', [WeddingQuoteController::class, 'index']);
-
-    Route::get('vendors', [VendorController::class, 'index']);
-    Route::get('vendors/{vendor}/packages', [VendorController::class, 'packages']);
-    Route::get('vendors/{vendor}', [VendorController::class, 'show']);
 
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
@@ -71,6 +69,13 @@ Route::prefix('v1')->group(function () {
         Route::get('privacy/app-permissions', [AppPermissionController::class, 'index']);
         Route::get('privacy/data-export', [UserDataExportController::class, 'download']);
 
+        Route::get('shared/directory', [SharedPrivacyController::class, 'directory']);
+        Route::get('shared/users/{user}/profile', [SharedPrivacyController::class, 'profile']);
+        Route::get('shared/users/{user}/wedding', [SharedPrivacyController::class, 'wedding']);
+        Route::get('shared/users/{user}/guests', [SharedPrivacyController::class, 'guests']);
+        Route::get('shared/users/{user}/budget', [SharedPrivacyController::class, 'budget']);
+        Route::post('shared/users/{user}/vendor-contact', [SharedPrivacyController::class, 'requestVendorContact']);
+
         Route::get('privacy/two-factor', [TwoFactorController::class, 'status']);
         Route::post('privacy/two-factor/enable', [TwoFactorController::class, 'enable']);
         Route::post('privacy/two-factor/confirm', [TwoFactorController::class, 'confirm']);
@@ -85,66 +90,84 @@ Route::prefix('v1')->group(function () {
         Route::get('wedding-info', [WeddingInfoController::class, 'show']);
         Route::put('wedding-info', [WeddingInfoController::class, 'update']);
         Route::post('wedding-info', [WeddingInfoController::class, 'update']);
-        Route::post('wedding-info/photo', [WeddingInfoController::class, 'uploadPhoto']);
+        Route::post('wedding-info/photo', [WeddingInfoController::class, 'uploadPhoto'])
+            ->middleware('premium');
 
-        Route::get('wedding-budget/summary', [WeddingBudgetController::class, 'summary']);
+        Route::get('billing/entitlement', [BillingController::class, 'entitlement']);
+        Route::post('billing/apple/verify', [BillingController::class, 'verifyApple']);
+
+        Route::get('vendors', [VendorController::class, 'index']);
+        Route::get('vendors/{vendor}/packages', [VendorController::class, 'packages']);
+        Route::get('vendors/{vendor}', [VendorController::class, 'show']);
+
+        Route::middleware('premium')->group(function () {
+            Route::get('wedding-budget/summary', [WeddingBudgetController::class, 'summary']);
+
+            Route::apiResource('wedding-budget-category-allocations', WeddingBudgetCategoryAllocationController::class)
+                ->parameters(['wedding-budget-category-allocations' => 'weddingBudgetCategoryAllocation']);
+
+            Route::apiResource('customer-payment-methods', CustomerPaymentMethodController::class)
+                ->parameters(['customer-payment-methods' => 'customerPaymentMethod']);
+
+            Route::apiResource('wedding-payment-schedules', WeddingPaymentScheduleController::class)
+                ->parameters(['wedding-payment-schedules' => 'weddingPaymentSchedule']);
+            Route::patch('wedding-payment-schedules/{weddingPaymentSchedule}/mark-paid', [WeddingPaymentScheduleController::class, 'markPaid']);
+
+            Route::apiResource('wedding-incoming-payments', WeddingIncomingPaymentController::class)
+                ->parameters(['wedding-incoming-payments' => 'weddingIncomingPayment']);
+        });
+
         Route::get('wedding-budget', [WeddingBudgetController::class, 'show']);
         Route::put('wedding-budget', [WeddingBudgetController::class, 'update']);
-
-        Route::apiResource('wedding-budget-category-allocations', WeddingBudgetCategoryAllocationController::class)
-            ->parameters(['wedding-budget-category-allocations' => 'weddingBudgetCategoryAllocation']);
 
         Route::apiResource('wedding-events', WeddingEventController::class)
             ->parameters(['wedding-events' => 'weddingEvent']);
 
-        Route::apiResource('customer-payment-methods', CustomerPaymentMethodController::class)
-            ->parameters(['customer-payment-methods' => 'customerPaymentMethod']);
+        Route::middleware('premium')->group(function () {
+            Route::apiResource('customer-preparation-sections', CustomerPreparationSectionController::class)
+                ->parameters(['customer-preparation-sections' => 'customerPreparationSection']);
 
-        Route::apiResource('wedding-payment-schedules', WeddingPaymentScheduleController::class)
-            ->parameters(['wedding-payment-schedules' => 'weddingPaymentSchedule']);
-        Route::patch('wedding-payment-schedules/{weddingPaymentSchedule}/mark-paid', [WeddingPaymentScheduleController::class, 'markPaid']);
+            Route::get('customer-preparation-tasks/summary', [CustomerPreparationTaskController::class, 'summary']);
+            Route::apiResource('customer-preparation-tasks', CustomerPreparationTaskController::class)
+                ->parameters(['customer-preparation-tasks' => 'customerPreparationTask']);
+            Route::patch('customer-preparation-tasks/{customerPreparationTask}/toggle', [CustomerPreparationTaskController::class, 'toggle']);
+            Route::patch('customer-preparation-sub-tasks/{customerPreparationSubTask}/toggle', [CustomerPreparationSubTaskController::class, 'toggle']);
+        });
 
-        Route::apiResource('wedding-incoming-payments', WeddingIncomingPaymentController::class)
-            ->parameters(['wedding-incoming-payments' => 'weddingIncomingPayment']);
+        Route::middleware('premium')->group(function () {
+            Route::apiResource('family-members', FamilyMemberController::class)
+                ->parameters(['family-members' => 'familyMember']);
+            Route::patch('family-members/{familyMember}/rsvp', [FamilyMemberController::class, 'updateRsvp']);
+            Route::get('family-members-excel-template', [FamilyMemberController::class, 'downloadTemplate']);
+            Route::post('family-members-import-excel', [FamilyMemberController::class, 'importExcel']);
+            Route::delete('family-members-all', [FamilyMemberController::class, 'destroyAll']);
 
-        Route::apiResource('customer-preparation-sections', CustomerPreparationSectionController::class)
-            ->parameters(['customer-preparation-sections' => 'customerPreparationSection']);
+            Route::apiResource('vip-guests', VipGuestController::class)
+                ->parameters(['vip-guests' => 'vipGuest']);
+            Route::patch('vip-guests/{vipGuest}/rsvp', [VipGuestController::class, 'updateRsvp']);
+            Route::get('vip-guests-excel-template', [VipGuestController::class, 'downloadTemplate']);
+            Route::post('vip-guests-import-excel', [VipGuestController::class, 'importExcel']);
+            Route::delete('vip-guests-all', [VipGuestController::class, 'destroyAll']);
 
-        Route::get('customer-preparation-tasks/summary', [CustomerPreparationTaskController::class, 'summary']);
-        Route::apiResource('customer-preparation-tasks', CustomerPreparationTaskController::class)
-            ->parameters(['customer-preparation-tasks' => 'customerPreparationTask']);
-        Route::patch('customer-preparation-tasks/{customerPreparationTask}/toggle', [CustomerPreparationTaskController::class, 'toggle']);
-        Route::patch('customer-preparation-sub-tasks/{customerPreparationSubTask}/toggle', [CustomerPreparationSubTaskController::class, 'toggle']);
-
-        Route::apiResource('family-members', FamilyMemberController::class)
-            ->parameters(['family-members' => 'familyMember']);
-        Route::patch('family-members/{familyMember}/rsvp', [FamilyMemberController::class, 'updateRsvp']);
-        Route::get('family-members-excel-template', [FamilyMemberController::class, 'downloadTemplate']);
-        Route::post('family-members-import-excel', [FamilyMemberController::class, 'importExcel']);
-        Route::delete('family-members-all', [FamilyMemberController::class, 'destroyAll']);
-
-        Route::apiResource('vip-guests', VipGuestController::class)
-            ->parameters(['vip-guests' => 'vipGuest']);
-        Route::patch('vip-guests/{vipGuest}/rsvp', [VipGuestController::class, 'updateRsvp']);
-        Route::get('vip-guests-excel-template', [VipGuestController::class, 'downloadTemplate']);
-        Route::post('vip-guests-import-excel', [VipGuestController::class, 'importExcel']);
-        Route::delete('vip-guests-all', [VipGuestController::class, 'destroyAll']);
-
-        Route::apiResource('guests', GuestController::class);
-        Route::patch('guests/{guest}/rsvp', [GuestController::class, 'updateRsvp']);
-        Route::get('guests-excel-template', [GuestController::class, 'downloadTemplate']);
-        Route::post('guests-import-excel', [GuestController::class, 'importExcel']);
-        Route::delete('guests-all', [GuestController::class, 'destroyAll']);
+            Route::apiResource('guests', GuestController::class);
+            Route::patch('guests/{guest}/rsvp', [GuestController::class, 'updateRsvp']);
+            Route::get('guests-excel-template', [GuestController::class, 'downloadTemplate']);
+            Route::post('guests-import-excel', [GuestController::class, 'importExcel']);
+            Route::delete('guests-all', [GuestController::class, 'destroyAll']);
+        });
 
         Route::apiResource('document-folders', DocumentFolderController::class)
             ->except(['show'])
-            ->parameters(['document-folders' => 'documentFolder']);
+            ->parameters(['document-folders' => 'documentFolder'])
+            ->middleware('premium');
 
-        Route::get('wedding-documents/summary', [WeddingDocumentController::class, 'summary']);
-        Route::get('wedding-documents/{weddingDocument}/download', [WeddingDocumentController::class, 'download']);
-        Route::apiResource('wedding-documents', WeddingDocumentController::class)
-            ->except(['show'])
-            ->parameters(['wedding-documents' => 'weddingDocument']);
+        Route::middleware('premium')->group(function () {
+            Route::get('wedding-documents/summary', [WeddingDocumentController::class, 'summary']);
+            Route::get('wedding-documents/{weddingDocument}/download', [WeddingDocumentController::class, 'download']);
+            Route::apiResource('wedding-documents', WeddingDocumentController::class)
+                ->except(['show'])
+                ->parameters(['wedding-documents' => 'weddingDocument']);
+        });
 
         Route::apiResource('customer-notifications', CustomerNotificationController::class)
             ->only(['index', 'show', 'destroy'])
@@ -162,9 +185,13 @@ Route::prefix('v1')->group(function () {
         Route::delete('messages/threads/{thread}', [MessageController::class, 'destroy']);
 
         Route::get('inspirations', [InspirationController::class, 'index']);
-        Route::post('inspirations/{inspiration}/save', [InspirationController::class, 'save']);
-        Route::delete('inspirations/{inspiration}/save', [InspirationController::class, 'unsave']);
-        Route::post('inspirations/{inspiration}/like', [InspirationController::class, 'like']);
-        Route::delete('inspirations/{inspiration}/like', [InspirationController::class, 'unlike']);
+        Route::post('inspirations/{inspiration}/save', [InspirationController::class, 'save'])
+            ->middleware('premium');
+        Route::delete('inspirations/{inspiration}/save', [InspirationController::class, 'unsave'])
+            ->middleware('premium');
+        Route::post('inspirations/{inspiration}/like', [InspirationController::class, 'like'])
+            ->middleware('premium');
+        Route::delete('inspirations/{inspiration}/like', [InspirationController::class, 'unlike'])
+            ->middleware('premium');
     });
 });

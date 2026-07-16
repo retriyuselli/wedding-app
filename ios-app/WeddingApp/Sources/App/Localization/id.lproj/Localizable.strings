@@ -105,6 +105,8 @@
 "more.inspiration_sub" = "Simpan inspirasi dan referensi";
 "more.documents" = "Dokumen";
 "more.documents_sub" = "Simpan dokumen penting pernikahan";
+"more.wedding_pro" = "Wedding Pro";
+"more.wedding_pro_sub" = "Buka checklist, tamu, budget, dokumen, dan lainnya";
 "more.settings" = "Pengaturan";
 "more.settings_sub" = "Notifikasi, tampilan, dan preferensi";
 "more.privacy" = "Privasi & Keamanan";
@@ -648,6 +650,47 @@
 "privacy.two_factor_inactive" = "Nonaktif";
 "privacy.commitment" = "Kami berkomitmen untuk melindungi privasi Anda. Baca Kebijakan Privasi kami untuk informasi lebih lanjut.";
 "privacy.help_center_sub" = "Pelajari lebih lanjut tentang privasi & keamanan";
+"privacy.visibility_saved" = "Pengaturan visibilitas berhasil disimpan.";
+"privacy.visibility_profile" = "Profil";
+"privacy.visibility_wedding" = "Detail pernikahan";
+"privacy.visibility_guests" = "Daftar tamu";
+"privacy.visibility_budget" = "Anggaran";
+"privacy.visibility_private" = "Privat";
+"privacy.visibility_couple" = "Pasangan";
+"privacy.visibility_public" = "Publik";
+"privacy.visibility_vendors" = "Vendor";
+"privacy.show_in_directory" = "Tampilkan di direktori";
+"privacy.allow_vendor_contact" = "Izinkan vendor menghubungi";
+"privacy.saving" = "Menyimpan…";
+"privacy.partner_section" = "Akun pasangan";
+"privacy.partner_section_hint" = "Hubungkan email pasangan agar data dengan visibilitas “Pasangan” dapat dilihat bersama. Jika akun Anda Premium, pasangan dapat memakai akses Pro untuk data yang Anda bagikan (mis. daftar tamu).";
+"privacy.partner_email_placeholder" = "Email akun pasangan";
+"privacy.partner_linked" = "Pasangan terhubung";
+"privacy.partner_linked_id" = "ID pengguna: %d";
+"privacy.partner_linked_success" = "Akun pasangan berhasil dihubungkan.";
+"privacy.partner_change_hint" = "Untuk mengganti pasangan, masukkan email akun lain lalu simpan.";
+"privacy.partner_unlinked" = "Tautan pasangan dilepas.";
+"privacy.unlink_partner" = "Lepas tautan";
+"privacy.view_partner_data" = "Lihat data";
+"privacy.directory_title" = "Direktori";
+"privacy.directory_subtitle" = "Profil yang memilih tampil di direktori publik";
+"privacy.directory_empty" = "Belum ada profil yang tampil di direktori.";
+"privacy.shared_profile_title" = "Profil bersama";
+"privacy.shared_profile_subtitle" = "Data yang diizinkan untuk Anda lihat";
+"privacy.shared_wedding" = "Detail pernikahan";
+"privacy.shared_guests" = "Daftar tamu";
+"privacy.shared_budget" = "Anggaran";
+"privacy.shared_section_unavailable" = "Tidak tersedia untuk Anda.";
+"privacy.shared_no_events" = "Belum ada acara.";
+"privacy.shared_guest_count" = "%d tamu";
+"privacy.shared_guests_more" = "+%d tamu lainnya";
+"privacy.shared_budget_total" = "Total anggaran";
+"privacy.shared_budget_spent" = "Terpakai";
+"privacy.shared_budget_remaining" = "Sisa";
+"privacy.viewer_role_self" = "Data Anda sendiri";
+"privacy.viewer_role_couple" = "Ditampilkan sebagai pasangan";
+"privacy.viewer_role_vendor" = "Ditampilkan sebagai vendor";
+"privacy.viewer_role_authenticated" = "Profil publik";
 
 /* Change Password */
 "change_password.title" = "Ubah Kata Sandi";
@@ -736,8 +779,8 @@
 "couple.photo_section" = "Foto Pasangan";
 "couple.photo_upload" = "Unggah foto pasangan";
 "couple.photo_change" = "Ganti foto pasangan";
-"couple.photo_hint" = "Format JPG/PNG, maksimal 2 MB.";
-"couple.photo_too_large" = "Ukuran foto melebihi 2 MB. Pilih foto yang lebih kecil.";
+"couple.photo_hint" = "Format JPG/PNG. Jika ukuran foto lebih dari 2 MB, unggahan akan ditolak — pilih foto yang lebih kecil.";
+"couple.photo_too_large" = "Foto melebihi 2 MB. Silakan pilih foto berukuran maksimal 2 MB.";
 "couple.photo_read_error" = "Gagal membaca foto. Coba lagi.";
 "couple.save" = "Simpan Pasangan";
 
@@ -1093,6 +1136,44 @@
 "privacy.export_blurb" = "Unduh salinan data akunmu. Proses mungkin membutuhkan waktu.";
 
 "vendor.request_msg_header" = "[Permintaan Vendor]";
+
+/* Wedding Pro */
+"premium.title" = "Wedding Pro";
+"premium.subtitle" = "Satu kali bayar, buka semua alat perencanaan inti — dan bagikan akses Pro ke pasangan untuk data yang Anda izinkan.";
+"premium.benefit_excel" = "Export & import daftar tamu lewat Excel";
+"premium.benefit_documents" = "Simpan kontrak, undangan, dan dokumen penting";
+"premium.benefit_couple_photo" = "Foto pasangan untuk profil & detail pernikahan";
+"premium.benefit_vendors" = "Jelajahi katalog vendor lengkap";
+"premium.benefit_checklist" = "Checklist persiapan pernikahan yang terstruktur";
+"premium.benefit_wedding_detail" = "Detail acara, lokasi, dan rangkaian hari-H";
+"premium.benefit_couple" = "Profil lengkap mempelai dan keluarga";
+"premium.benefit_guests" = "Kelola tamu, VIP, keluarga, dan RSVP";
+"premium.benefit_budget" = "Anggaran, jadwal bayar, dan pantauan sisa dana";
+"premium.benefit_inspiration" = "Simpan inspirasi & ide konsep pernikahan";
+"premium.benefit_reminders" = "Pengingat tepat waktu untuk deadline penting";
+"premium.benefit_partner" = "Pasangan ikut pakai Pro untuk data yang dibagikan";
+"premium.benefit_visibility" = "Atur siapa yang boleh melihat data Anda";
+"premium.buy" = "Buka Pro · %@";
+"premium.buy_fallback" = "Buka Wedding Pro";
+"premium.restore" = "Pulihkan Pembelian";
+"premium.footnote" = "Pembelian sekali bayar, terhubung ke Apple ID. Gunakan Pulihkan Pembelian jika sudah pernah membeli di perangkat lain.";
+"premium.product_unavailable" = "Produk belum tersedia. Coba lagi sebentar.";
+"premium.purchase_pending" = "Pembelian menunggu konfirmasi.";
+"premium.purchase_failed" = "Pembelian gagal. Silakan coba lagi.";
+"premium.restore_empty" = "Tidak ada pembelian Wedding Pro yang ditemukan.";
+"premium.unverified_transaction" = "Transaksi tidak dapat diverifikasi.";
+"premium.locked_title" = "Tersedia di Wedding Pro";
+"premium.locked_message" = "Buka sekali bayar untuk memakai fitur ini. Pasangan yang terhubung juga bisa mengakses data yang Anda bagikan.";
+"premium.unlock_cta" = "Buka Wedding Pro";
+"premium.menu_title" = "Wedding Pro";
+"premium.menu_sub" = "Buka checklist, tamu, budget, dokumen, dan lainnya";
+"premium.menu_active_sub" = "Semua fitur Pro sudah aktif";
+"premium.status_active" = "Aktif";
+"premium.status_inactive" = "Belum aktif";
+"premium.partner_guests_cta" = "Lihat daftar tamu pasangan";
+"premium.partner_budget_cta" = "Lihat anggaran pasangan";
+"premium.partner_access_sub" = "Akses lewat Wedding Pro milik %@";
+
 "documents.empty_filtered_sub" = "Tidak ada dokumen yang cocok dengan pencarian atau kategori ini.";
 "wedding_edit.event_count" = "%d acara";
 "wedding_edit.all_types_added" = "Semua jenis acara sudah ditambahkan.";

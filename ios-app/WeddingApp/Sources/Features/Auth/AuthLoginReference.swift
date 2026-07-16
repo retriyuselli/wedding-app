@@ -9,11 +9,17 @@ enum LoginPalette {
     /// Primary field/copy color — solid ink so it stays readable on glass.
     static var textPrimary: Color { AppTheme.titleOnGlass }
     static var textSecondary: Color { AppTheme.inkMuted(0.78) }
-    static var placeholder: Color { AppTheme.inkMuted(0.62) }
-    static var icon: Color { AppTheme.sageDark }
+    /// Placeholder on adaptive field fills (not on flat white — that washed out in dark mode).
+    static var placeholder: Color { AppTheme.inkMuted(0.72) }
+    static var icon: Color { AppTheme.sageMuted(0.95) }
     static var border: Color { AppTheme.sage.opacity(0.42) }
     static var divider: Color { AppTheme.sage.opacity(0.32) }
     static var sheet: Color { AppTheme.surface }
+    static var fieldFill: Color { AppTheme.nestedGlassFill }
+    /// Solid light chip for social buttons so labels stay readable in dark mode.
+    static var socialFill: Color { AppTheme.selectedChipFill }
+    static var socialLabel: Color { AppTheme.labelOnLightSurface }
+    static var socialBorder: Color { AppTheme.iconChipStroke }
 }
 
 enum AuthLoginLayout {
@@ -324,13 +330,8 @@ struct LoginInputField: View {
         .frame(height: 50)
         .padding(.horizontal, 18)
         .background {
-            ZStack {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.35)
-            }
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(LoginPalette.fieldFill)
         }
         .overlay {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -397,7 +398,7 @@ struct LoginPasswordField: View {
             } label: {
                 Image(systemName: isVisible ? "eye.slash" : "eye")
                     .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(LoginPalette.icon.opacity(0.85))
+                    .foregroundStyle(LoginPalette.icon)
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
@@ -405,13 +406,8 @@ struct LoginPasswordField: View {
         .frame(height: 50)
         .padding(.horizontal, 18)
         .background {
-            ZStack {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.35)
-            }
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(LoginPalette.fieldFill)
         }
         .overlay {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -443,7 +439,7 @@ struct LoginPrimaryButton: View {
                 } else {
                     Text(title)
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                         .lineLimit(1)
                         .minimumScaleFactor(0.76)
                 }
@@ -460,8 +456,8 @@ struct LoginPrimaryButton: View {
             .background(
                 LinearGradient(
                     colors: isDisabled
-                        ? [AppTheme.sage.opacity(0.55), AppTheme.sageDark.opacity(0.48)]
-                        : [AppTheme.sage, AppTheme.sageDark],
+                        ? [AppTheme.brandGradientEnd.opacity(0.72), AppTheme.quoteGradientMid.opacity(0.42)]
+                        : [AppTheme.brandGradientEnd, AppTheme.quoteGradientMid],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
@@ -522,27 +518,22 @@ struct LoginSocialButton: View {
 
                 Text(title ?? provider.title)
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(LoginPalette.textPrimary)
+                    .foregroundStyle(LoginPalette.socialLabel)
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 50)
-            .background {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.78))
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.30)
-                }
-            }
+            .background(
+                LoginPalette.socialFill,
+                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+            )
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(LoginPalette.border, lineWidth: 1)
+                    .stroke(LoginPalette.socialBorder, lineWidth: 1)
                     .allowsHitTesting(false)
             }
-            .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 12, y: 5)
+            .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 12, y: 5)
         }
         .buttonStyle(LoginPressButtonStyle())
         .disabled(isDisabled)
@@ -555,7 +546,7 @@ struct LoginSocialButton: View {
         case .apple:
             Image(systemName: "apple.logo")
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(LoginPalette.socialLabel)
         case .google:
             Text("G")
                 .font(.system(size: 20, weight: .bold, design: .rounded))

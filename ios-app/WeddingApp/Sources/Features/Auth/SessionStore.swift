@@ -64,6 +64,8 @@ final class SessionStore: ObservableObject {
             currentUser = response.user
             authRevision += 1
             schedulePushTokenSync()
+            await PremiumStore.shared.refreshLocalEntitlements()
+            await PremiumStore.shared.refreshServerEntitlement()
         } catch {
             guard generation == restoreGeneration else {
                 return
@@ -75,6 +77,7 @@ final class SessionStore: ObservableObject {
 
             KeychainStore.deleteToken()
             currentUser = nil
+            PremiumStore.shared.clearSharedPremiumAccess()
         }
     }
 
@@ -198,6 +201,7 @@ final class SessionStore: ObservableObject {
         isLoading = false
         authRevision += 1
         BudgetCategoriesStore.shared.reset()
+        PremiumStore.shared.clearSharedPremiumAccess()
     }
 
     func clearSessionAfterAccountDeletion() {
@@ -214,6 +218,24 @@ final class SessionStore: ObservableObject {
     func updateCurrentUser(_ user: User) {
         currentUser = user
         authRevision += 1
+    }
+
+    var isPremium: Bool {
+        PremiumStore.shared.isPremium(user: currentUser)
+    }
+
+    func refreshCurrentUser() async {
+        do {
+            let response = try await Self.fetchCurrentUser()
+            currentUser = response.user
+            authRevision += 1
+            await PremiumStore.shared.refreshLocalEntitlements()
+            await PremiumStore.shared.refreshServerEntitlement()
+        } catch {
+            #if DEBUG
+            print("[Auth] refreshCurrentUser failed: \(error)")
+            #endif
+        }
     }
 
     private func invalidateRestore() {
@@ -306,6 +328,10 @@ final class SessionStore: ObservableObject {
         authRevision += 1
         objectWillChange.send()
         schedulePushTokenSync()
+        Task {
+            await PremiumStore.shared.refreshLocalEntitlements()
+            await PremiumStore.shared.refreshServerEntitlement()
+        }
 
         #if DEBUG
         print("[Auth] Login succeeded for user id \(response.user.id), authRevision=\(authRevision)")

@@ -119,6 +119,8 @@ enum L10n {
         static var inspirationSub: String { "more.inspiration_sub".localized }
         static var documents: String { "more.documents".localized }
         static var documentsSub: String { "more.documents_sub".localized }
+        static var weddingPro: String { "more.wedding_pro".localized }
+        static var weddingProSub: String { "more.wedding_pro_sub".localized }
         static var settings: String { "more.settings".localized }
         static var settingsSub: String { "more.settings_sub".localized }
         static var privacy: String { "more.privacy".localized }
@@ -858,6 +860,47 @@ enum L10n {
         static func securityScore(_ percent: Int) -> String { "privacy.security_score".localized(percent) }
         static var openIosSettings: String { "privacy.open_ios_settings".localized }
         static var exportBlurb: String { "privacy.export_blurb".localized }
+        static var visibilitySaved: String { "privacy.visibility_saved".localized }
+        static var visibilityProfile: String { "privacy.visibility_profile".localized }
+        static var visibilityWedding: String { "privacy.visibility_wedding".localized }
+        static var visibilityGuests: String { "privacy.visibility_guests".localized }
+        static var visibilityBudget: String { "privacy.visibility_budget".localized }
+        static var visibilityPrivate: String { "privacy.visibility_private".localized }
+        static var visibilityCouple: String { "privacy.visibility_couple".localized }
+        static var visibilityPublic: String { "privacy.visibility_public".localized }
+        static var visibilityVendors: String { "privacy.visibility_vendors".localized }
+        static var showInDirectory: String { "privacy.show_in_directory".localized }
+        static var allowVendorContact: String { "privacy.allow_vendor_contact".localized }
+        static var saving: String { "privacy.saving".localized }
+        static var partnerSection: String { "privacy.partner_section".localized }
+        static var partnerSectionHint: String { "privacy.partner_section_hint".localized }
+        static var partnerEmailPlaceholder: String { "privacy.partner_email_placeholder".localized }
+        static var partnerLinked: String { "privacy.partner_linked".localized }
+        static func partnerLinkedId(_ id: Int) -> String { "privacy.partner_linked_id".localized(id) }
+        static var partnerLinkedSuccess: String { "privacy.partner_linked_success".localized }
+        static var partnerChangeHint: String { "privacy.partner_change_hint".localized }
+        static var partnerUnlinked: String { "privacy.partner_unlinked".localized }
+        static var unlinkPartner: String { "privacy.unlink_partner".localized }
+        static var viewPartnerData: String { "privacy.view_partner_data".localized }
+        static var directoryTitle: String { "privacy.directory_title".localized }
+        static var directorySubtitle: String { "privacy.directory_subtitle".localized }
+        static var directoryEmpty: String { "privacy.directory_empty".localized }
+        static var sharedProfileTitle: String { "privacy.shared_profile_title".localized }
+        static var sharedProfileSubtitle: String { "privacy.shared_profile_subtitle".localized }
+        static var sharedWedding: String { "privacy.shared_wedding".localized }
+        static var sharedGuests: String { "privacy.shared_guests".localized }
+        static var sharedBudget: String { "privacy.shared_budget".localized }
+        static var sharedSectionUnavailable: String { "privacy.shared_section_unavailable".localized }
+        static var sharedNoEvents: String { "privacy.shared_no_events".localized }
+        static func sharedGuestCount(_ count: Int) -> String { "privacy.shared_guest_count".localized(count) }
+        static func sharedGuestsMore(_ count: Int) -> String { "privacy.shared_guests_more".localized(count) }
+        static var sharedBudgetTotal: String { "privacy.shared_budget_total".localized }
+        static var sharedBudgetSpent: String { "privacy.shared_budget_spent".localized }
+        static var sharedBudgetRemaining: String { "privacy.shared_budget_remaining".localized }
+        static var viewerRoleSelf: String { "privacy.viewer_role_self".localized }
+        static var viewerRoleCouple: String { "privacy.viewer_role_couple".localized }
+        static var viewerRoleVendor: String { "privacy.viewer_role_vendor".localized }
+        static var viewerRoleAuthenticated: String { "privacy.viewer_role_authenticated".localized }
 
     }
 
@@ -1110,6 +1153,43 @@ enum L10n {
         static var conceptOptions: [String] {
             [conceptGarden, conceptClassic, conceptModern, conceptTraditional, conceptRustic, conceptBeach]
         }
+    }
+
+    enum Premium {
+        static var title: String { "premium.title".localized }
+        static var subtitle: String { "premium.subtitle".localized }
+        static var benefitExcel: String { "premium.benefit_excel".localized }
+        static var benefitDocuments: String { "premium.benefit_documents".localized }
+        static var benefitCouplePhoto: String { "premium.benefit_couple_photo".localized }
+        static var benefitChecklist: String { "premium.benefit_checklist".localized }
+        static var benefitWeddingDetail: String { "premium.benefit_wedding_detail".localized }
+        static var benefitCouple: String { "premium.benefit_couple".localized }
+        static var benefitGuests: String { "premium.benefit_guests".localized }
+        static var benefitBudget: String { "premium.benefit_budget".localized }
+        static var benefitInspiration: String { "premium.benefit_inspiration".localized }
+        static var benefitReminders: String { "premium.benefit_reminders".localized }
+        static var benefitPartner: String { "premium.benefit_partner".localized }
+        static var benefitVisibility: String { "premium.benefit_visibility".localized }
+        static func buy(_ price: String) -> String { "premium.buy".localized(price) }
+        static var buyFallback: String { "premium.buy_fallback".localized }
+        static var restore: String { "premium.restore".localized }
+        static var footnote: String { "premium.footnote".localized }
+        static var productUnavailable: String { "premium.product_unavailable".localized }
+        static var purchasePending: String { "premium.purchase_pending".localized }
+        static var purchaseFailed: String { "premium.purchase_failed".localized }
+        static var restoreEmpty: String { "premium.restore_empty".localized }
+        static var unverifiedTransaction: String { "premium.unverified_transaction".localized }
+        static var lockedTitle: String { "premium.locked_title".localized }
+        static var lockedMessage: String { "premium.locked_message".localized }
+        static var unlockCta: String { "premium.unlock_cta".localized }
+        static var menuTitle: String { "premium.menu_title".localized }
+        static var menuSub: String { "premium.menu_sub".localized }
+        static var menuActiveSub: String { "premium.menu_active_sub".localized }
+        static var statusActive: String { "premium.status_active".localized }
+        static var statusInactive: String { "premium.status_inactive".localized }
+        static var partnerGuestsCta: String { "premium.partner_guests_cta".localized }
+        static var partnerBudgetCta: String { "premium.partner_budget_cta".localized }
+        static func partnerAccessSub(_ name: String) -> String { "premium.partner_access_sub".localized(name) }
     }
 
     enum About {

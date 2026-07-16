@@ -3,8 +3,15 @@ import UIKit
 import UserNotifications
 
 struct RemindersPreferencesView: View {
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
     @ObservedObject private var pushManager = PushNotificationManager.shared
     @State private var isSendingTest = false
+    @State private var showPaywall = false
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var isAuthorized: Bool {
         pushManager.isAuthorized
@@ -72,22 +79,29 @@ struct RemindersPreferencesView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 24)
             }
+            .premiumContentLock(isPremium: isPremium, showPaywall: $showPaywall)
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
         .task {
+            guard isPremium else { return }
             await pushManager.refreshAuthorizationStatus()
             if isAuthorized {
                 await pushManager.syncDeviceTokenIfPossible()
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
+            guard isPremium else { return }
             Task {
                 await pushManager.refreshAuthorizationStatus()
                 if pushManager.isAuthorized {
                     await pushManager.syncDeviceTokenIfPossible()
                 }
             }
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+                .environmentObject(session)
         }
     }
 

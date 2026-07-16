@@ -29,6 +29,10 @@ use Spatie\Permission\Traits\HasRoles;
     'privacy_settings',
     'two_factor_enabled',
     'password_changed_at',
+    'is_premium',
+    'premium_product_id',
+    'premium_activated_at',
+    'apple_original_transaction_id',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasAvatar
@@ -45,7 +49,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'privacy_settings' => 'array',
             'two_factor_enabled' => 'boolean',
             'password_changed_at' => 'datetime',
+            'is_premium' => 'boolean',
+            'premium_activated_at' => 'datetime',
         ];
+    }
+
+    public function isPremium(): bool
+    {
+        return (bool) $this->is_premium;
     }
 
     public function trustedDevices(): HasMany

@@ -23,6 +23,9 @@ struct PrivacyVisibilitySettings: Codable, Hashable {
     var budgetVisibility: String
     var showInDirectory: Bool
     var allowVendorContact: Bool
+    var partnerUserId: Int?
+    var partnerEmail: String?
+    var partnerName: String?
 }
 
 struct AppPermissionItem: Codable, Identifiable, Hashable {

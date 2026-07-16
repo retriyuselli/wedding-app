@@ -18,6 +18,8 @@ class PrivacySettings
 
     public const AllowVendorContact = 'allow_vendor_contact';
 
+    public const PartnerUserId = 'partner_user_id';
+
     /**
      * @return array<string, mixed>
      */
@@ -30,6 +32,7 @@ class PrivacySettings
             self::BudgetVisibility => 'private',
             self::ShowInDirectory => false,
             self::AllowVendorContact => true,
+            self::PartnerUserId => null,
         ];
     }
 
@@ -73,6 +76,16 @@ class PrivacySettings
 
             $value = $input[$key];
 
+            if ($key === self::PartnerUserId) {
+                if ($value === null || $value === '') {
+                    $payload[$key] = null;
+                } elseif (is_numeric($value)) {
+                    $payload[$key] = (int) $value;
+                }
+
+                continue;
+            }
+
             if (isset($options[$key])) {
                 if (! in_array($value, $options[$key], true)) {
                     continue;
@@ -87,5 +100,12 @@ class PrivacySettings
         }
 
         return $payload;
+    }
+
+    public static function partnerUserId(User $user): ?int
+    {
+        $partnerId = self::forUser($user)[self::PartnerUserId] ?? null;
+
+        return is_numeric($partnerId) ? (int) $partnerId : null;
     }
 }

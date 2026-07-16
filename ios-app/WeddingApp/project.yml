@@ -37,6 +37,7 @@ targets:
       - path: Sources/App/Localization/id.lproj/Localizable.strings
       - path: Sources/App/Localization/en.lproj/Localizable.strings
       - path: Sources/Resources/LaunchScreen.storyboard
+      - path: Sources/Resources/Products.storekit
     dependencies:
       - package: GoogleSignIn
         product: GoogleSignIn
@@ -93,3 +94,20 @@ targets:
           INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
         Release:
           INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads: NO
+
+schemes:
+  WeddingApp:
+    build:
+      targets:
+        WeddingApp: all
+    run:
+      config: Debug
+      storeKitConfiguration: Sources/Resources/Products.storekit
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

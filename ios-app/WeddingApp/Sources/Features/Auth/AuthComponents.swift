@@ -181,12 +181,12 @@ struct AuthLabeledTextField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             HStack(spacing: 10) {
                 Image(systemName: icon)
                     .font(.system(size: 15, weight: .regular))
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                    .foregroundStyle(AppTheme.sageMuted(0.85))
                     .frame(width: 20)
 
                 TextField(
@@ -194,10 +194,10 @@ struct AuthLabeledTextField: View {
                     text: $text,
                     prompt: Text(placeholder)
                         .font(.system(size: 14, weight: .regular, design: .rounded))
-                        .foregroundStyle(AppTheme.ink.opacity(0.28))
+                        .foregroundStyle(AppTheme.inkMuted(0.72))
                 )
                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
                 .keyboardType(keyboardType)
                 .textContentType(textContentType)
                 .textInputAutocapitalization(keyboardType == .emailAddress ? .never : .words)
@@ -212,13 +212,8 @@ struct AuthLabeledTextField: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
             .background {
-                ZStack {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(AppTheme.cream.opacity(0.55))
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.55)
-                }
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(AppTheme.nestedGlassFill)
             }
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -262,12 +257,12 @@ struct AuthLabeledSecureField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             HStack(spacing: 10) {
                 Image(systemName: "lock")
                     .font(.system(size: 15, weight: .regular))
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                    .foregroundStyle(AppTheme.sageMuted(0.85))
                     .frame(width: 20)
 
                 Group {
@@ -277,7 +272,7 @@ struct AuthLabeledSecureField: View {
                             text: $text,
                             prompt: Text(placeholder)
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                                .foregroundStyle(AppTheme.ink.opacity(0.28))
+                                .foregroundStyle(AppTheme.inkMuted(0.72))
                         )
                     } else {
                         SecureField(
@@ -285,12 +280,12 @@ struct AuthLabeledSecureField: View {
                             text: $text,
                             prompt: Text(placeholder)
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                                .foregroundStyle(AppTheme.ink.opacity(0.28))
+                                .foregroundStyle(AppTheme.inkMuted(0.72))
                         )
                     }
                 }
                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
                 .textContentType(.password)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -306,20 +301,15 @@ struct AuthLabeledSecureField: View {
                 } label: {
                     Image(systemName: isVisible ? "eye.slash" : "eye")
                         .font(.system(size: 15, weight: .regular))
-                        .foregroundStyle(AppTheme.sageDark.opacity(0.55))
+                        .foregroundStyle(AppTheme.sageMuted(0.75))
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
             .background {
-                ZStack {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(AppTheme.cream.opacity(0.55))
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.55)
-                }
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(AppTheme.nestedGlassFill)
             }
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)

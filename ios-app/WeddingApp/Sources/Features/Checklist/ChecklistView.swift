@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct ChecklistView: View {
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
+
     @State private var events: [WeddingEvent] = []
     @State private var tasks: [PreparationTask] = []
     @State private var sections: [PreparationSection] = []
@@ -15,6 +18,11 @@ struct ChecklistView: View {
     @State private var isSearching = false
     @State private var showAddTaskSheet = false
     @State private var addTaskPreferredEventId: Int?
+    @State private var showPaywall = false
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var sectionTitles: [Int: String] {
         Dictionary(sections.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first })
@@ -71,13 +79,50 @@ struct ChecklistView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 24)
                 }
+                .blur(radius: isPremium ? 0 : 2.5)
+                .opacity(isPremium ? 1 : 0.82)
+
+                if !isPremium {
+                    PremiumLockedOverlay {
+                        showPaywall = true
+                    }
+                    .padding(.horizontal, 24)
+                }
             }
             .statusBarBlur()
             .toolbar(.hidden, for: .navigationBar)
-            .task { await load() }
-            .refreshable { await load() }
+            .task {
+                if isPremium {
+                    await load()
+                } else {
+                    await loadPreview()
+                }
+            }
+            .refreshable {
+                if isPremium {
+                    await load()
+                } else {
+                    await loadPreview()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
+                guard isPremium else { return }
                 Task { await load() }
+            }
+            .onChange(of: isPremium) { _, premium in
+                Task {
+                    if premium {
+                        await load()
+                    } else {
+                        await loadPreview()
+                    }
+                }
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView(onUnlocked: {
+                    Task { await load() }
+                })
+                .environmentObject(session)
             }
             .navigationDestination(item: $selectedTask) { task in
                 TaskDetailView(
@@ -107,6 +152,10 @@ struct ChecklistView: View {
                 }
             }
         }
+    }
+
+    private func runPremiumOrPaywall(_ action: @escaping () -> Void) {
+        PremiumGate.presentOrRun(session: session, showPaywall: $showPaywall, action: action)
     }
 
     private var preferredAddEventId: Int? {
@@ -197,15 +246,19 @@ struct ChecklistView: View {
 
             HStack(spacing: 10) {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) { isSearching = true }
+                    runPremiumOrPaywall {
+                        withAnimation(.easeInOut(duration: 0.2)) { isSearching = true }
+                    }
                 } label: {
                     circleButton("magnifyingglass")
                 }
                 .buttonStyle(.plain)
 
                 Button {
-                    addTaskPreferredEventId = nil
-                    showAddTaskSheet = true
+                    runPremiumOrPaywall {
+                        addTaskPreferredEventId = nil
+                        showAddTaskSheet = true
+                    }
                 } label: {
                     circleButton("plus")
                 }
@@ -450,7 +503,9 @@ struct ChecklistView: View {
                 LazyVStack(spacing: 10) {
                     ForEach(visibleTasks) { task in
                         Button {
-                            selectedTask = task
+                            runPremiumOrPaywall {
+                                selectedTask = task
+                            }
                         } label: {
                             TaskRow(task: task)
                         }
@@ -477,8 +532,10 @@ struct ChecklistView: View {
 
                     if group.id > 0 {
                         Button {
-                            addTaskPreferredEventId = group.id
-                            showAddTaskSheet = true
+                            runPremiumOrPaywall {
+                                addTaskPreferredEventId = group.id
+                                showAddTaskSheet = true
+                            }
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "plus.circle.fill")
@@ -551,6 +608,55 @@ struct ChecklistView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Preview content behind the Pro lock (blurred), so the page still feels scrollable.
+    private func loadPreview() async {
+        errorMessage = nil
+        if let envelope: Envelope<[WeddingEvent]> = try? await APIClient.shared.request("wedding-events"),
+           !envelope.data.isEmpty {
+            events = envelope.data
+        } else {
+            events = Self.previewEvents
+        }
+        tasks = Self.previewTasks(for: events)
+        sections = []
+        expandedSections = Set(events.prefix(2).map(\.id))
+        showAllSections = Set(events.map(\.id))
+    }
+
+    private static var previewEvents: [WeddingEvent] {
+        [
+            WeddingEvent(id: -101, jenisAcara: "akad", jenisLabel: WeddingEvent.label(for: "akad"), sortOrder: 1, tglAcara: nil, waktuMulai: nil, jamSelesai: nil, lokasiAcara: nil, estimasiTamu: nil, catatan: nil),
+            WeddingEvent(id: -102, jenisAcara: "resepsi", jenisLabel: WeddingEvent.label(for: "resepsi"), sortOrder: 2, tglAcara: nil, waktuMulai: nil, jamSelesai: nil, lokasiAcara: nil, estimasiTamu: nil, catatan: nil),
+            WeddingEvent(id: -103, jenisAcara: "pengajian", jenisLabel: WeddingEvent.label(for: "pengajian"), sortOrder: 0, tglAcara: nil, waktuMulai: nil, jamSelesai: nil, lokasiAcara: nil, estimasiTamu: nil, catatan: nil),
+        ]
+    }
+
+    private static func previewTasks(for events: [WeddingEvent]) -> [PreparationTask] {
+        let akadId = events.first(where: { $0.jenisAcara.lowercased() == "akad" })?.id
+            ?? events.first?.id
+        let resepsiId = events.first(where: { $0.jenisAcara.lowercased() == "resepsi" })?.id
+            ?? events.dropFirst().first?.id
+        let otherId = events.first(where: { $0.jenisAcara.lowercased() == "pengajian" || $0.jenisAcara.lowercased() == "lamaran" })?.id
+
+        var items: [PreparationTask] = [
+            PreparationTask(id: -1, weddingEventId: akadId, sectionId: nil, title: "Booking penghulu / petugas akad", label: nil, description: nil, notes: nil, priority: "high", status: "done", dueDate: nil, sortOrder: 1, subTasks: nil, attachments: nil),
+            PreparationTask(id: -2, weddingEventId: akadId, sectionId: nil, title: "Fitting baju pengantin", label: nil, description: nil, notes: nil, priority: "medium", status: "in_progress", dueDate: nil, sortOrder: 2, subTasks: nil, attachments: nil),
+            PreparationTask(id: -3, weddingEventId: akadId, sectionId: nil, title: "Persiapan mahar & seserahan", label: nil, description: nil, notes: nil, priority: "medium", status: "pending", dueDate: nil, sortOrder: 3, subTasks: nil, attachments: nil),
+            PreparationTask(id: -4, weddingEventId: resepsiId, sectionId: nil, title: "Finalisasi vendor dekorasi", label: nil, description: nil, notes: nil, priority: "high", status: "in_progress", dueDate: nil, sortOrder: 1, subTasks: nil, attachments: nil),
+            PreparationTask(id: -5, weddingEventId: resepsiId, sectionId: nil, title: "Konfirmasi catering & tasting", label: nil, description: nil, notes: nil, priority: "high", status: "pending", dueDate: nil, sortOrder: 2, subTasks: nil, attachments: nil),
+            PreparationTask(id: -6, weddingEventId: resepsiId, sectionId: nil, title: "Susunan acara resepsi", label: nil, description: nil, notes: nil, priority: "medium", status: "pending", dueDate: nil, sortOrder: 3, subTasks: nil, attachments: nil),
+            PreparationTask(id: -7, weddingEventId: resepsiId, sectionId: nil, title: "Brief dokumentasi foto & video", label: nil, description: nil, notes: nil, priority: "low", status: "pending", dueDate: nil, sortOrder: 4, subTasks: nil, attachments: nil),
+        ]
+
+        if let otherId {
+            items.append(
+                PreparationTask(id: -8, weddingEventId: otherId, sectionId: nil, title: "Undangan keluarga dekat", label: nil, description: nil, notes: nil, priority: "medium", status: "done", dueDate: nil, sortOrder: 1, subTasks: nil, attachments: nil)
+            )
+        }
+
+        return items
     }
 }
 

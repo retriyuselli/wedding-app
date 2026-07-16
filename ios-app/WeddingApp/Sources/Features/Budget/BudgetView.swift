@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct BudgetView: View {
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
     @ObservedObject private var categoriesStore = BudgetCategoriesStore.shared
     @State private var budget = WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
     @State private var summary: WeddingBudgetSummary?
@@ -17,6 +19,7 @@ struct BudgetView: View {
     @State private var showSummaryDetail = false
     @State private var showIncomingPayments = false
     @State private var showExpenseFilter = false
+    @State private var showPaywall = false
     @State private var expenseStatusFilter: String? = nil
     @State private var draftExpenseStatusFilter: String? = nil
     @State private var selectedCategory: BudgetCategory?
@@ -26,6 +29,10 @@ struct BudgetView: View {
     @State private var editingIncomingPayment: IncomingPayment?
 
     @FocusState private var isSearchFocused: Bool
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var trimmedSearchQuery: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -145,18 +152,91 @@ struct BudgetView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 20)
                 }
+                .blur(radius: isPremium ? 0 : 2.5)
+                .opacity(isPremium ? 1 : 0.82)
                 .overlay {
-                    if isLoading && schedules.isEmpty && budget.totalBudget == 0 {
+                    if isLoading && schedules.isEmpty && budget.totalBudget == 0 && isPremium {
                         ProgressView()
                     }
+                }
+
+                if !isPremium {
+                    VStack(spacing: 14) {
+                        ForEach(premium.sharedBudgetAccess) { access in
+                            NavigationLink {
+                                SharedUserDetailView(userId: access.userId)
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "person.2.fill")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundStyle(AppTheme.iconOnChip)
+                                        .frame(width: 42, height: 42)
+                                        .background(AppTheme.iconChipFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(L10n.Premium.partnerBudgetCta)
+                                            .font(AppFont.medium(14))
+                                            .foregroundStyle(AppTheme.titleOnGlass)
+                                        Text(L10n.Premium.partnerAccessSub(access.name))
+                                            .font(AppFont.regular(12))
+                                            .foregroundStyle(AppTheme.inkMuted(0.65))
+                                            .lineLimit(2)
+                                    }
+
+                                    Spacer(minLength: 8)
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(AppTheme.inkMuted(0.45))
+                                }
+                                .padding(14)
+                                .premiumGlassCard(cornerRadius: 18)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        PremiumLockedOverlay {
+                            showPaywall = true
+                        }
+                    }
+                    .padding(.horizontal, 24)
                 }
             }
             .statusBarBlur()
             .toolbar(.hidden, for: .navigationBar)
-            .task { await load() }
-            .refreshable { await load() }
+            .task {
+                await PremiumStore.shared.refreshServerEntitlement()
+                if isPremium {
+                    await load()
+                } else {
+                    loadPreview()
+                }
+            }
+            .refreshable {
+                if isPremium {
+                    await load()
+                } else {
+                    loadPreview()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
+                guard isPremium else { return }
                 Task { await load() }
+            }
+            .onChange(of: isPremium) { _, premium in
+                Task {
+                    if premium {
+                        await load()
+                    } else {
+                        loadPreview()
+                    }
+                }
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView(onUnlocked: {
+                    Task { await load() }
+                })
+                .environmentObject(session)
             }
             .navigationDestination(isPresented: $showEditBudget) {
                 EditTotalBudgetView(budget: budget) { updated in
@@ -242,6 +322,10 @@ struct BudgetView: View {
         }
     }
 
+    private func runPremiumOrPaywall(_ action: @escaping () -> Void) {
+        PremiumGate.presentOrRun(session: session, showPaywall: $showPaywall, action: action)
+    }
+
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
@@ -259,9 +343,11 @@ struct BudgetView: View {
 
             HStack(spacing: 10) {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isSearching = true
-                        isSearchFocused = true
+                    runPremiumOrPaywall {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isSearching = true
+                            isSearchFocused = true
+                        }
                     }
                 } label: {
                     circleButton("magnifyingglass", isActive: isSearching)
@@ -269,8 +355,10 @@ struct BudgetView: View {
                 .buttonStyle(.plain)
 
                 circleButton("slider.horizontal.3", isActive: expenseStatusFilter != nil) {
-                    draftExpenseStatusFilter = expenseStatusFilter
-                    showExpenseFilter = true
+                    runPremiumOrPaywall {
+                        draftExpenseStatusFilter = expenseStatusFilter
+                        showExpenseFilter = true
+                    }
                 }
             }
             .padding(.top, 4)
@@ -386,7 +474,9 @@ struct BudgetView: View {
                     VStack(spacing: 10) {
                         ForEach(filteredSchedules) { schedule in
                             Button {
-                                editingScheduleRoute = EditableScheduleRoute(id: schedule.id)
+                                runPremiumOrPaywall {
+                                    editingScheduleRoute = EditableScheduleRoute(id: schedule.id)
+                                }
                             } label: {
                                 searchExpenseCard(schedule)
                             }
@@ -404,7 +494,9 @@ struct BudgetView: View {
                     VStack(spacing: 10) {
                         ForEach(filteredCategories) { category in
                             Button {
-                                selectedCategory = category
+                                runPremiumOrPaywall {
+                                    selectedCategory = category
+                                }
                             } label: {
                                 BudgetCategoryRow(category: category, total: metrics.totalBudget)
                             }
@@ -466,7 +558,9 @@ struct BudgetView: View {
 
     private var totalCard: some View {
         Button {
-            showEditBudget = true
+            runPremiumOrPaywall {
+                showEditBudget = true
+            }
         } label: {
             VStack(spacing: 18) {
                 HStack(alignment: .top) {
@@ -647,7 +741,9 @@ struct BudgetView: View {
 
     private var incomingPaymentsCard: some View {
         Button {
-            showIncomingPayments = true
+            runPremiumOrPaywall {
+                showIncomingPayments = true
+            }
         } label: {
             IncomingPaymentsSummaryCard(
                 metrics: incomingMetrics,
@@ -659,7 +755,9 @@ struct BudgetView: View {
 
     private var summaryHeader: some View {
         Button {
-            showSummaryDetail = true
+            runPremiumOrPaywall {
+                showSummaryDetail = true
+            }
         } label: {
             HStack {
                 Text(L10n.Budget.summary)
@@ -699,7 +797,9 @@ struct BudgetView: View {
             LazyVStack(spacing: 10) {
                 ForEach(categories) { category in
                     Button {
-                        selectedCategory = category
+                        runPremiumOrPaywall {
+                            selectedCategory = category
+                        }
                     } label: {
                         BudgetCategoryRow(category: category, total: metrics.totalBudget)
                     }
@@ -712,7 +812,9 @@ struct BudgetView: View {
     private var actionBar: some View {
         HStack(spacing: 0) {
             Button {
-                showAddExpense = true
+                runPremiumOrPaywall {
+                    showAddExpense = true
+                }
             } label: {
                 actionItem(icon: "plus", title: L10n.Budget.addExpense, sub: L10n.Budget.addExpenseSub)
             }
@@ -721,7 +823,9 @@ struct BudgetView: View {
             Divider().frame(height: 34)
 
             Button {
-                showCategories = true
+                runPremiumOrPaywall {
+                    showCategories = true
+                }
             } label: {
                 actionItem(icon: "square.grid.2x2", title: L10n.Budget.categoriesAction, sub: L10n.Budget.categoriesActionSub)
             }
@@ -730,7 +834,9 @@ struct BudgetView: View {
             Divider().frame(height: 34)
 
             Button {
-                showReport = true
+                runPremiumOrPaywall {
+                    showReport = true
+                }
             } label: {
                 actionItem(icon: "chart.bar", title: L10n.Budget.report, sub: L10n.Budget.reportSub)
             }
@@ -814,6 +920,40 @@ struct BudgetView: View {
         } catch {
             incomingPayments = []
         }
+    }
+
+    private func loadPreview() {
+        errorMessage = nil
+        budget = WeddingBudget(id: -1, totalBudget: 150_000_000, currency: "IDR", notes: nil)
+        schedules = decodePreview("""
+        [
+          {"id":-1,"title":"DP Venue","vendor_name":"Garden Hall","category":"venue","category_label":"Venue","amount":35000000,"due_date":"2026-08-01","status":"paid","status_label":"Lunas","sort_order":1},
+          {"id":-2,"title":"Pelunasan Catering","vendor_name":"Sari Rasa","category":"catering","category_label":"Catering","amount":42000000,"due_date":"2026-09-15","status":"pending","status_label":"Belum lunas","sort_order":2},
+          {"id":-3,"title":"Makeup & Wardrobe","vendor_name":"Glam Studio","category":"attire","category_label":"Busana","amount":18000000,"due_date":"2026-09-01","status":"pending","status_label":"Belum lunas","sort_order":3},
+          {"id":-4,"title":"Dokumentasi","vendor_name":"Lens & Light","category":"documentation","category_label":"Dokumentasi","amount":12000000,"due_date":"2026-08-20","status":"overdue","status_label":"Terlambat","sort_order":4}
+        ]
+        """) ?? []
+        categoryAllocations = decodePreview("""
+        [
+          {"id":-1,"category":"venue","category_label":"Venue","allocated_amount":50000000,"notes":null},
+          {"id":-2,"category":"catering","category_label":"Catering","allocated_amount":45000000,"notes":null},
+          {"id":-3,"category":"attire","category_label":"Busana","allocated_amount":25000000,"notes":null},
+          {"id":-4,"category":"documentation","category_label":"Dokumentasi","allocated_amount":15000000,"notes":null}
+        ]
+        """) ?? []
+        incomingPayments = decodePreview("""
+        [
+          {"id":-1,"bank_name":"BCA","amount":10000000,"transfer_date":"2026-07-01","sender_name":"Keluarga Mempelai","description":"Hadiah awal","reference_number":null,"proof_url":null,"status":"confirmed","status_label":"Dikonfirmasi","confirmed_at":null,"rejection_reason":null,"notes":null},
+          {"id":-2,"bank_name":"Mandiri","amount":5000000,"transfer_date":"2026-07-10","sender_name":"Sahabat","description":"Kontribusi","reference_number":null,"proof_url":null,"status":"pending","status_label":"Menunggu","confirmed_at":null,"rejection_reason":null,"notes":null}
+        ]
+        """) ?? []
+        summary = nil
+    }
+
+    private func decodePreview<T: Decodable>(_ json: String) -> T? {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try? decoder.decode(T.self, from: Data(json.utf8))
     }
 }
 

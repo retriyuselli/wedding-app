@@ -718,18 +718,33 @@ private struct HomeDashboardView: View {
 
         do {
             async let infoEnvelope: Envelope<WeddingInfo> = APIClient.shared.request("wedding-info")
-            async let budgetEnvelope: Envelope<WeddingBudget> = APIClient.shared.request("wedding-budget")
             async let eventEnvelope: Envelope<[WeddingEvent]> = APIClient.shared.request("wedding-events")
-            async let guestEnvelope: Envelope<[Guest]> = APIClient.shared.request("guests")
-            async let summaryEnvelope: Envelope<ChecklistSummary> = APIClient.shared.request("customer-preparation-tasks/summary")
 
             info = try await infoEnvelope.data
-            budget = try await budgetEnvelope.data
             events = try await eventEnvelope.data
-            guests = try await guestEnvelope.data
-            checklistSummary = try await summaryEnvelope.data
         } catch {
             errorMessage = error.localizedDescription
+        }
+
+        do {
+            let budgetEnvelope: NullableEnvelope<WeddingBudget> = try await APIClient.shared.request("wedding-budget")
+            budget = budgetEnvelope.data ?? WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
+        } catch {
+            budget = WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
+        }
+
+        do {
+            let guestEnvelope: Envelope<[Guest]> = try await APIClient.shared.request("guests")
+            guests = guestEnvelope.data
+        } catch {
+            guests = []
+        }
+
+        do {
+            let summaryEnvelope: Envelope<ChecklistSummary> = try await APIClient.shared.request("customer-preparation-tasks/summary")
+            checklistSummary = summaryEnvelope.data
+        } catch {
+            checklistSummary = nil
         }
 
         do {

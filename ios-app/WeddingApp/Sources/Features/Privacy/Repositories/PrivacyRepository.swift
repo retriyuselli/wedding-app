@@ -3,7 +3,10 @@ import Foundation
 protocol PrivacyRepositoryProtocol: Sendable {
     func securitySummary() async throws -> PrivacySecuritySummary
     func visibilitySettings() async throws -> PrivacyVisibilitySettings
-    func saveVisibility(_ settings: PrivacyVisibilitySettings) async throws -> (PrivacyVisibilitySettings, String?)
+    func saveVisibility(
+        _ settings: PrivacyVisibilitySettings,
+        partnerEmail: String?
+    ) async throws -> (PrivacyVisibilitySettings, String?)
     func appPermissions() async throws -> [AppPermissionItem]
     func exportAccountData() async throws -> URL
     func twoFactorStatus() async throws -> TwoFactorStatus
@@ -34,8 +37,11 @@ struct PrivacyRepository: PrivacyRepositoryProtocol {
         try await service.fetchVisibility()
     }
 
-    func saveVisibility(_ settings: PrivacyVisibilitySettings) async throws -> (PrivacyVisibilitySettings, String?) {
-        try await service.updateVisibility(settings)
+    func saveVisibility(
+        _ settings: PrivacyVisibilitySettings,
+        partnerEmail: String?
+    ) async throws -> (PrivacyVisibilitySettings, String?) {
+        try await service.updateVisibility(settings, partnerEmail: partnerEmail)
     }
 
     func appPermissions() async throws -> [AppPermissionItem] {

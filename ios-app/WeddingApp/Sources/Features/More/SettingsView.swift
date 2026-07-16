@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @EnvironmentObject private var session: SessionStore
     @ObservedObject private var pushManager = PushNotificationManager.shared
     @ObservedObject private var languageStore = LanguageStore.shared
     @ObservedObject private var appearance = AppearanceStore.shared
 
     @State private var showComingSoon = false
+    @State private var showPaywall = false
 
     private var notificationStatusSubtitle: String {
         switch pushManager.authorizationStatus {
@@ -63,6 +65,10 @@ struct SettingsView: View {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
             Text(L10n.Common.comingSoonMessage)
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+                .environmentObject(session)
         }
     }
 
@@ -175,6 +181,25 @@ struct SettingsView: View {
 
     private var accountSection: some View {
         section(title: L10n.Settings.accountSection) {
+            Button {
+                if !session.isPremium {
+                    showPaywall = true
+                }
+            } label: {
+                rowContent(
+                    icon: session.isPremium ? "checkmark.seal.fill" : "sparkles",
+                    title: L10n.Premium.menuTitle,
+                    subtitle: session.isPremium ? L10n.Premium.menuActiveSub : L10n.Premium.menuSub,
+                    trailingText: session.isPremium ? L10n.Premium.statusActive : nil
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            divider
+
             NavigationLink {
                 EditProfileView()
             } label: {

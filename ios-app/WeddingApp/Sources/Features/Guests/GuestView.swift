@@ -87,6 +87,9 @@ enum GuestListSegment: String, CaseIterable, Identifiable {
 }
 
 struct GuestView: View {
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
+
     @State private var segment: GuestListSegment = .guests
     @State private var guests: [Guest] = []
     @State private var vipGuests: [VipGuest] = []
@@ -96,6 +99,7 @@ struct GuestView: View {
     @State private var showAddSheet = false
     @State private var showExportSheet = false
     @State private var showExcelImporter = false
+    @State private var showPaywall = false
     @State private var isExcelBusy = false
     @State private var isDeletingAll = false
     @State private var showDeleteAllConfirm = false
@@ -113,6 +117,10 @@ struct GuestView: View {
     @State private var comingSoonTitle = ""
 
     private let pageSize = 5
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var currentSegmentCount: Int {
         switch segment {
@@ -234,11 +242,47 @@ struct GuestView: View {
                         dismissSearchKeyboard()
                     }
                 )
+                .blur(radius: isPremium ? 0 : 2.5)
+                .opacity(isPremium ? 1 : 0.82)
+
+                if !isPremium {
+                    VStack(spacing: 14) {
+                        ForEach(premium.sharedGuestAccess) { access in
+                            NavigationLink {
+                                SharedUserDetailView(userId: access.userId)
+                            } label: {
+                                sharedPartnerAccessCard(
+                                    title: L10n.Premium.partnerGuestsCta,
+                                    subtitle: L10n.Premium.partnerAccessSub(access.name)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        PremiumLockedOverlay {
+                            showPaywall = true
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                }
             }
             .statusBarBlur()
             .toolbar(.hidden, for: .navigationBar)
-            .task { await load() }
-            .refreshable { await load() }
+            .task {
+                await PremiumStore.shared.refreshServerEntitlement()
+                if isPremium {
+                    await load()
+                } else {
+                    loadPreview()
+                }
+            }
+            .refreshable {
+                if isPremium {
+                    await load()
+                } else {
+                    loadPreview()
+                }
+            }
             .onChange(of: segment) { _, _ in
                 selectedFilter = nil
                 searchText = ""
@@ -259,7 +303,17 @@ struct GuestView: View {
                     currentPage = totalPages
                 }
             }
+            .onChange(of: isPremium) { _, premium in
+                Task {
+                    if premium {
+                        await load()
+                    } else {
+                        loadPreview()
+                    }
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
+                guard isPremium else { return }
                 Task { await load() }
             }
             .sheet(isPresented: $showAddSheet) {
@@ -352,7 +406,45 @@ struct GuestView: View {
             } message: {
                 Text(L10n.Common.comingSoonMessage)
             }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView(onUnlocked: {
+                    Task { await load() }
+                })
+                .environmentObject(session)
+            }
         }
+    }
+
+    private func runPremiumOrPaywall(_ action: @escaping () -> Void) {
+        PremiumGate.presentOrRun(session: session, showPaywall: $showPaywall, action: action)
+    }
+
+    private func sharedPartnerAccessCard(title: String, subtitle: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "person.2.fill")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(AppTheme.iconOnChip)
+                .frame(width: 42, height: 42)
+                .background(AppTheme.iconChipFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(AppFont.medium(14))
+                    .foregroundStyle(AppTheme.titleOnGlass)
+                Text(subtitle)
+                    .font(AppFont.regular(12))
+                    .foregroundStyle(AppTheme.inkMuted(0.65))
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 8)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(AppTheme.inkMuted(0.45))
+        }
+        .padding(14)
+        .premiumGlassCard(cornerRadius: 18)
     }
 
     private var header: some View {
@@ -599,17 +691,21 @@ struct GuestView: View {
 
             Menu {
                 Button {
-                    Task { await downloadExcelTemplate() }
+                    runPremiumOrPaywall {
+                        Task { await downloadExcelTemplate() }
+                    }
                 } label: {
                     Label(L10n.Guest.downloadTemplate, systemImage: "arrow.down.doc")
                 }
                 .disabled(isExcelBusy || isDeletingAll)
 
                 Button {
-                    Task { @MainActor in
-                        // Menu dismiss races the importer presentation on device/Release builds.
-                        try? await Task.sleep(for: .milliseconds(350))
-                        showExcelImporter = true
+                    runPremiumOrPaywall {
+                        Task { @MainActor in
+                            // Menu dismiss races the importer presentation on device/Release builds.
+                            try? await Task.sleep(for: .milliseconds(350))
+                            showExcelImporter = true
+                        }
                     }
                 } label: {
                     Label(L10n.Guest.uploadExcel, systemImage: "arrow.up.doc")
@@ -651,7 +747,9 @@ struct GuestView: View {
 
             Button {
                 dismissSearchKeyboard()
-                showAddSheet = true
+                runPremiumOrPaywall {
+                    showAddSheet = true
+                }
             } label: {
                 Label(segment.addTitle, systemImage: "plus")
                     .font(AppFont.semibold(13))
@@ -742,7 +840,9 @@ struct GuestView: View {
                         iconName: segment.listIcon,
                         onOpenDetail: {
                             dismissSearchKeyboard()
-                            selectedDetail = row.target
+                            runPremiumOrPaywall {
+                                selectedDetail = row.target
+                            }
                         },
                         onCall: {
                             dismissSearchKeyboard()
@@ -863,7 +963,9 @@ struct GuestView: View {
                 sub: L10n.Guest.exportDataSub
             ) {
                 dismissSearchKeyboard()
-                showExportSheet = true
+                runPremiumOrPaywall {
+                    showExportSheet = true
+                }
             }
         }
         .padding(.vertical, 14)
@@ -941,6 +1043,27 @@ struct GuestView: View {
             guard !error.isRequestCancelled else { return }
             errorMessage = error.userFacingMessage
         }
+    }
+
+    private func loadPreview() {
+        errorMessage = nil
+        guests = [
+            Guest(id: -1, no: 1, name: "Andi Pratama", phone: "081234567890", email: nil, tableNumber: "A1", rsvpStatus: "hadir", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil, catatan: nil),
+            Guest(id: -2, no: 2, name: "Siti Rahma", phone: "081298765432", email: nil, tableNumber: "A2", rsvpStatus: "menunggu", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil, catatan: nil),
+            Guest(id: -3, no: 3, name: "Budi Santoso", phone: nil, email: nil, tableNumber: "B1", rsvpStatus: "tidak_hadir", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil, catatan: nil),
+            Guest(id: -4, no: 4, name: "Dewi Lestari", phone: "081211122233", email: nil, tableNumber: "B2", rsvpStatus: "menunggu", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil, catatan: nil),
+            Guest(id: -5, no: 5, name: "Rizky Maulana", phone: nil, email: nil, tableNumber: "C1", rsvpStatus: "hadir", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil, catatan: nil),
+        ]
+        vipGuests = [
+            VipGuest(id: -11, no: 1, name: "Bapak Hendra Wijaya", jabatan: "Direktur", instansi: "PT Nusantara", phone: nil, kategori: "vip", rsvpStatus: "hadir", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil, catatan: nil),
+            VipGuest(id: -12, no: 2, name: "Ibu Ratna Sari", jabatan: "Kepala Dinas", instansi: nil, phone: nil, kategori: "pejabat", rsvpStatus: "menunggu", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil, catatan: nil),
+        ]
+        familyMembers = [
+            FamilyMember(id: -21, no: 1, name: "Ayah Mempelai Wanita", role: "Orang tua", phone: nil, rsvpStatus: "hadir", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil),
+            FamilyMember(id: -22, no: 2, name: "Ibu Mempelai Pria", role: "Orang tua", phone: nil, rsvpStatus: "hadir", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil),
+            FamilyMember(id: -23, no: 3, name: "Kakak Mempelai", role: "Saudara", phone: nil, rsvpStatus: "menunggu", rsvpUpdatedByName: nil, rsvpUpdatedAt: nil),
+        ]
+        resetPagination()
     }
 
     private func downloadExcelTemplate() async {

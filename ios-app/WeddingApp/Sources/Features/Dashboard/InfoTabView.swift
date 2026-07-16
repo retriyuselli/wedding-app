@@ -75,11 +75,15 @@ struct InfoTabView: View {
         do {
             let infoEnvelope: Envelope<WeddingInfo> = try await APIClient.shared.request("wedding-info")
             info = infoEnvelope.data
-
-            let budgetEnvelope: Envelope<WeddingBudget> = try await APIClient.shared.request("wedding-budget")
-            budget = budgetEnvelope.data
         } catch {
             errorMessage = error.localizedDescription
+        }
+
+        do {
+            let budgetEnvelope: NullableEnvelope<WeddingBudget> = try await APIClient.shared.request("wedding-budget")
+            budget = budgetEnvelope.data ?? WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
+        } catch {
+            budget = WeddingBudget(id: nil, totalBudget: 0, currency: nil, notes: "")
         }
     }
 

@@ -3,7 +3,10 @@ import Foundation
 protocol PrivacyAPIServiceProtocol: Sendable {
     func fetchSummary() async throws -> PrivacySecuritySummary
     func fetchVisibility() async throws -> PrivacyVisibilitySettings
-    func updateVisibility(_ settings: PrivacyVisibilitySettings) async throws -> (PrivacyVisibilitySettings, String?)
+    func updateVisibility(
+        _ settings: PrivacyVisibilitySettings,
+        partnerEmail: String?
+    ) async throws -> (PrivacyVisibilitySettings, String?)
     func fetchAppPermissions() async throws -> [AppPermissionItem]
     func downloadDataExport() async throws -> (Data, String)
     func fetchTwoFactorStatus() async throws -> TwoFactorStatus
@@ -30,18 +33,27 @@ struct PrivacyAPIService: PrivacyAPIServiceProtocol {
         return envelope.data
     }
 
-    func updateVisibility(_ settings: PrivacyVisibilitySettings) async throws -> (PrivacyVisibilitySettings, String?) {
+    func updateVisibility(
+        _ settings: PrivacyVisibilitySettings,
+        partnerEmail: String?
+    ) async throws -> (PrivacyVisibilitySettings, String?) {
+        var json: [String: Any] = [
+            "profile_visibility": settings.profileVisibility,
+            "wedding_visibility": settings.weddingVisibility,
+            "guest_list_visibility": settings.guestListVisibility,
+            "budget_visibility": settings.budgetVisibility,
+            "show_in_directory": settings.showInDirectory,
+            "allow_vendor_contact": settings.allowVendorContact,
+        ]
+
+        if let partnerEmail {
+            json["partner_email"] = partnerEmail
+        }
+
         let response: VisibilityUpdateResponse = try await APIClient.shared.request(
             "privacy/visibility",
             method: "PUT",
-            json: [
-                "profile_visibility": settings.profileVisibility,
-                "wedding_visibility": settings.weddingVisibility,
-                "guest_list_visibility": settings.guestListVisibility,
-                "budget_visibility": settings.budgetVisibility,
-                "show_in_directory": settings.showInDirectory,
-                "allow_vendor_contact": settings.allowVendorContact,
-            ]
+            json: json
         )
         return (response.data, response.message)
     }

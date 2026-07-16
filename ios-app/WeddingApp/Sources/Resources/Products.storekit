@@ -1,0 +1,46 @@
+{
+  "identifier" : "WeddingAppProducts",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "149000",
+      "familyShareable" : false,
+      "internalID" : "A1B2C3D4E5F64789A0B1C2D3",
+      "localizations" : [
+        {
+          "description" : "Unlock Excel tamu, dokumen, foto pasangan, dan checklist.",
+          "displayName" : "Wedding Pro",
+          "locale" : "id"
+        },
+        {
+          "description" : "Unlock guest Excel, documents, couple photo, and checklist.",
+          "displayName" : "Wedding Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "wedding_pro_unlock",
+      "referenceName" : "Wedding Pro Unlock",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0000000000",
+    "_developerTeamID" : "LHH9LVRYVY",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 756864000.0,
+    "_locale" : "id",
+    "_storefront" : "IDN",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

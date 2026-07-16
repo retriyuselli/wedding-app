@@ -12,14 +12,21 @@ private struct WeddingScheduleItem: Identifiable {
 
 struct WeddingDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
 
     @State private var info = WeddingInfo(id: nil, groomName: "", brideName: "", budaya: "", songlist: [])
     @State private var events: [WeddingEvent] = []
     @State private var guests: [Guest] = []
     @State private var selectedTab: WeddingDetailTab = .ringkasan
     @State private var showEdit = false
+    @State private var showPaywall = false
     @State private var isLoading = false
     @State private var loadErrorMessage: String?
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var coupleName: String {
         let bride = info.brideName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -102,6 +109,15 @@ struct WeddingDetailView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 24)
             }
+            .blur(radius: isPremium ? 0 : 2.5)
+            .opacity(isPremium ? 1 : 0.82)
+
+            if !isPremium {
+                PremiumLockedOverlay {
+                    showPaywall = true
+                }
+                .padding(.horizontal, 24)
+            }
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
@@ -110,16 +126,26 @@ struct WeddingDetailView: View {
         .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
             Task { await load() }
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(onUnlocked: {
+                Task { await load() }
+            })
+            .environmentObject(session)
+        }
         .navigationDestination(isPresented: $showEdit) {
             WeddingDetailEditView {
                 Task { await load() }
             }
         }
         .overlay {
-            if isLoading && events.isEmpty && guests.isEmpty {
+            if isPremium && isLoading && events.isEmpty && guests.isEmpty {
                 ProgressView()
             }
         }
+    }
+
+    private func runPremiumOrPaywall(_ action: @escaping () -> Void) {
+        PremiumGate.presentOrRun(session: session, showPaywall: $showPaywall, action: action)
     }
 
     // MARK: - Header
@@ -145,7 +171,11 @@ struct WeddingDetailView: View {
 
                 Spacer()
 
-                Button { showEdit = true } label: {
+                Button {
+                    runPremiumOrPaywall {
+                        showEdit = true
+                    }
+                } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "square.and.pencil")
                             .font(.system(size: 14, weight: .semibold))
@@ -504,7 +534,11 @@ struct WeddingDetailView: View {
                 .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.inkMuted(0.5))
                 .multilineTextAlignment(.center)
-            Button { showEdit = true } label: {
+            Button {
+                runPremiumOrPaywall {
+                    showEdit = true
+                }
+            } label: {
                 Text(L10n.Common.edit)
                     .font(AppFont.medium(12))
                     .foregroundStyle(AppTheme.labelOnLightSurface)
@@ -638,13 +672,18 @@ struct WeddingDetailView: View {
         do {
             async let infoEnvelope: Envelope<WeddingInfo> = APIClient.shared.request("wedding-info")
             async let eventEnvelope: Envelope<[WeddingEvent]> = APIClient.shared.request("wedding-events")
-            async let guestEnvelope: Envelope<[Guest]> = APIClient.shared.request("guests")
 
             info = try await infoEnvelope.data
             events = try await eventEnvelope.data
-            guests = try await guestEnvelope.data
         } catch {
             loadErrorMessage = error.userFacingMessage
+        }
+
+        do {
+            let guestEnvelope: Envelope<[Guest]> = try await APIClient.shared.request("guests")
+            guests = guestEnvelope.data
+        } catch {
+            guests = []
         }
     }
 }

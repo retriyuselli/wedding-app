@@ -1,9 +1,16 @@
 import SwiftUI
 
 struct SavedInspirationView: View {
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
     @ObservedObject private var savedStore = SavedInspirationStore.shared
     @State private var items: [InspirationItem] = []
     @State private var isLoading = false
+    @State private var showPaywall = false
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var savedItems: [InspirationItem] {
         items
@@ -49,16 +56,29 @@ struct SavedInspirationView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 24)
             }
+            .premiumContentLock(isPremium: isPremium, showPaywall: $showPaywall)
             .overlay {
-                if isLoading && items.isEmpty {
+                if isPremium && isLoading && items.isEmpty {
                     ProgressView()
                 }
             }
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
-        .task { await load() }
-        .refreshable { await load() }
+        .task {
+            guard isPremium else { return }
+            await load()
+        }
+        .refreshable {
+            guard isPremium else { return }
+            await load()
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(onUnlocked: {
+                Task { await load() }
+            })
+            .environmentObject(session)
+        }
     }
 
     private func load() async {

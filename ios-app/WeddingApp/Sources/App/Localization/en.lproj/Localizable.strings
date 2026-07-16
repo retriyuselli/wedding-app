@@ -105,6 +105,8 @@
 "more.inspiration_sub" = "Save inspiration and references";
 "more.documents" = "Documents";
 "more.documents_sub" = "Store important wedding documents";
+"more.wedding_pro" = "Wedding Pro";
+"more.wedding_pro_sub" = "Unlock checklist, guests, budget, documents, and more";
 "more.settings" = "Settings";
 "more.settings_sub" = "Notifications, appearance, and preferences";
 "more.privacy" = "Privacy & Security";
@@ -648,6 +650,47 @@
 "privacy.two_factor_inactive" = "Inactive";
 "privacy.commitment" = "We are committed to protecting your privacy. Read our Privacy Policy for more information.";
 "privacy.help_center_sub" = "Learn more about privacy & security";
+"privacy.visibility_saved" = "Visibility settings saved.";
+"privacy.visibility_profile" = "Profile";
+"privacy.visibility_wedding" = "Wedding details";
+"privacy.visibility_guests" = "Guest list";
+"privacy.visibility_budget" = "Budget";
+"privacy.visibility_private" = "Private";
+"privacy.visibility_couple" = "Couple";
+"privacy.visibility_public" = "Public";
+"privacy.visibility_vendors" = "Vendors";
+"privacy.show_in_directory" = "Show in directory";
+"privacy.allow_vendor_contact" = "Allow vendors to contact you";
+"privacy.saving" = "Saving…";
+"privacy.partner_section" = "Partner account";
+"privacy.partner_section_hint" = "Link your partner’s email so data set to “Couple” can be viewed together. If your account is Premium, your partner can use Pro access for the data you share (e.g. guest list).";
+"privacy.partner_email_placeholder" = "Partner account email";
+"privacy.partner_linked" = "Partner linked";
+"privacy.partner_linked_id" = "User ID: %d";
+"privacy.partner_linked_success" = "Partner account linked successfully.";
+"privacy.partner_change_hint" = "To change partner, enter another account email and save.";
+"privacy.partner_unlinked" = "Partner link removed.";
+"privacy.unlink_partner" = "Unlink";
+"privacy.view_partner_data" = "View data";
+"privacy.directory_title" = "Directory";
+"privacy.directory_subtitle" = "Profiles that opted into the public directory";
+"privacy.directory_empty" = "No profiles are listed in the directory yet.";
+"privacy.shared_profile_title" = "Shared profile";
+"privacy.shared_profile_subtitle" = "Data you are allowed to view";
+"privacy.shared_wedding" = "Wedding details";
+"privacy.shared_guests" = "Guest list";
+"privacy.shared_budget" = "Budget";
+"privacy.shared_section_unavailable" = "Not available to you.";
+"privacy.shared_no_events" = "No events yet.";
+"privacy.shared_guest_count" = "%d guests";
+"privacy.shared_guests_more" = "+%d more guests";
+"privacy.shared_budget_total" = "Total budget";
+"privacy.shared_budget_spent" = "Spent";
+"privacy.shared_budget_remaining" = "Remaining";
+"privacy.viewer_role_self" = "Your own data";
+"privacy.viewer_role_couple" = "Shown as partner";
+"privacy.viewer_role_vendor" = "Shown as vendor";
+"privacy.viewer_role_authenticated" = "Public profile";
 
 /* Change Password */
 "change_password.title" = "Change Password";
@@ -736,8 +779,8 @@
 "couple.photo_section" = "Couple Photo";
 "couple.photo_upload" = "Upload couple photo";
 "couple.photo_change" = "Change couple photo";
-"couple.photo_hint" = "JPG/PNG format, maximum 2 MB.";
-"couple.photo_too_large" = "Photo exceeds 2 MB. Please choose a smaller image.";
+"couple.photo_hint" = "JPG/PNG format. If the photo is larger than 2 MB, the upload will be rejected — please choose a smaller image.";
+"couple.photo_too_large" = "Photo exceeds 2 MB. Please choose a photo of 2 MB or less.";
 "couple.photo_read_error" = "Couldn't read the photo. Please try again.";
 "couple.save" = "Save Couple";
 
@@ -1093,6 +1136,44 @@
 "privacy.export_blurb" = "Download a copy of your account data. This may take a moment.";
 
 "vendor.request_msg_header" = "[Vendor Request]";
+
+/* Wedding Pro */
+"premium.title" = "Wedding Pro";
+"premium.subtitle" = "One-time unlock for your core wedding toolkit — and share Pro access with your partner for the data you allow.";
+"premium.benefit_excel" = "Export & import guest lists with Excel";
+"premium.benefit_documents" = "Keep contracts, invites, and key documents";
+"premium.benefit_couple_photo" = "Couple photo for profile & wedding details";
+"premium.benefit_vendors" = "Browse the full vendor catalog";
+"premium.benefit_checklist" = "A structured wedding preparation checklist";
+"premium.benefit_wedding_detail" = "Event details, venues, and day-of timeline";
+"premium.benefit_couple" = "Full profiles for the couple and family";
+"premium.benefit_guests" = "Manage guests, VIPs, family, and RSVPs";
+"premium.benefit_budget" = "Budget tracking, payment schedules, and remaining funds";
+"premium.benefit_inspiration" = "Save inspiration and wedding concept ideas";
+"premium.benefit_reminders" = "Timely reminders for important deadlines";
+"premium.benefit_partner" = "Let your partner use Pro on the data you share";
+"premium.benefit_visibility" = "Control who can see your wedding data";
+"premium.buy" = "Unlock Pro · %@";
+"premium.buy_fallback" = "Unlock Wedding Pro";
+"premium.restore" = "Restore Purchases";
+"premium.footnote" = "One-time purchase linked to your Apple ID. Use Restore Purchases if you already bought on another device.";
+"premium.product_unavailable" = "Product is unavailable. Please try again shortly.";
+"premium.purchase_pending" = "Purchase is pending confirmation.";
+"premium.purchase_failed" = "Purchase failed. Please try again.";
+"premium.restore_empty" = "No Wedding Pro purchase was found.";
+"premium.unverified_transaction" = "Transaction could not be verified.";
+"premium.locked_title" = "Available with Wedding Pro";
+"premium.locked_message" = "Unlock with a one-time purchase to use this feature. A linked partner can also access the data you choose to share.";
+"premium.unlock_cta" = "Unlock Wedding Pro";
+"premium.menu_title" = "Wedding Pro";
+"premium.menu_sub" = "Unlock checklist, guests, budget, documents, and more";
+"premium.menu_active_sub" = "All Pro features are active";
+"premium.status_active" = "Active";
+"premium.status_inactive" = "Not active";
+"premium.partner_guests_cta" = "View partner’s guest list";
+"premium.partner_budget_cta" = "View partner’s budget";
+"premium.partner_access_sub" = "Access via %@’s Wedding Pro";
+
 "documents.empty_filtered_sub" = "No documents match this search or category.";
 "wedding_edit.event_count" = "%d events";
 "wedding_edit.all_types_added" = "All event types have already been added.";

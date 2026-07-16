@@ -84,16 +84,16 @@ struct LoginView: View {
             VStack(spacing: 8) {
                 HStack(spacing: 7) {
                     Text(L10n.Auth.brandWedding)
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                     Text(L10n.Auth.brandApp)
-                        .foregroundStyle(AppTheme.goldDark)
+                        .foregroundStyle(AppTheme.gold)
                 }
                 .font(.system(size: 34, weight: .bold, design: .serif))
                 .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 8, y: 2)
 
                 Text(L10n.Dashboard.planTogether)
                     .font(.system(size: 14, weight: .medium, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.72))
+                    .foregroundStyle(AppTheme.inkMuted(0.75))
                     .multilineTextAlignment(.center)
             }
         }
@@ -138,7 +138,7 @@ struct LoginView: View {
                 } label: {
                     Text(L10n.Auth.forgotPassword)
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.sageMuted(0.95))
                 }
                 .buttonStyle(.plain)
             }
@@ -182,7 +182,7 @@ struct LoginView: View {
                     Text(L10n.Auth.noAccount)
                         .foregroundStyle(LoginPalette.textSecondary)
                     Text(L10n.Auth.registerNow)
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.sageMuted(0.95))
                         .fontWeight(.semibold)
                 }
                 .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -202,7 +202,7 @@ struct LoginView: View {
                 Text(L10n.Auth.termsPrefix)
                     .foregroundStyle(LoginPalette.textSecondary)
                 + Text(L10n.Auth.termsLink)
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.sageMuted(0.95))
                     .underline()
                     .fontWeight(.semibold)
                 + Text(L10n.Auth.termsSuffix)
@@ -221,19 +221,24 @@ struct LoginView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text(L10n.Auth.twoFactorTitle)
                     .font(.system(size: 20, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Text(session.pendingTwoFactorMessage ?? L10n.Auth.twoFactorMessage)
                     .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(AppTheme.inkMuted(0.55))
+                    .foregroundStyle(AppTheme.inkMuted(0.65))
 
-                TextField(L10n.Auth.twoFactorCodePlaceholder, text: $twoFactorCode)
+                TextField(
+                    "",
+                    text: $twoFactorCode,
+                    prompt: Text(L10n.Auth.twoFactorCodePlaceholder)
+                        .foregroundStyle(AppTheme.inkMuted(0.72))
+                )
                     .keyboardType(.numberPad)
                     .font(.system(size: 16, weight: .regular, design: .rounded))
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .padding(14)
                     .background {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .fill(AppTheme.nestedGlassFill)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
 
                 if let errorMessage = session.errorMessage {
@@ -252,7 +257,7 @@ struct LoginView: View {
                         .padding(.vertical, 14)
                         .background(
                             LinearGradient(
-                                colors: [AppTheme.sage, AppTheme.sageDark],
+                                colors: [AppTheme.quoteGradientLeading, AppTheme.quoteGradientMid],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -330,7 +335,7 @@ private struct ForgotPasswordSheet: View {
             VStack(spacing: 13) {
                 Image(systemName: didSendRequest ? "checkmark.seal.fill" : "key.fill")
                     .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(didSendRequest ? AppTheme.sageDark : AppTheme.gold)
+                    .foregroundStyle(didSendRequest ? AppTheme.sageMuted(0.95) : AppTheme.gold)
                     .frame(width: 58, height: 58)
                     .background {
                         Circle()
@@ -340,12 +345,12 @@ private struct ForgotPasswordSheet: View {
 
                 Text(L10n.Auth.forgotTitle)
                     .font(.system(size: 22, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                     .multilineTextAlignment(.center)
 
                 Text(L10n.Auth.forgotSubtitle)
                     .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(AppTheme.inkMuted(0.55))
+                    .foregroundStyle(AppTheme.inkMuted(0.65))
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
                     .padding(.horizontal, 10)

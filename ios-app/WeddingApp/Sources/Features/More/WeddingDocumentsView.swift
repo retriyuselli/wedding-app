@@ -55,6 +55,9 @@ enum DocumentSortOption: String, CaseIterable, Identifiable {
 }
 
 struct WeddingDocumentsView: View {
+    @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var premium = PremiumStore.shared
+
     @State private var documents: [WeddingDocumentItem] = []
     @State private var folders: [DocumentFolderItem] = []
     @State private var summary: WeddingDocumentSummary?
@@ -79,6 +82,11 @@ struct WeddingDocumentsView: View {
     @State private var isDownloading = false
     @State private var downloadShareURL: URL?
     @State private var showDownloadShare = false
+    @State private var showPaywall = false
+
+    private var isPremium: Bool {
+        premium.isPremium(user: session.currentUser)
+    }
 
     private var storageQuotaBytes: Int {
         summary?.quotaBytes ?? (5 * 1024 * 1024)
@@ -149,11 +157,39 @@ struct WeddingDocumentsView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 24)
             }
+            .premiumContentLock(isPremium: isPremium, showPaywall: $showPaywall)
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
-        .task { await load() }
-        .refreshable { await load() }
+        .task {
+            if isPremium {
+                await load()
+            } else {
+                loadPreview()
+            }
+        }
+        .refreshable {
+            if isPremium {
+                await load()
+            } else {
+                loadPreview()
+            }
+        }
+        .onChange(of: isPremium) { _, premium in
+            Task {
+                if premium {
+                    await load()
+                } else {
+                    loadPreview()
+                }
+            }
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(onUnlocked: {
+                Task { await load() }
+            })
+            .environmentObject(session)
+        }
         .fileImporter(
             isPresented: $showFileImporter,
             allowedContentTypes: [.pdf, .jpeg, .png, .image],
@@ -317,9 +353,11 @@ struct WeddingDocumentsView: View {
     private var uploadRow: some View {
         HStack(spacing: 12) {
             Button {
-                uploadCategory = selectedCategory == .all ? .vendor : selectedCategory
-                uploadFolderId = selectedFolderId
-                showFileImporter = true
+                PremiumGate.presentOrRun(session: session, showPaywall: $showPaywall) {
+                    uploadCategory = selectedCategory == .all ? .vendor : selectedCategory
+                    uploadFolderId = selectedFolderId
+                    showFileImporter = true
+                }
             } label: {
                 HStack(spacing: 12) {
                     Group {
@@ -748,6 +786,32 @@ struct WeddingDocumentsView: View {
         async let foldersTask: Void = loadFolders()
         async let summaryTask: Void = loadSummary()
         _ = await (documentsTask, foldersTask, summaryTask)
+    }
+
+    private func loadPreview() {
+        errorMessage = nil
+        folders = [
+            DocumentFolderItem(id: -1, name: "Kontrak Vendor", sortOrder: 1, documentsCount: 2, createdAt: nil, updatedAt: nil),
+            DocumentFolderItem(id: -2, name: "Keuangan", sortOrder: 2, documentsCount: 1, createdAt: nil, updatedAt: nil),
+        ]
+        documents = [
+            WeddingDocumentItem(id: -1, documentFolderId: -1, folderName: "Kontrak Vendor", fileName: "Kontrak_Dekorasi.pdf", filePath: nil, fileSize: 245_000, mimeType: "application/pdf", category: "vendor", url: nil, source: "uploaded", taskTitle: nil, createdAt: nil, updatedAt: nil),
+            WeddingDocumentItem(id: -2, documentFolderId: -1, folderName: "Kontrak Vendor", fileName: "MOU_Venue.pdf", filePath: nil, fileSize: 180_000, mimeType: "application/pdf", category: "vendor", url: nil, source: "uploaded", taskTitle: nil, createdAt: nil, updatedAt: nil),
+            WeddingDocumentItem(id: -3, documentFolderId: -2, folderName: "Keuangan", fileName: "Bukti_Transfer.jpg", filePath: nil, fileSize: 420_000, mimeType: "image/jpeg", category: "keuangan", url: nil, source: "uploaded", taskTitle: nil, createdAt: nil, updatedAt: nil),
+            WeddingDocumentItem(id: -4, documentFolderId: nil, folderName: nil, fileName: "Undangan_Digital.pdf", filePath: nil, fileSize: 95_000, mimeType: "application/pdf", category: "resepsi", url: nil, source: "uploaded", taskTitle: nil, createdAt: nil, updatedAt: nil),
+        ]
+        summary = WeddingDocumentSummary(
+            usedBytes: 940_000,
+            quotaBytes: 5 * 1024 * 1024,
+            usedPercent: 17.9,
+            counts: [
+                "all": 4,
+                "vendor": 2,
+                "keuangan": 1,
+                "resepsi": 1,
+                "akad": 0,
+            ]
+        )
     }
 
     private func loadDocuments() async {

@@ -6,6 +6,7 @@ struct MoreView: View {
     @State private var info = WeddingInfo(id: nil, groomName: "", brideName: "", budaya: "", songlist: [])
     @State private var showLogoutConfirmation = false
     @State private var showComingSoon = false
+    @State private var showPaywall = false
 
     private var coupleName: String {
         let bride = info.brideName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -59,6 +60,7 @@ struct MoreView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         header
                         profileCard
+                        weddingProCard
                         sectionGroup(title: L10n.More.planningSection, items: planningItems)
                         sectionGroup(title: L10n.More.accountSection, items: accountItems)
                         shareCard
@@ -88,6 +90,10 @@ struct MoreView: View {
                 Button(L10n.Common.ok, role: .cancel) {}
             } message: {
                 Text(L10n.Common.comingSoonMessage)
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView()
+                    .environmentObject(session)
             }
         }
     }
@@ -163,6 +169,58 @@ struct MoreView: View {
         .premiumGlassCard(cornerRadius: 28)
     }
 
+    private var weddingProCard: some View {
+        Button {
+            if session.isPremium {
+                return
+            }
+            showPaywall = true
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: session.isPremium ? "checkmark.seal.fill" : "sparkles")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(AppTheme.sageDark)
+                    .frame(width: 42, height: 42)
+                    .background(AppTheme.iconChipFill, in: Circle())
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.More.weddingPro)
+                        .font(AppFont.medium(15))
+                        .foregroundStyle(AppTheme.titleOnGlass)
+                    Text(session.isPremium ? L10n.Premium.menuActiveSub : L10n.More.weddingProSub)
+                        .font(AppFont.regular(12))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+
+                Text(session.isPremium ? L10n.Premium.statusActive : L10n.Premium.unlockCta)
+                    .font(AppFont.medium(11))
+                    .foregroundStyle(session.isPremium ? AppTheme.sageDark : .white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background {
+                        if session.isPremium {
+                            Capsule().fill(AppTheme.lightSage.opacity(0.8))
+                        } else {
+                            Capsule().fill(
+                                LinearGradient(
+                                    colors: [AppTheme.sage, AppTheme.sageDark],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        }
+                    }
+            }
+            .padding(16)
+            .premiumGlassCard(cornerRadius: 22)
+        }
+        .buttonStyle(.plain)
+        .disabled(session.isPremium)
+    }
+
     private func sectionGroup(title: String, items: [MoreItem]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
@@ -215,15 +273,17 @@ struct MoreView: View {
         HStack(spacing: 14) {
             Image(systemName: "envelope.open")
                 .font(.system(size: 26, weight: .light))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.iconOnChip)
+                .frame(width: 44, height: 44)
+                .background(AppTheme.iconChipFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.More.shareApp)
                     .font(AppFont.medium(15))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Text(L10n.More.shareAppSub)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.inkMuted(0.7))
                     .lineSpacing(1)
             }
 
@@ -236,15 +296,14 @@ struct MoreView: View {
             ) {
                 Label(L10n.Common.share, systemImage: "square.and.arrow.up")
                     .font(AppFont.medium(12))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.labelOnLightSurface)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
-                    .background {
+                    .background(AppTheme.selectedChipFill, in: Capsule())
+                    .overlay {
                         Capsule()
-                            .fill(Color.white.opacity(0.78))
-                            .background(.ultraThinMaterial, in: Capsule())
+                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
                     }
-                    .overlay { Capsule().stroke(Color.white.opacity(0.65), lineWidth: 1) }
             }
         }
         .padding(16)

@@ -53,10 +53,10 @@ struct MoreSubpageNavigationHeader: View {
                 VStack(spacing: 4) {
                     Text(title)
                         .font(.system(size: 18, weight: .semibold, design: .serif))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnGlass)
                     Text(subtitle)
                         .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundStyle(AppTheme.inkMuted(0.5))
+                        .foregroundStyle(AppTheme.inkMuted(0.65))
                         .multilineTextAlignment(.center)
                 }
 
