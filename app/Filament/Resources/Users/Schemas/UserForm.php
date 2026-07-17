@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
+use App\Services\Billing\WeddingProEntitlementService;
+use Closure;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -138,8 +141,77 @@ class UserForm
                             ->label('Apple original transaction ID')
                             ->maxLength(255)
                             ->placeholder('Kosongkan jika aktivasi manual')
-                            ->helperText('Diisi otomatis dari IAP. Untuk demo boleh diisi ID fiktif unik.')
+                            ->helperText('Diisi otomatis dari IAP. Untuk demo pakai ID unik (jangan 0 / kosong).')
                             ->visible(fn (Get $get): bool => (bool) $get('is_premium'))
+                            ->rule(function () {
+                                return function (string $attribute, mixed $value, Closure $fail): void {
+                                    if (blank($value)) {
+                                        return;
+                                    }
+
+                                    if (! app(WeddingProEntitlementService::class)
+                                        ->isUsableAppleTransactionId((string) $value)) {
+                                        $fail('Transaction ID tidak valid. Jangan pakai 0 atau placeholder kosong.');
+                                    }
+                                };
+                            })
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Pasangan Terhubung')
+                    ->description('Akun pasangan dari pengaturan privasi iOS (privacy_settings.partner_user_id). Digunakan untuk berbagi data couple-scoped.')
+                    ->visibleOn('edit')
+                    ->schema([
+                        Select::make('partner_user_id')
+                            ->label('Akun pasangan')
+                            ->searchable()
+                            ->native(false)
+                            ->nullable()
+                            ->placeholder('Belum terhubung')
+                            ->helperText('Cari nama atau email. Kosongkan lalu simpan untuk memutus tautan.')
+                            ->getSearchResultsUsing(function (string $search, ?User $record): array {
+                                $query = User::query()
+                                    ->when($record, fn ($builder) => $builder->whereKeyNot($record->getKey()))
+                                    ->where(function ($builder) use ($search): void {
+                                        $builder
+                                            ->where('name', 'like', "%{$search}%")
+                                            ->orWhere('email', 'like', "%{$search}%");
+                                    })
+                                    ->orderBy('name')
+                                    ->limit(50);
+
+                                return $query->get()
+                                    ->mapWithKeys(fn (User $user): array => [
+                                        $user->id => "{$user->name} · {$user->email}",
+                                    ])
+                                    ->all();
+                            })
+                            ->getOptionLabelUsing(function ($value): ?string {
+                                if (blank($value)) {
+                                    return null;
+                                }
+
+                                $user = User::query()->find($value);
+
+                                return $user
+                                    ? "{$user->name} · {$user->email}"
+                                    : "User #{$value} (tidak ditemukan)";
+                            })
+                            ->rule(function (?User $record) {
+                                return function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                    if (blank($value) || $record === null) {
+                                        return;
+                                    }
+
+                                    if ((int) $value === (int) $record->getKey()) {
+                                        $fail('Tidak dapat menghubungkan akun ke dirinya sendiri.');
+                                    }
+
+                                    if (! User::query()->whereKey($value)->exists()) {
+                                        $fail('Akun pasangan tidak ditemukan.');
+                                    }
+                                };
+                            })
                             ->columnSpanFull(),
                     ]),
 

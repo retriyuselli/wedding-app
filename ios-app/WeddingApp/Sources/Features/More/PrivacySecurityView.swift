@@ -5,6 +5,8 @@ struct PrivacySecurityView: View {
     @StateObject private var viewModel = PrivacySecurityViewModel()
 
     @State private var showSocialLoginPasswordAlert = false
+    @State private var showPaywall = false
+    @State private var premiumDestination: PremiumPrivacyDestination?
 
     private var usesSocialLogin: Bool {
         session.currentUser?.hasSocialLogin ?? false
@@ -62,6 +64,23 @@ struct PrivacySecurityView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
         .refreshable { await viewModel.retry() }
+        .navigationDestination(item: $premiumDestination) { destination in
+            switch destination {
+            case .securitySummary: SecuritySummaryView()
+            case .dataVisibility: DataVisibilityView()
+            case .directory: SharedDirectoryView()
+            case .notifications: RemindersPreferencesView()
+            case .permissions: AppPermissionsView()
+            case .downloadData: DataExportView()
+            case .trustedDevices: TrustedDevicesView()
+            case .activeSessions: ActiveSessionsView()
+            }
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(onUnlocked: {
+                showPaywall = false
+            })
+        }
         .alert(L10n.Common.notAvailable, isPresented: $showSocialLoginPasswordAlert) {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
@@ -70,8 +89,8 @@ struct PrivacySecurityView: View {
     }
 
     private var summaryCard: some View {
-        NavigationLink {
-            SecuritySummaryView()
+        Button {
+            openPremium(.securitySummary)
         } label: {
             HStack(spacing: 14) {
                 Image(systemName: "checkmark.shield.fill")
@@ -108,75 +127,40 @@ struct PrivacySecurityView: View {
 
     private var privacySettingsSection: some View {
         section(title: L10n.Privacy.privacySettings) {
-            NavigationLink {
-                DataVisibilityView()
-            } label: {
-                rowContent(
-                    icon: "lock",
-                    title: L10n.Privacy.dataVisibility,
-                    subtitle: L10n.Privacy.dataVisibilitySub
-                )
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            premiumRow(
+                icon: "lock",
+                title: L10n.Privacy.dataVisibility,
+                subtitle: L10n.Privacy.dataVisibilitySub,
+                destination: .dataVisibility
+            )
             divider
-            NavigationLink {
-                SharedDirectoryView()
-            } label: {
-                rowContent(
-                    icon: "person.2",
-                    title: L10n.Privacy.directoryTitle,
-                    subtitle: L10n.Privacy.directorySubtitle
-                )
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            premiumRow(
+                icon: "person.2",
+                title: L10n.Privacy.directoryTitle,
+                subtitle: L10n.Privacy.directorySubtitle,
+                destination: .directory
+            )
             divider
-            NavigationLink {
-                RemindersPreferencesView()
-            } label: {
-                rowContent(
-                    icon: "bell.slash",
-                    title: L10n.Privacy.notifications,
-                    subtitle: L10n.Privacy.notificationsSub
-                )
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            premiumRow(
+                icon: "bell.slash",
+                title: L10n.Privacy.notifications,
+                subtitle: L10n.Privacy.notificationsSub,
+                destination: .notifications
+            )
             divider
-            NavigationLink {
-                AppPermissionsView()
-            } label: {
-                rowContent(
-                    icon: "chart.bar",
-                    title: L10n.Privacy.permissions,
-                    subtitle: L10n.Privacy.permissionsSub
-                )
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            premiumRow(
+                icon: "chart.bar",
+                title: L10n.Privacy.permissions,
+                subtitle: L10n.Privacy.permissionsSub,
+                destination: .permissions
+            )
             divider
-            NavigationLink {
-                DataExportView()
-            } label: {
-                rowContent(
-                    icon: "arrow.down.to.line",
-                    title: L10n.Privacy.downloadData,
-                    subtitle: L10n.Privacy.downloadDataSub
-                )
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            premiumRow(
+                icon: "arrow.down.to.line",
+                title: L10n.Privacy.downloadData,
+                subtitle: L10n.Privacy.downloadDataSub,
+                destination: .downloadData
+            )
             divider
             NavigationLink {
                 DeleteAccountView()
@@ -229,19 +213,12 @@ struct PrivacySecurityView: View {
                 }
             }
             divider
-            NavigationLink {
-                TrustedDevicesView()
-            } label: {
-                rowContent(
-                    icon: "iphone",
-                    title: L10n.Privacy.trustedDevices,
-                    subtitle: L10n.Privacy.trustedDevicesSub
-                )
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            premiumRow(
+                icon: "iphone",
+                title: L10n.Privacy.trustedDevices,
+                subtitle: L10n.Privacy.trustedDevicesSub,
+                destination: .trustedDevices
+            )
             divider
             NavigationLink {
                 TwoFactorSettingsView()
@@ -260,19 +237,12 @@ struct PrivacySecurityView: View {
             }
             .buttonStyle(.plain)
             divider
-            NavigationLink {
-                ActiveSessionsView()
-            } label: {
-                rowContent(
-                    icon: "rectangle.portrait.and.arrow.right",
-                    title: L10n.Privacy.activeSessions,
-                    subtitle: L10n.Privacy.activeSessionsSub
-                )
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            premiumRow(
+                icon: "rectangle.portrait.and.arrow.right",
+                title: L10n.Privacy.activeSessions,
+                subtitle: L10n.Privacy.activeSessionsSub,
+                destination: .activeSessions
+            )
         }
     }
 
@@ -320,6 +290,33 @@ struct PrivacySecurityView: View {
             .premiumGlassCard(cornerRadius: 18)
         }
         .buttonStyle(.plain)
+    }
+
+    private func premiumRow(
+        icon: String,
+        title: String,
+        subtitle: String,
+        destination: PremiumPrivacyDestination
+    ) -> some View {
+        Button {
+            openPremium(destination)
+        } label: {
+            rowContent(
+                icon: icon,
+                title: title,
+                subtitle: subtitle
+            )
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func openPremium(_ destination: PremiumPrivacyDestination) {
+        PremiumGate.presentOrRun(session: session, showPaywall: $showPaywall) {
+            premiumDestination = destination
+        }
     }
 
     private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -403,4 +400,17 @@ struct PrivacySecurityView: View {
 
         return nil
     }
+}
+
+private enum PremiumPrivacyDestination: String, Identifiable, Hashable {
+    case securitySummary
+    case dataVisibility
+    case directory
+    case notifications
+    case permissions
+    case downloadData
+    case trustedDevices
+    case activeSessions
+
+    var id: String { rawValue }
 }

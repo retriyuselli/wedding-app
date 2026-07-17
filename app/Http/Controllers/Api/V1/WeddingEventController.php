@@ -47,7 +47,13 @@ class WeddingEventController extends Controller
         $event = $this->findOwned($request, $weddingEvent);
         $event->update($data);
 
-        return new WeddingEventResource($event);
+        // Safety net: events that lost their checklist (e.g. older queue bugs) get
+        // re-provisioned the next time they are saved.
+        if (! $event->preparationTasks()->exists()) {
+            app(DefaultWeddingChecklistProvisioner::class)->provisionForEvent($event->fresh());
+        }
+
+        return new WeddingEventResource($event->fresh());
     }
 
     public function destroy(Request $request, int $weddingEvent): Response

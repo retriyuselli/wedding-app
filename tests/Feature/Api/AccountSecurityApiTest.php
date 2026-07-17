@@ -2,13 +2,20 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\CustomerPreparationTask;
+use App\Models\CustomerPreparationTaskAttachment;
 use App\Models\User;
+use App\Models\WeddingDocument;
+use App\Models\WeddingIncomingPayment;
+use App\Models\WeddingInfo;
+use App\Models\WeddingPaymentSchedule;
 use Database\Seeders\UserSeeder;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AccountSecurityApiTest extends TestCase
@@ -161,6 +168,83 @@ class AccountSecurityApiTest extends TestCase
         $this->assertDatabaseMissing('personal_access_tokens', [
             'tokenable_id' => $user->id,
         ]);
+    }
+
+    public function test_delete_account_removes_user_storage_files(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+
+        $user = User::factory()->create([
+            'password' => Hash::make('password'),
+            'avatar_url' => 'avatars/user-avatar.jpg',
+        ]);
+
+        $couplePhoto = 'couple-photos/'.$user->id.'/photo.jpg';
+        $documentPath = 'wedding-documents/'.$user->id.'/surat.pdf';
+        $proofPath = 'payment-schedules/proofs/proof-'.$user->id.'.jpg';
+        $incomingProof = 'incoming-payments/proofs/incoming-'.$user->id.'.jpg';
+        $attachmentPath = 'preparation-attachments/task-'.$user->id.'-file.pdf';
+        $exportZip = 'exports/'.$user->id.'/wedding-app-data-export.zip';
+
+        Storage::disk('public')->put($couplePhoto, 'couple');
+        Storage::disk('public')->put($documentPath, 'document');
+        Storage::disk('public')->put($proofPath, 'proof');
+        Storage::disk('public')->put($incomingProof, 'incoming');
+        Storage::disk('public')->put($attachmentPath, 'attachment');
+        Storage::disk('public')->put('avatars/user-avatar.jpg', 'avatar');
+        Storage::disk('local')->put($exportZip, 'zip');
+
+        WeddingInfo::factory()->create([
+            'user_id' => $user->id,
+            'couple_photo' => $couplePhoto,
+        ]);
+
+        WeddingDocument::factory()->create([
+            'user_id' => $user->id,
+            'file_path' => $documentPath,
+        ]);
+
+        WeddingPaymentSchedule::factory()->create([
+            'user_id' => $user->id,
+            'proof_url' => $proofPath,
+        ]);
+
+        WeddingIncomingPayment::factory()->create([
+            'user_id' => $user->id,
+            'proof_url' => $incomingProof,
+        ]);
+
+        $task = CustomerPreparationTask::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        CustomerPreparationTaskAttachment::query()->create([
+            'user_id' => $user->id,
+            'preparation_task_id' => $task->id,
+            'file_name' => 'file.pdf',
+            'file_path' => $attachmentPath,
+            'file_size' => 12,
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->deleteJson('/api/v1/auth/account', [
+                'password' => 'password',
+                'confirmation' => 'HAPUS',
+            ])
+            ->assertOk();
+
+        Storage::disk('public')->assertMissing($couplePhoto);
+        Storage::disk('public')->assertMissing($documentPath);
+        Storage::disk('public')->assertMissing($proofPath);
+        Storage::disk('public')->assertMissing($incomingProof);
+        Storage::disk('public')->assertMissing($attachmentPath);
+        Storage::disk('public')->assertMissing('avatars/user-avatar.jpg');
+        Storage::disk('local')->assertMissing($exportZip);
+        $this->assertFalse(Storage::disk('public')->exists('couple-photos/'.$user->id));
+        $this->assertFalse(Storage::disk('public')->exists('wedding-documents/'.$user->id));
+        $this->assertFalse(Storage::disk('local')->exists('exports/'.$user->id));
     }
 
     public function test_delete_account_requires_confirmation_text(): void

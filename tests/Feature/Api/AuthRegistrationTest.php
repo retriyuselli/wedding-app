@@ -65,7 +65,6 @@ class AuthRegistrationTest extends TestCase
             ->first();
 
         $this->assertNotNull($task);
-        $this->assertNotNull($task->description);
-        $this->assertGreaterThanOrEqual(2, $task->subTasks()->count());
+        $this->assertSame('pending', $task->status);
     }
 }

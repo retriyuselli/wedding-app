@@ -54,6 +54,7 @@ struct WeddingDetailEditView: View {
     @State private var startTime = Calendar.current.date(from: DateComponents(hour: 10, minute: 0)) ?? Date()
     @State private var location = ""
     @State private var concept = L10n.WeddingEdit.conceptGarden
+    @State private var customConcept = ""
     @State private var note = ""
     @State private var scheduleEvents: [EditableScheduleEvent] = []
     @State private var deletedEventIds: Set<Int> = []
@@ -66,6 +67,15 @@ struct WeddingDetailEditView: View {
     private var conceptOptions: [String] {
         L10n.WeddingEdit.conceptOptions + L10n.Onboarding.cultureOptions
     }
+
+    private var knownConceptValues: [String] {
+        conceptOptions.filter { !CultureSelection.isOther($0) }
+    }
+
+    private var resolvedConcept: String {
+        CultureSelection.resolvedValue(selected: concept, custom: customConcept)
+    }
+
     private let noteLimit = 200
 
     init(onSaved: @escaping () -> Void = {}) {
@@ -151,6 +161,21 @@ struct WeddingDetailEditView: View {
                             }
                             .labelsHidden()
                             .tint(AppTheme.sageDark)
+                            .onChange(of: concept) { _, newValue in
+                                if !CultureSelection.isOther(newValue) {
+                                    customConcept = ""
+                                }
+                            }
+                        }
+
+                        if CultureSelection.isOther(concept) {
+                            fieldRow(icon: "pencil.line", title: L10n.Onboarding.cultureCustomLabel) {
+                                TextField(L10n.Onboarding.cultureCustomPlaceholder, text: $customConcept)
+                                    .font(AppFont.medium(15))
+                                    .foregroundStyle(AppTheme.sageDark)
+                                    .textInputAutocapitalization(.words)
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                         }
                     }
 
@@ -609,7 +634,12 @@ struct WeddingDetailEditView: View {
 
             let loadedBudaya = loadedInfo.budaya?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if !loadedBudaya.isEmpty {
-                concept = loadedBudaya
+                CultureSelection.applyLoaded(
+                    loadedBudaya,
+                    selected: &concept,
+                    custom: &customConcept,
+                    knownOptions: knownConceptValues
+                )
             }
 
             if let resepsi = loadedEvents.first(where: { $0.jenisAcara == "resepsi" }),
@@ -697,7 +727,7 @@ struct WeddingDetailEditView: View {
                     json: [
                         "groom_name": groomName,
                         "bride_name": brideName,
-                        "budaya": concept,
+                        "budaya": resolvedConcept,
                     ]
                 )
 

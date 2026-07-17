@@ -30,7 +30,7 @@ struct LoginView: View {
 
                         termsFooter
                             .padding(.top, 28)
-                            .padding(.bottom, 24)
+                            .padding(.bottom, 16)
                             .opacity(appeared ? 1 : 0)
                     }
                     .padding(.horizontal, 28)
@@ -38,6 +38,17 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .scrollDismissesKeyboard(.interactively)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Text(L10n.Auth.copyright)
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundStyle(AppTheme.inkMuted(0.45))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 28)
+                        .padding(.top, 8)
+                        .padding(.bottom, 10)
+                        .opacity(appeared ? 1 : 0)
+                }
             }
             .toolbar(.hidden, for: .navigationBar)
             .tint(AppTheme.sageDark)

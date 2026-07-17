@@ -125,11 +125,22 @@ class TwoFactorAuthService
             Cache::put($this->codeKey($user, $purpose).':plain', $code, self::CODE_TTL_SECONDS);
         }
 
+        $subject = match ($purpose) {
+            'enable' => 'Kode Verifikasi Dua Langkah',
+            'disable' => 'Kode Nonaktifkan Verifikasi Dua Langkah',
+            'login' => 'Kode Login Verifikasi Dua Langkah',
+            default => 'Kode Verifikasi Dua Langkah',
+        };
+
         Mail::raw(
             "Kode verifikasi Wedding App Anda: {$code}\nBerlaku 10 menit.",
-            function ($message) use ($user, $purpose): void {
-                $message->to($user->email)
-                    ->subject('Kode Verifikasi Dua Langkah ('.$purpose.')');
+            function ($message) use ($user, $subject): void {
+                $message->from(
+                    (string) config('mail.from.address'),
+                    (string) config('mail.from.name', 'Wedding App'),
+                )
+                    ->to($user->email)
+                    ->subject($subject);
             }
         );
     }

@@ -41,7 +41,10 @@ class DefaultWeddingChecklistProvisionerTest extends TestCase
     public function test_manually_created_event_receives_checklist(): void
     {
         $user = User::factory()->create();
-        $user->weddingEvents()->delete();
+
+        foreach ($user->weddingEvents()->get() as $existing) {
+            $existing->delete();
+        }
 
         $event = WeddingEvent::factory()->create([
             'user_id' => $user->id,
@@ -51,7 +54,20 @@ class DefaultWeddingChecklistProvisionerTest extends TestCase
 
         $this->assertSame(48, $event->preparationTasks()->count());
         $this->assertTrue(
-            $event->preparationTasks()->whereNotNull('description')->exists()
+            $event->preparationTasks()->where('title', 'Menentukan tanggal & jam acara lamaran')->exists()
         );
+    }
+
+    public function test_deleting_event_removes_its_checklist_tasks(): void
+    {
+        $user = User::factory()->create();
+        $event = $user->weddingEvents()->where('jenis_acara', 'lamaran')->firstOrFail();
+
+        $this->assertSame(48, $event->preparationTasks()->count());
+
+        $event->delete();
+
+        $this->assertSame(0, CustomerPreparationTask::query()->where('wedding_event_id', $event->id)->count());
+        $this->assertSame(209, CustomerPreparationTask::query()->where('user_id', $user->id)->count());
     }
 }

@@ -93,6 +93,8 @@ Route::prefix('v1')->group(function () {
         Route::post('wedding-info', [WeddingInfoController::class, 'update']);
         Route::post('wedding-info/photo', [WeddingInfoController::class, 'uploadPhoto'])
             ->middleware('premium');
+        // Deleting own photo is always allowed (cleanup / privacy), even if Pro lapsed.
+        Route::delete('wedding-info/photo', [WeddingInfoController::class, 'deletePhoto']);
 
         Route::get('billing/entitlement', [BillingController::class, 'entitlement']);
         Route::post('billing/apple/verify', [BillingController::class, 'verifyApple'])

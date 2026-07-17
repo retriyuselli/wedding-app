@@ -18,6 +18,7 @@ struct CoupleView: View {
     @State private var groomFatherName = ""
     @State private var groomMotherName = ""
     @State private var budaya = ""
+    @State private var customBudaya = ""
     @State private var couplePhotoURL: URL?
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var photoPreview: UIImage?
@@ -26,6 +27,8 @@ struct CoupleView: View {
     @State private var errorMessage: String?
     @State private var photoSizeWarning: String?
     @State private var showPaywall = false
+    @State private var showRemovePhotoConfirm = false
+    @State private var isRemovingPhoto = false
 
     /// Keep under PHP `post_max_size` (often 2M) after multipart overhead.
     private let maxPhotoBytes = 1_850_000
@@ -45,6 +48,10 @@ struct CoupleView: View {
         if bride.isEmpty { return groom }
         if groom.isEmpty { return bride }
         return "\(bride) & \(groom)"
+    }
+
+    private var hasCouplePhoto: Bool {
+        photoPreview != nil || couplePhotoURL != nil
     }
 
     var body: some View {
@@ -84,11 +91,9 @@ struct CoupleView: View {
                     }
 
                     MoreFormSection(title: L10n.Couple.cultureSection) {
-                        MoreInputRow(
-                            icon: "heart.text.square",
-                            placeholder: L10n.Couple.culturePlaceholder,
-                            text: $budaya
-                        )
+                        CultureChipGrid(selected: $budaya, customText: $customBudaya)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 4)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -119,6 +124,18 @@ struct CoupleView: View {
             })
             .environmentObject(session)
         }
+        .confirmationDialog(
+            L10n.Couple.photoRemoveConfirmTitle,
+            isPresented: $showRemovePhotoConfirm,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.Couple.photoRemove, role: .destructive) {
+                Task { await removeCouplePhoto() }
+            }
+            Button(L10n.Common.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.Couple.photoRemoveConfirmMessage)
+        }
     }
 
     private var photoPickerLabel: some View {
@@ -135,6 +152,10 @@ struct CoupleView: View {
         .background(AppTheme.nestedGlassFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
+    private var resolvedBudaya: String {
+        CultureSelection.resolvedValue(selected: budaya, custom: customBudaya)
+    }
+
     private var couplePreviewCard: some View {
         HStack(spacing: 14) {
             couplePhotoThumb(size: 72)
@@ -145,7 +166,7 @@ struct CoupleView: View {
                     .foregroundStyle(AppTheme.sageDark)
                     .lineLimit(2)
 
-                Text(budaya.isEmpty ? L10n.Couple.cultureEmpty : budaya)
+                Text(resolvedBudaya.isEmpty ? L10n.Couple.cultureEmpty : resolvedBudaya)
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.5))
             }
@@ -173,6 +194,29 @@ struct CoupleView: View {
                         photoPickerLabel
                     }
                     .buttonStyle(.plain)
+                }
+
+                if hasCouplePhoto {
+                    Button {
+                        showRemovePhotoConfirm = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            if isRemovingPhoto {
+                                ProgressView()
+                                    .tint(Color.red.opacity(0.85))
+                            } else {
+                                Image(systemName: "trash")
+                                Text(L10n.Couple.photoRemove)
+                            }
+                        }
+                        .font(AppFont.medium(14))
+                        .foregroundStyle(Color.red.opacity(0.85))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isRemovingPhoto || isLoading)
                 }
 
                 Text(L10n.Couple.photoHint)
@@ -262,7 +306,7 @@ struct CoupleView: View {
         groomPhone = data.groomPhone ?? ""
         groomFatherName = data.groomFatherName ?? ""
         groomMotherName = data.groomMotherName ?? ""
-        budaya = data.budaya ?? ""
+        CultureSelection.applyLoaded(data.budaya, selected: &budaya, custom: &customBudaya)
         if let urlString = data.couplePhotoUrl, let url = URL(string: urlString) {
             couplePhotoURL = url
         } else {
@@ -280,7 +324,6 @@ struct CoupleView: View {
             if let photoFileData {
                 guard photoFileData.count <= maxPhotoBytes else {
                     photoSizeWarning = L10n.Couple.photoTooLarge
-                    errorMessage = L10n.Couple.photoTooLarge
                     return
                 }
 
@@ -315,6 +358,34 @@ struct CoupleView: View {
         }
     }
 
+    private func removeCouplePhoto() async {
+        isRemovingPhoto = true
+        errorMessage = nil
+        photoSizeWarning = nil
+        defer { isRemovingPhoto = false }
+
+        // Local-only selection (not yet saved): clear without API call.
+        if photoFileData != nil || (photoPreview != nil && couplePhotoURL == nil) {
+            selectedPhotoItem = nil
+            photoPreview = nil
+            photoFileData = nil
+            return
+        }
+
+        do {
+            let envelope: Envelope<WeddingInfo> = try await APIClient.shared.request(
+                "wedding-info/photo",
+                method: "DELETE"
+            )
+            apply(envelope.data)
+            selectedPhotoItem = nil
+            photoPreview = nil
+            photoFileData = nil
+        } catch {
+            errorMessage = error.userFacingMessage
+        }
+    }
+
     private func textPayload() -> [String: Any] {
         var payload: [String: Any] = [:]
         func put(_ key: String, _ value: String) {
@@ -331,7 +402,7 @@ struct CoupleView: View {
         put("groom_phone", groomPhone)
         put("groom_father_name", groomFatherName)
         put("groom_mother_name", groomMotherName)
-        put("budaya", budaya)
+        put("budaya", resolvedBudaya)
         return payload
     }
 
@@ -350,7 +421,7 @@ struct CoupleView: View {
             "groom_phone": value(groomPhone),
             "groom_father_name": value(groomFatherName),
             "groom_mother_name": value(groomMotherName),
-            "budaya": value(budaya),
+            "budaya": value(resolvedBudaya),
         ]
     }
 
@@ -369,7 +440,6 @@ struct CoupleView: View {
 
             if picked.data.count > maxPhotoLimitBytes {
                 photoSizeWarning = L10n.Couple.photoTooLarge
-                errorMessage = L10n.Couple.photoTooLarge
                 selectedPhotoItem = nil
                 photoPreview = nil
                 photoFileData = nil
@@ -378,7 +448,6 @@ struct CoupleView: View {
 
             guard let compressed = compressJPEG(image, maxBytes: maxPhotoBytes) else {
                 photoSizeWarning = L10n.Couple.photoTooLarge
-                errorMessage = L10n.Couple.photoTooLarge
                 selectedPhotoItem = nil
                 photoPreview = nil
                 photoFileData = nil

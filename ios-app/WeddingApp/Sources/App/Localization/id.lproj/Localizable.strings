@@ -89,6 +89,7 @@
 "auth.terms_prefix" = "Dengan melanjutkan, Anda menyetujui ";
 "auth.terms_link" = "Syarat dan Ketentuan";
 "auth.terms_suffix" = " yang berlaku";
+"auth.copyright" = "%@ by makna wedding & event planner";
 
 /* More */
 "more.title" = "Lainnya";
@@ -779,6 +780,9 @@
 "couple.photo_section" = "Foto Pasangan";
 "couple.photo_upload" = "Unggah foto pasangan";
 "couple.photo_change" = "Ganti foto pasangan";
+"couple.photo_remove" = "Hapus foto";
+"couple.photo_remove_confirm_title" = "Hapus foto pasangan?";
+"couple.photo_remove_confirm_message" = "Foto yang sudah diunggah akan dihapus. Home akan kembali menampilkan cincin interlocking.";
 "couple.photo_hint" = "Format JPG/PNG. Jika ukuran foto lebih dari 2 MB, unggahan akan ditolak — pilih foto yang lebih kecil.";
 "couple.photo_too_large" = "Foto melebihi 2 MB. Silakan pilih foto berukuran maksimal 2 MB.";
 "couple.photo_read_error" = "Gagal membaca foto. Coba lagi.";
@@ -822,15 +826,15 @@
 "onboarding.culture_title" = "Budaya mana yang paling cocok?";
 "onboarding.culture_subtitle" = "Membantu kami menyesuaikan inspirasi dan checklist.";
 
-"onboarding.extras_eyebrow" = "Opsional";
+"onboarding.extras_eyebrow" = "Hampir selesai";
 "onboarding.extras_title" = "Sedikit detail lagi";
-"onboarding.extras_subtitle" = "Boleh dilewati dulu — kalian bisa ubah lagi kapan saja.";
+"onboarding.extras_subtitle" = "Estimasi budget wajib diisi. Estimasi tamu boleh dilewati dulu.";
 "onboarding.guests_label" = "Perkiraan jumlah tamu";
 "onboarding.guests_placeholder" = "Contoh: 300";
 "onboarding.guests_for_event" = "Tamu %@";
 "onboarding.budget_label" = "Estimasi budget (IDR)";
 "onboarding.budget_placeholder" = "Contoh: 150000000";
-"onboarding.extras_hint" = "Estimasi tamu per acara dan budget bersifat opsional. Ketuk Mulai Merencanakan jika sudah siap.";
+"onboarding.extras_hint" = "Estimasi budget wajib. Estimasi tamu per acara bersifat opsional.";
 
 /* Wedding Detail */
 "wedding_detail.title" = "Detail Pernikahan";
@@ -929,6 +933,8 @@
 "vendor.about" = "Tentang Vendor";
 "vendor.contact" = "Kontak";
 "vendor.packages" = "Paket";
+"vendor.package_search_placeholder" = "Cari paket…";
+"vendor.package_search_empty" = "Paket tidak ditemukan. Coba kata kunci lain.";
 "vendor.show_less" = "Tutup";
 "vendor.show_more" = "Lihat";
 "vendor.no_packages" = "Belum ada paket tersedia.";
@@ -1062,6 +1068,8 @@
 "onboarding.culture_bali" = "Bali";
 "onboarding.culture_modern" = "Modern";
 "onboarding.culture_other" = "Lainnya";
+"onboarding.culture_custom_label" = "Tuliskan budaya / adat";
+"onboarding.culture_custom_placeholder" = "Contoh: Betawi, Bugis, Tionghoa";
 
 /* Wedding detail edit */
 "wedding_edit.title" = "Edit Detail Pernikahan";
@@ -1156,12 +1164,13 @@
 "premium.buy" = "Buka Pro · %@";
 "premium.buy_fallback" = "Buka Wedding Pro";
 "premium.restore" = "Pulihkan Pembelian";
-"premium.footnote" = "Pembelian sekali bayar, terhubung ke Apple ID. Gunakan Pulihkan Pembelian jika sudah pernah membeli di perangkat lain.";
+"premium.footnote" = "Pembelian sekali bayar terhubung ke Apple ID Anda. Jika ganti akun Wedding App, gunakan Pulihkan Pembelian — Pro akan aktif di akun yang sedang login.";
 "premium.product_unavailable" = "Produk Wedding Pro belum tersedia dari App Store. Periksa koneksi, lalu ketuk Muat ulang produk. Jika masih gagal, produk IAP mungkin belum Ready di App Store Connect.";
 "premium.reload_products" = "Muat ulang produk";
 "premium.purchase_pending" = "Pembelian menunggu konfirmasi.";
 "premium.purchase_failed" = "Pembelian gagal. Silakan coba lagi.";
-"premium.restore_empty" = "Tidak ada pembelian Wedding Pro yang ditemukan.";
+"premium.restore_empty_title" = "Pembelian tidak ditemukan";
+"premium.restore_empty" = "Apple ID di perangkat ini belum punya pembelian Wedding Pro. Silakan beli lewat tombol Buka Pro.";
 "premium.unverified_transaction" = "Transaksi tidak dapat diverifikasi.";
 "premium.locked_title" = "Tersedia di Wedding Pro";
 "premium.locked_message" = "Buka sekali bayar untuk memakai fitur ini. Pasangan yang terhubung juga bisa mengakses data yang Anda bagikan.";

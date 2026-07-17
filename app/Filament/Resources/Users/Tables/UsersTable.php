@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use App\Models\User;
+use App\Support\PrivacySettings;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -92,6 +93,30 @@ class UsersTable
                         ? 'Aktif sejak '.($record->premium_activated_at?->format('d M Y H:i') ?? '—')
                         : 'Belum Wedding Pro')
                     ->sortable(),
+                TextColumn::make('partner_user_id')
+                    ->label('Pasangan')
+                    ->state(function (User $record): string {
+                        $partnerId = PrivacySettings::partnerUserId($record);
+
+                        if ($partnerId === null) {
+                            return '—';
+                        }
+
+                        $partner = User::query()->find($partnerId);
+
+                        return $partner?->name ?? "User #{$partnerId}";
+                    })
+                    ->description(function (User $record): ?string {
+                        $partnerId = PrivacySettings::partnerUserId($record);
+
+                        if ($partnerId === null) {
+                            return null;
+                        }
+
+                        return User::query()->whereKey($partnerId)->value('email');
+                    })
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('login_provider')
                     ->label('Login')
                     ->state(function (User $record): string {

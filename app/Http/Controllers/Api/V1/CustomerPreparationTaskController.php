@@ -7,6 +7,7 @@ use App\Http\Resources\V1\CustomerPreparationTaskResource;
 use App\Models\CustomerPreparationSubTask;
 use App\Models\CustomerPreparationTask;
 use App\Services\CustomerPreparationSummaryCalculator;
+use App\Services\DefaultWeddingChecklistProvisioner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -27,8 +28,24 @@ class CustomerPreparationTaskController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        $user = $request->user();
+
+        // Heal accounts that have events but no checklist rows (delete/recreate edge cases).
+        if (
+            $user->weddingEvents()->exists()
+            && ! CustomerPreparationTask::query()->where('user_id', $user->id)->exists()
+        ) {
+            app(DefaultWeddingChecklistProvisioner::class)->provisionFor($user);
+        } else {
+            foreach ($user->weddingEvents()->withCount('preparationTasks')->get() as $event) {
+                if ((int) $event->preparation_tasks_count === 0) {
+                    app(DefaultWeddingChecklistProvisioner::class)->provisionForEvent($event);
+                }
+            }
+        }
+
         $query = CustomerPreparationTask::query()
-            ->where('user_id', $request->user()->id)
+            ->where('user_id', $user->id)
             ->with(['subTasks', 'attachments']);
 
         if ($request->filled('wedding_event_id')) {

@@ -46,7 +46,68 @@ class UserResourceFormTest extends TestCase
             ->assertSee('Pengantin Contoh')
             ->assertSee('Login Sosial')
             ->assertSee('Wedding Pro')
+            ->assertSee('Pasangan Terhubung')
             ->assertSee('Biarkan kosong untuk mempertahankan password saat ini.');
+    }
+
+    public function test_super_admin_can_link_and_unlink_partner_from_edit_form(): void
+    {
+        $admin = $this->actingAsSuperAdmin();
+        $user = User::factory()->create([
+            'email' => 'owner-partner@example.com',
+        ]);
+        $partner = User::factory()->create([
+            'name' => 'Pasangan Contoh',
+            'email' => 'pasangan-contoh@example.com',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['record' => $user->getRouteKey()])
+            ->assertSee('Pasangan Terhubung')
+            ->fillForm([
+                'partner_user_id' => $partner->id,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $user->refresh();
+        $this->assertSame($partner->id, $user->privacy_settings['partner_user_id'] ?? null);
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['record' => $user->getRouteKey()])
+            ->assertFormSet([
+                'partner_user_id' => $partner->id,
+            ])
+            ->fillForm([
+                'partner_user_id' => null,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $user->refresh();
+        $this->assertNull($user->privacy_settings['partner_user_id'] ?? null);
+    }
+
+    public function test_users_index_shows_linked_partner_column(): void
+    {
+        $admin = $this->actingAsSuperAdmin();
+        $partner = User::factory()->create([
+            'name' => 'Partner List Check',
+            'email' => 'partnerlist@example.com',
+        ]);
+        User::factory()->create([
+            'name' => 'Owner List Check',
+            'email' => 'ownerlist@example.com',
+            'privacy_settings' => [
+                'partner_user_id' => $partner->id,
+            ],
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->assertSuccessful()
+            ->assertSee('Pasangan')
+            ->assertSee('Partner List Check');
     }
 
     public function test_super_admin_can_activate_wedding_pro_from_edit_form(): void

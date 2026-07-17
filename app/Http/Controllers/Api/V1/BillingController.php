@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\UserResource;
 use App\Models\User;
 use App\Services\Billing\AppleTransactionVerifier;
+use App\Services\Billing\WeddingProEntitlementService;
 use App\Services\Privacy\SharedPremiumAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class BillingController extends Controller
 {
     public function __construct(
         private AppleTransactionVerifier $appleTransactionVerifier,
+        private WeddingProEntitlementService $weddingProEntitlementService,
         private SharedPremiumAccess $sharedPremiumAccess,
     ) {}
 
@@ -65,34 +67,21 @@ class BillingController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $owner = User::query()
-            ->where('apple_original_transaction_id', $verified['original_transaction_id'])
-            ->first();
-
-        if ($owner && $owner->id !== $user->id) {
+        try {
+            $result = $this->weddingProEntitlementService->activateFromVerifiedAppleTransaction(
+                $user,
+                $verified,
+                $data['signed_transaction'],
+            );
+        } catch (InvalidArgumentException $exception) {
             throw ValidationException::withMessages([
-                'original_transaction_id' => ['Pembelian ini sudah terhubung ke akun lain.'],
+                'original_transaction_id' => [$exception->getMessage()],
             ]);
         }
-
-        if ($user->isPremium()
-            && $user->apple_original_transaction_id === $verified['original_transaction_id']) {
-            return response()->json([
-                'message' => 'Wedding Pro sudah aktif.',
-                'user' => new UserResource($user),
-            ]);
-        }
-
-        $user->forceFill([
-            'is_premium' => true,
-            'premium_product_id' => $verified['product_id'],
-            'premium_activated_at' => $user->premium_activated_at ?? now(),
-            'apple_original_transaction_id' => $verified['original_transaction_id'],
-        ])->save();
 
         return response()->json([
-            'message' => 'Wedding Pro berhasil diaktifkan.',
-            'user' => new UserResource($user->fresh()),
+            'message' => $result['message'],
+            'user' => new UserResource($result['user']),
         ]);
     }
 }

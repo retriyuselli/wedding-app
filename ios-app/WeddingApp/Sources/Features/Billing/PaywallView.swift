@@ -7,6 +7,11 @@ struct PaywallView: View {
 
     var onUnlocked: (() -> Void)?
 
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var alertOffersPurchase = false
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -18,7 +23,8 @@ struct PaywallView: View {
 
                         benefitsCard
 
-                        if let errorMessage = premium.errorMessage {
+                        if let errorMessage = premium.errorMessage,
+                           errorMessage != L10n.Premium.restoreEmpty {
                             Text(errorMessage)
                                 .font(AppFont.regular(13))
                                 .foregroundStyle(.red)
@@ -45,6 +51,18 @@ struct PaywallView: View {
             }
             .task {
                 await premium.refreshProducts()
+            }
+            .alert(alertTitle, isPresented: $showAlert) {
+                if alertOffersPurchase {
+                    Button(L10n.Premium.buyFallback) {
+                        Task { await runPurchase() }
+                    }
+                    Button(L10n.Common.close, role: .cancel) {}
+                } else {
+                    Button(L10n.Common.ok, role: .cancel) {}
+                }
+            } message: {
+                Text(alertMessage)
             }
         }
     }
@@ -119,13 +137,7 @@ struct PaywallView: View {
 
     private var purchaseButton: some View {
         Button {
-            Task {
-                let ok = await premium.purchasePro(session: session)
-                if ok {
-                    onUnlocked?()
-                    dismiss()
-                }
-            }
+            Task { await runPurchase() }
         } label: {
             HStack {
                 if premium.purchaseInFlight {
@@ -154,13 +166,7 @@ struct PaywallView: View {
 
     private var restoreButton: some View {
         Button {
-            Task {
-                let ok = await premium.restorePurchases(session: session)
-                if ok {
-                    onUnlocked?()
-                    dismiss()
-                }
-            }
+            Task { await runRestore() }
         } label: {
             Text(L10n.Premium.restore)
                 .font(AppFont.medium(14))
@@ -185,6 +191,44 @@ struct PaywallView: View {
             return L10n.Premium.buy(product.displayPrice)
         }
         return L10n.Premium.buyFallback
+    }
+
+    private func runPurchase() async {
+        let ok = await premium.purchasePro(session: session)
+        if ok {
+            onUnlocked?()
+            dismiss()
+            return
+        }
+        presentActionAlertIfNeeded()
+    }
+
+    private func runRestore() async {
+        let ok = await premium.restorePurchases(session: session)
+        if ok {
+            onUnlocked?()
+            dismiss()
+            return
+        }
+        presentActionAlertIfNeeded()
+    }
+
+    private func presentActionAlertIfNeeded() {
+        guard let message = premium.errorMessage, !message.isEmpty else { return }
+
+        if message == L10n.Premium.restoreEmpty {
+            alertTitle = L10n.Premium.restoreEmptyTitle
+            alertMessage = message
+            alertOffersPurchase = true
+            premium.errorMessage = nil
+            showAlert = true
+            return
+        }
+
+        alertTitle = L10n.Common.warning
+        alertMessage = message
+        alertOffersPurchase = false
+        showAlert = true
     }
 }
 

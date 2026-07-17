@@ -55,14 +55,18 @@ struct OnboardingView: View {
     @State private var eventLocations: [OnboardingEventKind: String] = [:]
     @State private var eventGuests: [OnboardingEventKind: String] = [:]
     @State private var culture = ""
+    @State private var customCulture = ""
     @State private var estimatedBudget = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var appear = false
     @FocusState private var focusedField: Field?
 
-    private var cultures: [String] { L10n.Onboarding.cultureOptions }
     private let totalSteps = 5
+
+    private var resolvedCulture: String {
+        CultureSelection.resolvedValue(selected: culture, custom: customCulture)
+    }
 
     private var canContinue: Bool {
         switch step {
@@ -76,7 +80,11 @@ struct OnboardingView: View {
                 !(eventLocations[kind] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             }
         case 3:
-            return !culture.isEmpty
+            return CultureSelection.isValid(selected: culture, custom: customCulture)
+        case 4:
+            let budgetDigits = estimatedBudget.filter(\.isNumber)
+            guard let value = Double(budgetDigits) else { return false }
+            return value > 0
         default:
             return true
         }
@@ -518,43 +526,11 @@ struct OnboardingView: View {
             subtitle: L10n.Onboarding.cultureSubtitle,
             titleUsesSerif: false
         ) {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                ForEach(cultures, id: \.self) { item in
-                    let selected = culture == item
-                    Button {
-                        dismissKeyboard()
-                        culture = item
-                    } label: {
-                        Text(item)
-                            .font(AppFont.semibold(15))
-                            .foregroundStyle(selected ? Color.white : AppTheme.titleOnGlass)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background {
-                                if selected {
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [AppTheme.sage, AppTheme.brandGradientEnd],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                } else {
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .fill(AppTheme.nestedGlassFill)
-                                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                                }
-                            }
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .stroke(selected ? Color.white.opacity(0.2) : AppTheme.iconChipStroke, lineWidth: 1)
-                            }
-                            .shadow(color: AppTheme.sageDark.opacity(selected ? 0.14 : 0.05), radius: selected ? 10 : 6, y: 3)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
+            CultureChipGrid(
+                selected: $culture,
+                customText: $customCulture,
+                onSelect: { _ in dismissKeyboard() }
+            )
         }
     }
 
@@ -747,7 +723,7 @@ struct OnboardingView: View {
                 groomName = groom
             }
             if let budaya = info.budaya?.trimmingCharacters(in: .whitespacesAndNewlines), !budaya.isEmpty {
-                culture = budaya
+                CultureSelection.applyLoaded(budaya, selected: &culture, custom: &customCulture)
             }
 
             var loadedKinds: Set<OnboardingEventKind> = []
@@ -803,7 +779,7 @@ struct OnboardingView: View {
                 json: [
                     "bride_name": bride,
                     "groom_name": groom,
-                    "budaya": culture,
+                    "budaya": resolvedCulture,
                 ]
             )
 

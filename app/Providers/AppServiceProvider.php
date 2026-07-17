@@ -12,6 +12,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +29,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('production')
+            && config('billing.apple_jws_verification_bypass')) {
+            throw new RuntimeException(
+                'APPLE_JWS_VERIFICATION_BYPASS must remain false in production.'
+            );
+        }
+
         User::observe(UserObserver::class);
         WeddingEvent::observe(WeddingEventObserver::class);
 

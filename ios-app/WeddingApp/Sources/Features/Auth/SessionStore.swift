@@ -201,7 +201,7 @@ final class SessionStore: ObservableObject {
         isLoading = false
         authRevision += 1
         BudgetCategoriesStore.shared.reset()
-        PremiumStore.shared.clearSharedPremiumAccess()
+        PremiumStore.shared.resetAfterAccountDeletion()
     }
 
     func clearSessionAfterAccountDeletion() {

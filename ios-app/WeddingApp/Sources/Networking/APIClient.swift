@@ -271,7 +271,11 @@ final class APIClient {
 
         if let errorResponse = try? decoder.decode(APIErrorResponse.self, from: data) {
             let detail = errorResponse.errors?.values.first?.first
-            return .server(detail ?? errorResponse.message)
+            let message = detail ?? errorResponse.message
+            if statusCode == 403, errorResponse.code == "premium_required" {
+                return .premiumRequired(message)
+            }
+            return .server(message)
         }
 
         let body = String(data: data, encoding: .utf8)?

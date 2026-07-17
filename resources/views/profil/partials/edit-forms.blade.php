@@ -74,17 +74,88 @@
                    placeholder="Nama lengkap"
                    class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none ring-sage-300 focus:ring-2">
         </div>
-        <div>
+        <div id="budaya-picker" class="space-y-3" data-initial="{{ old('budaya', $info?->budaya) }}">
             <label class="mb-1.5 block text-sm font-medium text-gray-700">Budaya / Adat</label>
-            <input name="budaya" type="text" value="{{ old('budaya', $info?->budaya) }}"
-                   placeholder="Misal: Jawa, Sunda, Minang"
-                   class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none ring-sage-300 focus:ring-2">
+            <div class="grid grid-cols-2 gap-2" id="budaya-options">
+                @foreach (['Jawa', 'Sunda', 'Batak', 'Melayu', 'Minang', 'Bali', 'Modern', 'Lainnya'] as $option)
+                    <button type="button"
+                            data-option="{{ $option }}"
+                            class="budaya-option rounded-xl border px-3 py-2.5 text-sm font-medium transition border-gray-200 bg-white text-gray-700 hover:bg-gray-50">
+                        {{ $option }}
+                    </button>
+                @endforeach
+            </div>
+            <div id="budaya-custom-wrap" class="hidden space-y-1.5">
+                <label class="block text-sm font-medium text-gray-700">Tuliskan budaya / adat</label>
+                <input id="budaya-custom" type="text"
+                       placeholder="Contoh: Betawi, Bugis, Tionghoa"
+                       class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none ring-sage-300 focus:ring-2">
+            </div>
+            <input type="hidden" name="budaya" id="budaya-value" value="{{ old('budaya', $info?->budaya) }}">
         </div>
         <button type="submit" class="inline-flex h-11 items-center justify-center rounded-xl bg-sage-600 px-5 text-sm font-medium text-white hover:bg-sage-700">
             Simpan Detail Pernikahan
         </button>
     </form>
 </div>
+
+@once
+<script>
+(function () {
+    const root = document.getElementById('budaya-picker');
+    if (!root) return;
+
+    const presets = ['Jawa', 'Sunda', 'Batak', 'Melayu', 'Minang', 'Bali', 'Modern'];
+    const other = 'Lainnya';
+    const initial = (root.dataset.initial || '').trim();
+    const buttons = Array.from(root.querySelectorAll('.budaya-option'));
+    const customWrap = document.getElementById('budaya-custom-wrap');
+    const customInput = document.getElementById('budaya-custom');
+    const hidden = document.getElementById('budaya-value');
+
+    let selected = '';
+    if (initial === '') {
+        selected = '';
+    } else if (presets.includes(initial)) {
+        selected = initial;
+    } else {
+        selected = other;
+        customInput.value = initial;
+    }
+
+    function sync() {
+        buttons.forEach((btn) => {
+            const active = btn.dataset.option === selected;
+            btn.classList.toggle('bg-sage-600', active);
+            btn.classList.toggle('text-white', active);
+            btn.classList.toggle('border-sage-600', active);
+            btn.classList.toggle('bg-white', !active);
+            btn.classList.toggle('text-gray-700', !active);
+            btn.classList.toggle('border-gray-200', !active);
+        });
+        const isOther = selected === other;
+        customWrap.classList.toggle('hidden', !isOther);
+        if (isOther) {
+            hidden.value = (customInput.value || '').trim();
+        } else {
+            hidden.value = selected;
+        }
+    }
+
+    buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            selected = btn.dataset.option;
+            if (selected !== other) customInput.value = '';
+            sync();
+            if (selected === other) customInput.focus();
+        });
+    });
+
+    customInput.addEventListener('input', sync);
+    sync();
+})();
+</script>
+@endonce
 
 <div id="security" class="dashboard-card scroll-mt-24 overflow-hidden">
     <div class="border-b border-gray-100 px-5 py-4">

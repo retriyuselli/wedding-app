@@ -1,10 +1,28 @@
 import SwiftUI
 
 struct CoupleAvatarImage: View {
-    var width: CGFloat = 168
-    var height: CGFloat = 200
+    var photoURL: URL? = nil
+    var width: CGFloat = 118
+    var height: CGFloat = 156
     var showsFloralBackdrop: Bool = false
-    var cornerRadius: CGFloat = 24
+    var cornerRadius: CGFloat = 0
+
+    private var portraitShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: portraitCornerRadius, style: .continuous)
+    }
+
+    private var portraitCornerRadius: CGFloat {
+        if cornerRadius > 0 { return cornerRadius }
+        return min(width, height) * 0.42
+    }
+
+    private var portraitWidth: CGFloat {
+        min(width * 0.94, 124)
+    }
+
+    private var portraitHeight: CGFloat {
+        min(height * 0.94, 164)
+    }
 
     var body: some View {
         ZStack {
@@ -36,25 +54,102 @@ struct CoupleAvatarImage: View {
                     .allowsHitTesting(false)
             }
 
-            Image("CouplePortrait")
-                .resizable()
-                .scaledToFill()
-                .frame(width: width, height: height, alignment: .center)
-                .clipped()
-                .clipShape(photoShape)
-                .shadow(color: AppTheme.sageDark.opacity(0.18), radius: 18, y: 10)
-                .shadow(color: AppTheme.gold.opacity(0.10), radius: 8, y: 4)
+            if let photoURL {
+                couplePhoto(url: photoURL)
+            } else {
+                framedPortrait { ringsPlaceholderContent }
+                    .accessibilityHidden(true)
+            }
         }
         .frame(width: width, height: height, alignment: .center)
     }
 
-    private var photoShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            topLeadingRadius: cornerRadius * 0.55,
-            bottomLeadingRadius: cornerRadius * 0.55,
-            bottomTrailingRadius: cornerRadius,
-            topTrailingRadius: cornerRadius,
-            style: .continuous
-        )
+    private func couplePhoto(url: URL) -> some View {
+        framedPortrait {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    ringsPlaceholderContent
+                case .empty:
+                    ZStack {
+                        portraitShape.fill(AppTheme.iconChipFill)
+                        ProgressView()
+                            .tint(AppTheme.sageDark)
+                    }
+                @unknown default:
+                    ringsPlaceholderContent
+                }
+            }
+        }
+        .accessibilityLabel(L10n.More.couple)
+    }
+
+    private func framedPortrait<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .frame(width: portraitWidth, height: portraitHeight)
+            .clipShape(portraitShape)
+            .overlay {
+                // Soft edge vignette — keeps bright photos quieter in the card.
+                portraitShape
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                .clear,
+                                .clear,
+                                AppTheme.sageDark.opacity(0.12),
+                            ],
+                            center: .center,
+                            startRadius: portraitWidth * 0.30,
+                            endRadius: portraitHeight * 0.74
+                        )
+                    )
+                    .allowsHitTesting(false)
+            }
+            .overlay {
+                portraitShape
+                    .stroke(AppTheme.cream.opacity(0.95), lineWidth: 2.5)
+                    .padding(2.5)
+            }
+            .overlay {
+                portraitShape
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                AppTheme.gold.opacity(0.78),
+                                AppTheme.sage.opacity(0.42),
+                                AppTheme.gold.opacity(0.62),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.6
+                    )
+            }
+            .shadow(color: AppTheme.sageDark.opacity(0.16), radius: 16, y: 10)
+            .shadow(color: AppTheme.gold.opacity(0.10), radius: 8, y: 4)
+    }
+
+    private var ringsPlaceholderContent: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    AppTheme.cream.opacity(0.95),
+                    AppTheme.lightSage.opacity(0.55),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            WeddingRingAnimation(
+                ringsApart: false,
+                glowActive: true,
+                shimmer: true
+            )
+            .frame(width: portraitWidth * 0.78, height: portraitHeight * 0.48)
+        }
     }
 }

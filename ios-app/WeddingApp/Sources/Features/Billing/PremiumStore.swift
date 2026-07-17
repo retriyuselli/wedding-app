@@ -37,8 +37,25 @@ final class PremiumStore: ObservableObject {
     }
 
     func isPremium(user: User?) -> Bool {
-        if user?.isPremium == true { return true }
-        return localEntitled
+        // Server flag is the source of truth for feature access.
+        // Local StoreKit entitlement alone must not unlock Pro — Non-Consumable
+        // purchases survive account deletion and would wrongly show "Aktif"
+        // on a newly registered free account.
+        user?.isPremium == true
+    }
+
+    /// True when this Apple ID owns the Non-Consumable on-device (for Restore UX).
+    var hasLocalStoreKitEntitlement: Bool { localEntitled }
+
+    /// Call when the API returns `premium_required`.
+    func markServerEntitlementMissing() {
+        // no-op for unlock path; kept for call sites / future server sync hooks
+    }
+
+    func resetAfterAccountDeletion() {
+        localEntitled = false
+        sharedPremiumAccess = []
+        errorMessage = nil
     }
 
     func refreshProducts() async {
@@ -87,6 +104,19 @@ final class PremiumStore: ObservableObject {
     @discardableResult
     func purchasePro(session: SessionStore) async -> Bool {
         do {
+            await refreshLocalEntitlements()
+            if localEntitled {
+                let restored = await restorePurchases(session: session)
+                if restored {
+                    return true
+                }
+                // Restore found a StoreKit entitlement but server sync failed → keep that error.
+                if errorMessage != nil, errorMessage != L10n.Premium.restoreEmpty {
+                    return false
+                }
+                // Stale local flag / empty entitlements → continue with a real purchase attempt.
+            }
+
             if proProduct == nil {
                 await refreshProducts()
             }
@@ -136,12 +166,17 @@ final class PremiumStore: ObservableObject {
 
         do {
             try await AppStore.sync()
+            var sawProEntitlement = false
             var restored = false
+            var lastSyncError: String?
+
             for await result in Transaction.currentEntitlements {
                 guard case .verified(let transaction) = result,
                       BillingProduct.allProIds.contains(transaction.productID) else {
                     continue
                 }
+
+                sawProEntitlement = true
                 if await syncToServer(
                     productId: transaction.productID,
                     transactionId: String(transaction.id),
@@ -150,13 +185,26 @@ final class PremiumStore: ObservableObject {
                     session: session
                 ) {
                     restored = true
+                } else {
+                    lastSyncError = errorMessage
                 }
             }
+
             await refreshLocalEntitlements()
-            if !restored {
-                errorMessage = L10n.Premium.restoreEmpty
+
+            if restored {
+                errorMessage = nil
+                return true
             }
-            return restored
+
+            if sawProEntitlement {
+                // Never replace a real API/sync error with "no purchase found".
+                errorMessage = lastSyncError ?? L10n.Premium.purchaseFailed
+                return false
+            }
+
+            errorMessage = L10n.Premium.restoreEmpty
+            return false
         } catch {
             errorMessage = error.localizedDescription
             return false

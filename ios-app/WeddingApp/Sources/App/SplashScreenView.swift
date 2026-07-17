@@ -110,6 +110,10 @@ struct WeddingRingAnimation: View {
     var ringsApart: Bool
     var glowActive: Bool
     var shimmer: Bool
+    /// Soft looping bloom behind the rings (option 1).
+    var softPulse: Bool = true
+
+    @State private var pulseExpanded = false
 
     private let ringSize: CGFloat = 54
     private let lineWidth: CGFloat = 4.2
@@ -122,15 +126,33 @@ struct WeddingRingAnimation: View {
         ringsApart ? CGSize(width: 34, height: -8) : CGSize(width: 14, height: -3)
     }
 
+    private var bloomScale: CGFloat {
+        if ringsApart {
+            return 0.92
+        }
+        if softPulse {
+            return pulseExpanded ? 1.16 : 0.96
+        }
+        return glowActive ? 1.10 : 0.92
+    }
+
+    private var bloomOpacity: Double {
+        if ringsApart { return 0.45 }
+        if softPulse {
+            return pulseExpanded ? 1.0 : 0.72
+        }
+        return 0.95
+    }
+
     var body: some View {
         ZStack {
-            // Bloom behind the join.
+            // Bloom behind the join — soft pulse when interlocked.
             Circle()
                 .fill(
                     RadialGradient(
                         colors: [
-                            AppTheme.gold.opacity(glowActive ? 0.30 : 0.16),
-                            AppTheme.sage.opacity(glowActive ? 0.16 : 0.08),
+                            AppTheme.gold.opacity(glowActive ? 0.34 : 0.18),
+                            AppTheme.sage.opacity(glowActive ? 0.18 : 0.09),
                             .clear,
                         ],
                         center: .center,
@@ -139,8 +161,8 @@ struct WeddingRingAnimation: View {
                     )
                 )
                 .frame(width: 118, height: 118)
-                .scaleEffect(glowActive ? 1.10 : 0.92)
-                .opacity(ringsApart ? 0.45 : 0.95)
+                .scaleEffect(bloomScale)
+                .opacity(bloomOpacity)
 
             // Left ring — sage
             ring(color: AppTheme.sageDark, highlight: AppTheme.sage)
@@ -158,6 +180,12 @@ struct WeddingRingAnimation: View {
                     .offset(leftOffset)
                     .rotationEffect(.degrees(glowActive ? 5 : -4))
                     .transition(.opacity)
+            }
+        }
+        .onAppear {
+            guard softPulse, !pulseExpanded else { return }
+            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
+                pulseExpanded = true
             }
         }
     }
@@ -207,7 +235,11 @@ struct WeddingRingAnimation: View {
             }
         }
         .frame(width: ringSize, height: ringSize)
-        .shadow(color: highlight.opacity(0.30), radius: glowActive ? 7 : 4, y: 1)
+        .shadow(
+            color: highlight.opacity(softPulse && pulseExpanded ? 0.38 : 0.30),
+            radius: softPulse && pulseExpanded ? 9 : (glowActive ? 7 : 4),
+            y: 1
+        )
     }
 }
 

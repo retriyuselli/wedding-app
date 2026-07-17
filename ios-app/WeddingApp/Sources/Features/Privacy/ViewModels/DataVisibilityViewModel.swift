@@ -53,6 +53,7 @@ final class DataVisibilityViewModel: ObservableObject {
         guard let settings else { return }
         isSaving = true
         errorMessage = nil
+        successMessage = nil
         defer { isSaving = false }
 
         let trimmedEmail = partnerEmailDraft.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -79,6 +80,7 @@ final class DataVisibilityViewModel: ObservableObject {
         guard let settings else { return }
         isSaving = true
         errorMessage = nil
+        successMessage = nil
         defer { isSaving = false }
 
         do {

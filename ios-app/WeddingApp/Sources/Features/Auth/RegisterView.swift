@@ -8,6 +8,7 @@ struct RegisterView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var passwordConfirmation = ""
+    @State private var showTerms = false
     @FocusState private var focusedField: AuthFormField?
 
     var body: some View {
@@ -38,21 +39,37 @@ struct RegisterView: View {
                             onRegister: submitRegister,
                             onApple: submitAppleLogin,
                             onGoogle: submitGoogleLogin,
-                            onLogin: { dismiss() }
+                            onLogin: { dismiss() },
+                            onTerms: { showTerms = true }
                         )
                         .frame(minHeight: AuthLoginLayout.formSheetMinimumHeight(for: geometry, extraPadding: 300))
                     }
-                    .padding(.bottom, max(18, geometry.safeAreaInsets.bottom + 8))
+                    .padding(.bottom, max(28, geometry.safeAreaInsets.bottom + 36))
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: geometry.size.height + 72, alignment: .top)
                 }
                 .scrollDismissesKeyboard(.interactively)
+
+                Text(L10n.Auth.copyright)
+                    .font(.system(size: 11, weight: .regular, design: .rounded))
+                    .foregroundStyle(AppTheme.inkMuted(0.45))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 28)
+                    .padding(.bottom, max(10, geometry.safeAreaInsets.bottom + 6))
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .allowsHitTesting(false)
             }
             .ignoresSafeArea(.container, edges: [.top, .bottom])
         }
         .background(LoginPalette.background)
         .toolbar(.hidden, for: .navigationBar)
         .tint(AppTheme.sageDark)
+        .sheet(isPresented: $showTerms) {
+            NavigationStack {
+                TermsOfServiceView()
+            }
+        }
         .onAppear {
             session.resetTransientUIState()
         }
@@ -137,35 +154,13 @@ private struct RegisterFormSheet: View {
     let onApple: () -> Void
     let onGoogle: () -> Void
     let onLogin: () -> Void
+    let onTerms: () -> Void
 
     var body: some View {
         ZStack(alignment: .top) {
             LoginSheetGlassBackground()
 
             VStack(spacing: 0) {
-                LoginBadge(systemImage: "person.badge.plus", overlaySystemImage: nil)
-                    .offset(y: -5)
-
-                HStack(spacing: 8) {
-                    Text(L10n.Auth.createAccount)
-                        .font(.system(size: 26, weight: .semibold, design: .serif))
-                        .foregroundStyle(AppTheme.titleOnGlass)
-
-                    Image(systemName: "heart")
-                        .font(.system(size: 18, weight: .light))
-                        .foregroundStyle(AppTheme.gold)
-                        .offset(y: 2)
-                }
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
-
-                Text(L10n.Auth.tagline)
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(LoginPalette.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 5)
-                    .padding(.bottom, 12)
-
                 VStack(spacing: 9) {
                     LoginInputField(
                         icon: "person",
@@ -267,10 +262,29 @@ private struct RegisterFormSheet: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.top, 18)
+
+                Button(action: onTerms) {
+                    (
+                        Text(L10n.Auth.termsPrefix)
+                            .foregroundStyle(LoginPalette.textSecondary)
+                        + Text(L10n.Auth.termsLink)
+                            .foregroundStyle(AppTheme.sageMuted(0.95))
+                            .underline()
+                            .fontWeight(.semibold)
+                        + Text(L10n.Auth.termsSuffix)
+                            .foregroundStyle(LoginPalette.textSecondary)
+                    )
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(L10n.Auth.termsPrefix)\(L10n.Auth.termsLink)\(L10n.Auth.termsSuffix)")
+                .padding(.top, 16)
                 .padding(.bottom, 28)
             }
             .padding(.horizontal, 34)
-            .padding(.top, 18)
+            .padding(.top, 36)
         }
         .frame(maxWidth: .infinity)
     }

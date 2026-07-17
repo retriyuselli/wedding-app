@@ -219,6 +219,14 @@ private struct HomeDashboardView: View {
         return [bride, groom].filter { !$0.isEmpty }.joined(separator: " & ")
     }
 
+    private var couplePhotoURL: URL? {
+        guard let raw = info.couplePhotoUrl?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !raw.isEmpty else {
+            return nil
+        }
+        return URL(string: raw)
+    }
+
     private var primaryLocation: String {
         events.compactMap(\.lokasiAcara).first { !$0.isEmpty } ?? L10n.Dashboard.defaultVenue
     }
@@ -392,63 +400,68 @@ private struct HomeDashboardView: View {
     }
 
     private var weddingSummaryCard: some View {
-        let photoLift: CGFloat = 36
-        let photoWidth: CGFloat = 168
-        let photoHeight: CGFloat = 222
+        let photoWidth: CGFloat = 122
+        let photoHeight: CGFloat = 162
 
-        return VStack(alignment: .leading, spacing: 18) {
-            HStack(alignment: .top, spacing: 14) {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(coupleName)
-                        .font(.system(size: 24, weight: .semibold, design: .serif))
-                        .foregroundStyle(AppTheme.sageDark)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+        return VStack(alignment: .leading, spacing: 16) {
+            CoupleAvatarImage(
+                photoURL: couplePhotoURL,
+                width: photoWidth,
+                height: photoHeight,
+                showsFloralBackdrop: false
+            )
+            .frame(width: photoWidth, height: photoHeight)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 12)
 
-                    if !summaryEvents.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            ForEach(summaryEvents) { event in
-                                HStack(alignment: .top, spacing: 10) {
-                                    Image(systemName: eventIcon(for: event.jenisAcara))
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(AppTheme.gold)
-                                        .frame(width: 18, alignment: .center)
-                                        .padding(.top, 2)
+            Text(coupleName)
+                .font(.system(size: 24, weight: .semibold, design: .serif))
+                .foregroundStyle(AppTheme.sageDark)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity, alignment: .center)
 
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(event.jenisLabel ?? WeddingEvent.label(for: event.jenisAcara))
-                                            .font(AppFont.semibold(13))
-                                            .foregroundStyle(AppTheme.sageDark)
-                                            .lineLimit(1)
+            if !summaryEvents.isEmpty {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: 12, alignment: .topLeading),
+                        GridItem(.flexible(), spacing: 12, alignment: .topLeading),
+                    ],
+                    alignment: .leading,
+                    spacing: 14
+                ) {
+                    ForEach(summaryEvents) { event in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: eventIcon(for: event.jenisAcara))
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(AppTheme.gold)
+                                .frame(width: 16, alignment: .center)
+                                .padding(.top, 2)
 
-                                        Text(summaryEventDateText(for: event))
-                                            .font(AppFont.regular(12))
-                                            .foregroundStyle(AppTheme.ink.opacity(0.48))
-                                            .lineLimit(1)
-                                    }
-                                }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(event.jenisLabel ?? WeddingEvent.label(for: event.jenisAcara))
+                                    .font(AppFont.semibold(13))
+                                    .foregroundStyle(AppTheme.sageDark)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+
+                                Text(summaryEventDateText(for: event))
+                                    .font(AppFont.regular(11))
+                                    .foregroundStyle(AppTheme.ink.opacity(0.48))
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                    } else {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Label(weddingDate.map { DateFormatter.displayLocaleDate($0) } ?? L10n.More.dateNotSet, systemImage: "calendar")
-                            Label(primaryLocation, systemImage: "mappin")
-                        }
-                        .font(AppFont.medium(13))
-                        .foregroundStyle(AppTheme.ink.opacity(0.52))
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .offset(y: -2)
-
-                CoupleAvatarImage(
-                    width: photoWidth,
-                    height: photoHeight,
-                    showsFloralBackdrop: false,
-                    cornerRadius: 28
-                )
-                .frame(width: photoWidth, height: photoHeight)
-                .offset(y: -photoLift + 18)
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(weddingDate.map { DateFormatter.displayLocaleDate($0) } ?? L10n.More.dateNotSet, systemImage: "calendar")
+                    Label(primaryLocation, systemImage: "mappin")
+                }
+                .font(AppFont.medium(13))
+                .foregroundStyle(AppTheme.ink.opacity(0.52))
             }
 
             WeddingCountdownBadge(
@@ -457,9 +470,8 @@ private struct HomeDashboardView: View {
                 milestones: countdownMilestones
             )
         }
-        .padding(.leading, 20)
-        .padding(.trailing, 16)
-        .padding(.top, 18)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
         .padding(.bottom, 20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
@@ -499,7 +511,6 @@ private struct HomeDashboardView: View {
         }
         .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 24, y: 12)
         .shadow(color: AppTheme.gold.opacity(0.06), radius: 8, y: 3)
-        .padding(.top, photoLift)
     }
 
     private var weddingProgressCard: some View {

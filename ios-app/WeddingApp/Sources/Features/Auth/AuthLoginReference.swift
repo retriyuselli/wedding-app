@@ -94,17 +94,6 @@ struct LoginHeroSection: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
-                Image("CouplePortrait")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(
-                        width: geometry.size.width * 0.64,
-                        height: geometry.size.height + 150,
-                        alignment: .bottomTrailing
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-                    .offset(x: 58, y: 34)
-
                 LinearGradient(
                     colors: [
                         Color.white.opacity(0.70),
@@ -117,17 +106,16 @@ struct LoginHeroSection: View {
 
                 RadialGradient(
                     colors: [Color.white.opacity(0.92), Color.white.opacity(0.00)],
-                    center: .topTrailing,
+                    center: .top,
                     startRadius: 12,
                     endRadius: 260
                 )
                 .opacity(0.72)
 
                 LoginHeroBrand()
-                    .frame(maxWidth: geometry.size.width * 0.52, alignment: .leading)
-                    .padding(.leading, 26)
-                    .padding(.top, topInset + 88)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(.horizontal, 26)
+                    .padding(.top, topInset + 56)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .zIndex(2)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
@@ -137,41 +125,32 @@ struct LoginHeroSection: View {
 
 struct LoginHeroBrand: View {
     var body: some View {
-        VStack(alignment: .center, spacing: 17) {
-            LoginHeartLogo()
-                .frame(width: 54, height: 54)
+        VStack(spacing: 14) {
+            WeddingRingAnimation(
+                ringsApart: false,
+                glowActive: true,
+                shimmer: true
+            )
+            .frame(width: 120, height: 96)
+            .accessibilityHidden(true)
 
-            Text(L10n.Auth.appName)
-                .font(.system(size: 26, weight: .semibold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
+            VStack(spacing: 8) {
+                HStack(spacing: 7) {
+                    Text(L10n.Auth.brandWedding)
+                        .foregroundStyle(AppTheme.titleOnGlass)
+                    Text(L10n.Auth.brandApp)
+                        .foregroundStyle(AppTheme.gold)
+                }
+                .font(.system(size: 34, weight: .bold, design: .serif))
+                .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 8, y: 2)
 
-            HStack(spacing: 9) {
-                Rectangle()
-                    .fill(LoginPalette.gold.opacity(0.72))
-                    .frame(width: 40, height: 1.1)
-
-                Image(systemName: "heart.fill")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(LoginPalette.gold.opacity(0.82))
-
-                Rectangle()
-                    .fill(LoginPalette.gold.opacity(0.72))
-                    .frame(width: 40, height: 1.1)
+                Text(L10n.Dashboard.planTogether)
+                    .font(.system(size: 14, weight: .medium, design: .serif))
+                    .foregroundStyle(AppTheme.inkMuted(0.75))
+                    .multilineTextAlignment(.center)
             }
-
-            Text(L10n.Auth.heroTagline)
-                .font(.system(size: 12, weight: .regular, design: .rounded))
-                .foregroundStyle(LoginPalette.textSecondary)
-                .multilineTextAlignment(.center)
-                .lineSpacing(5)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Image(systemName: "leaf")
-                .font(.system(size: 15, weight: .light))
-                .foregroundStyle(LoginPalette.green.opacity(0.78))
         }
+        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
     }
 }

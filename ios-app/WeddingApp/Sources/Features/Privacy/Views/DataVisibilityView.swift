@@ -3,9 +3,11 @@ import SwiftUI
 struct DataVisibilityView: View {
     @StateObject private var viewModel = DataVisibilityViewModel()
     @State private var showSuccess = false
+    @State private var showError = false
+    @FocusState private var isPartnerEmailFocused: Bool
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack {
             LuxuryWeddingBackground()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
@@ -80,37 +82,58 @@ struct DataVisibilityView: View {
 
                         partnerSection
 
-                        Color.clear.frame(height: 80)
+                        Color.clear.frame(height: 24)
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
+                .padding(.bottom, 12)
             }
-
-            Button {
-                Task {
-                    await viewModel.save()
-                    if viewModel.successMessage != nil { showSuccess = true }
-                }
-            } label: {
-                Text(viewModel.isSaving ? L10n.Privacy.saving : L10n.Common.save)
-                    .font(AppFont.medium(15))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(AppTheme.quoteGradientMid, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .foregroundStyle(.white)
-            }
-            .disabled(viewModel.isSaving || viewModel.settings == nil)
-            .padding(20)
+            .scrollDismissesKeyboard(.interactively)
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .bottom) { saveBar }
         .task { await viewModel.load() }
         .alert(L10n.Common.success, isPresented: $showSuccess) {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
             Text(viewModel.successMessage ?? "")
         }
+        .alert(L10n.Common.warning, isPresented: $showError) {
+            Button(L10n.Common.ok, role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+    }
+
+    private var saveBar: some View {
+        Button {
+            isPartnerEmailFocused = false
+            Task {
+                await viewModel.save()
+                if viewModel.successMessage != nil {
+                    showSuccess = true
+                } else if viewModel.errorMessage != nil {
+                    showError = true
+                }
+            }
+        } label: {
+            Text(viewModel.isSaving ? L10n.Privacy.saving : L10n.Common.save)
+                .font(AppFont.medium(15))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(AppTheme.quoteGradientMid, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .foregroundStyle(.white)
+        }
+        .disabled(viewModel.isSaving || viewModel.settings == nil)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 12)
+        .background(
+            AppTheme.background.opacity(0.92)
+                .ignoresSafeArea(edges: .bottom)
+        )
     }
 
     @ViewBuilder
@@ -163,7 +186,11 @@ struct DataVisibilityView: View {
                 Button(L10n.Privacy.unlinkPartner) {
                     Task {
                         await viewModel.unlinkPartner()
-                        if viewModel.successMessage != nil { showSuccess = true }
+                        if viewModel.successMessage != nil {
+                            showSuccess = true
+                        } else if viewModel.errorMessage != nil {
+                            showError = true
+                        }
                     }
                 }
                 .font(AppFont.medium(13))
@@ -181,6 +208,7 @@ struct DataVisibilityView: View {
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .focused($isPartnerEmailFocused)
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.titleOnGlass)
                 .padding(12)

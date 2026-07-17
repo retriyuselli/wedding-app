@@ -245,6 +245,10 @@ Wedding Pro unlocks:
 
 Lainnya → Privasi & Keamanan → Hapus Akun
 
+Backend: `UserObserver::deleting` → `UserStorageCleanup` menghapus file di storage
+(couple photos, wedding documents, payment proofs, preparation attachments, exports, avatar lokal)
+sebelum row user di-cascade, agar tidak ada file yatim.
+
 === PRIVACY POLICY ===
 
 https://www.weddingapp.co.id/privacy-policy
@@ -401,3 +405,5 @@ Workaround review: aktifkan Pro manual di Filament / akun `review.pro@…`.
 ## Ringkas untuk Reviewer (1 paragraf)
 
 Wedding App is a freemium wedding planner. Core browsing (home, vendors, account) works without purchase. Advanced planning tools are soft-locked behind a one-time Non-Consumable IAP (`wedding_pro_unlock`) with Restore Purchases. Two demo accounts are provided: free (to test locks + purchase) and Pro (already unlocked on the server).
+
+

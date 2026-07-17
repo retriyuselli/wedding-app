@@ -171,17 +171,18 @@ struct MoreView: View {
 
     private var weddingProCard: some View {
         Button {
-            if session.isPremium {
-                return
-            }
+            guard !session.isPremium else { return }
             showPaywall = true
         } label: {
             HStack(spacing: 14) {
                 Image(systemName: session.isPremium ? "checkmark.seal.fill" : "sparkles")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(session.isPremium ? AppTheme.sageDark : AppTheme.iconOnChip)
                     .frame(width: 42, height: 42)
-                    .background(AppTheme.iconChipFill, in: Circle())
+                    .background(
+                        (session.isPremium ? AppTheme.lightSage : AppTheme.iconChipFill),
+                        in: Circle()
+                    )
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L10n.More.weddingPro)
@@ -189,7 +190,7 @@ struct MoreView: View {
                         .foregroundStyle(AppTheme.titleOnGlass)
                     Text(session.isPremium ? L10n.Premium.menuActiveSub : L10n.More.weddingProSub)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.inkMuted(0.55))
+                        .foregroundStyle(AppTheme.inkMuted(0.72))
                         .lineLimit(2)
                 }
 
@@ -202,7 +203,12 @@ struct MoreView: View {
                     .padding(.vertical, 6)
                     .background {
                         if session.isPremium {
-                            Capsule().fill(AppTheme.lightSage.opacity(0.8))
+                            Capsule()
+                                .fill(AppTheme.lightSage)
+                                .overlay {
+                                    Capsule()
+                                        .stroke(AppTheme.sageDark.opacity(0.22), lineWidth: 1)
+                                }
                         } else {
                             Capsule().fill(
                                 LinearGradient(
@@ -218,7 +224,9 @@ struct MoreView: View {
             .premiumGlassCard(cornerRadius: 22)
         }
         .buttonStyle(.plain)
-        .disabled(session.isPremium)
+        // Avoid `.disabled` — it greys out the whole card when Pro is active.
+        .allowsHitTesting(!session.isPremium)
+        .accessibilityAddTraits(session.isPremium ? .isStaticText : .isButton)
     }
 
     private func sectionGroup(title: String, items: [MoreItem]) -> some View {

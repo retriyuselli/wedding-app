@@ -86,6 +86,10 @@ enum L10n {
         static var termsPrefix: String { "auth.terms_prefix".localized }
         static var termsLink: String { "auth.terms_link".localized }
         static var termsSuffix: String { "auth.terms_suffix".localized }
+        static var copyright: String {
+            let year = Calendar.current.component(.year, from: Date())
+            return "auth.copyright".localized(String(year))
+        }
         static var back: String { "auth.back".localized }
         static var googleNotConfigured: String { "auth.google_not_configured".localized }
         static var googleCannotOpen: String { "auth.google_cannot_open".localized }
@@ -694,6 +698,8 @@ enum L10n {
         static var about: String { "vendor.about".localized }
         static var contact: String { "vendor.contact".localized }
         static var packages: String { "vendor.packages".localized }
+        static var packageSearchPlaceholder: String { "vendor.package_search_placeholder".localized }
+        static var packageSearchEmpty: String { "vendor.package_search_empty".localized }
         static var showLess: String { "vendor.show_less".localized }
         static var showMore: String { "vendor.show_more".localized }
         static var noPackages: String { "vendor.no_packages".localized }
@@ -995,6 +1001,9 @@ enum L10n {
         static var photoSection: String { "couple.photo_section".localized }
         static var photoUpload: String { "couple.photo_upload".localized }
         static var photoChange: String { "couple.photo_change".localized }
+        static var photoRemove: String { "couple.photo_remove".localized }
+        static var photoRemoveConfirmTitle: String { "couple.photo_remove_confirm_title".localized }
+        static var photoRemoveConfirmMessage: String { "couple.photo_remove_confirm_message".localized }
         static var photoHint: String { "couple.photo_hint".localized }
         static var photoTooLarge: String { "couple.photo_too_large".localized }
         static var photoReadError: String { "couple.photo_read_error".localized }
@@ -1050,6 +1059,8 @@ enum L10n {
         static var cultureBali: String { "onboarding.culture_bali".localized }
         static var cultureModern: String { "onboarding.culture_modern".localized }
         static var cultureOther: String { "onboarding.culture_other".localized }
+        static var cultureCustomLabel: String { "onboarding.culture_custom_label".localized }
+        static var cultureCustomPlaceholder: String { "onboarding.culture_custom_placeholder".localized }
         static var cultureOptions: [String] {
             [cultureJawa, cultureSunda, cultureBatak, cultureMelayu, cultureMinang, cultureBali, cultureModern, cultureOther]
         }
@@ -1179,6 +1190,7 @@ enum L10n {
         static var purchasePending: String { "premium.purchase_pending".localized }
         static var purchaseFailed: String { "premium.purchase_failed".localized }
         static var restoreEmpty: String { "premium.restore_empty".localized }
+        static var restoreEmptyTitle: String { "premium.restore_empty_title".localized }
         static var unverifiedTransaction: String { "premium.unverified_transaction".localized }
         static var lockedTitle: String { "premium.locked_title".localized }
         static var lockedMessage: String { "premium.locked_message".localized }

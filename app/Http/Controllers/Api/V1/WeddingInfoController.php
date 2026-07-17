@@ -69,11 +69,20 @@ class WeddingInfoController extends Controller
         return new WeddingInfoResource($info->fresh());
     }
 
+    public function deletePhoto(Request $request): WeddingInfoResource
+    {
+        $info = $request->user()->weddingInfo()->firstOrCreate(
+            ['user_id' => $request->user()->id]
+        );
+
+        $this->clearCouplePhoto($info);
+
+        return new WeddingInfoResource($info->fresh());
+    }
+
     private function storeCouplePhoto($info, $file): void
     {
-        if ($info->couple_photo && ! str_starts_with((string) $info->couple_photo, 'http')) {
-            Storage::disk('public')->delete($info->couple_photo);
-        }
+        $this->clearCouplePhoto($info);
 
         $path = $file->store(
             'couple-photos/'.$info->user_id,
@@ -81,5 +90,16 @@ class WeddingInfoController extends Controller
         );
 
         $info->update(['couple_photo' => $path]);
+    }
+
+    private function clearCouplePhoto($info): void
+    {
+        if ($info->couple_photo && ! str_starts_with((string) $info->couple_photo, 'http')) {
+            Storage::disk('public')->delete($info->couple_photo);
+        }
+
+        if ($info->couple_photo !== null) {
+            $info->update(['couple_photo' => null]);
+        }
     }
 }

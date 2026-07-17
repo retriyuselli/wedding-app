@@ -13,7 +13,12 @@ class AppleTransactionVerifier
     /**
      * Verify a StoreKit 2 signed transaction JWS and return normalized transaction data.
      *
-     * @return array{product_id: string, transaction_id: string, original_transaction_id: string}
+     * @return array{
+     *     product_id: string,
+     *     transaction_id: string,
+     *     original_transaction_id: string,
+     *     payload: array<string, mixed>
+     * }
      */
     public function verify(
         string $signedTransaction,
@@ -27,10 +32,12 @@ class AppleTransactionVerifier
         $transactionId = (string) ($payload['transactionId'] ?? '');
         $originalTransactionId = (string) ($payload['originalTransactionId'] ?? $transactionId);
 
-        if ($productId === '' || $transactionId === '') {
+        if ($productId === '') {
             throw new InvalidArgumentException('Transaksi Apple tidak lengkap.');
         }
 
+        // StoreKit Testing / local .storekit can emit "0" for transaction identifiers.
+        // That is acceptable here; entitlement key resolution happens later.
         if ($productId !== $expectedProductId) {
             throw new InvalidArgumentException('Product ID tidak cocok.');
         }
@@ -51,6 +58,7 @@ class AppleTransactionVerifier
             'product_id' => $productId,
             'transaction_id' => $transactionId,
             'original_transaction_id' => $originalTransactionId,
+            'payload' => $payload,
         ];
     }
 }

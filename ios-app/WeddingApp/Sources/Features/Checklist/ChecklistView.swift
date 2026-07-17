@@ -598,14 +598,27 @@ struct ChecklistView: View {
             async let eventEnvelope: Envelope<[WeddingEvent]> = APIClient.shared.request("wedding-events")
             async let taskEnvelope: Envelope<[PreparationTask]> = APIClient.shared.request("customer-preparation-tasks")
             async let sectionEnvelope: Envelope<[PreparationSection]> = APIClient.shared.request("customer-preparation-sections")
-            events = try await eventEnvelope.data
-            tasks = try await taskEnvelope.data
-            sections = try await sectionEnvelope.data
+
+            // Await all first so a premium/network failure cannot leave events
+            // populated with an empty task list ("0 of 0 tasks").
+            let loadedEvents = try await eventEnvelope.data
+            let loadedTasks = try await taskEnvelope.data
+            let loadedSections = try await sectionEnvelope.data
+
+            events = loadedEvents
+            tasks = loadedTasks
+            sections = loadedSections
 
             if let first = groups.first {
                 expandedSections.insert(first.id)
             }
         } catch {
+            // Server rejected Pro checklist (local StoreKit entitlement ≠ server is_premium).
+            if error.premiumRequired {
+                premium.markServerEntitlementMissing()
+                await loadPreview()
+                return
+            }
             errorMessage = error.localizedDescription
         }
     }

@@ -10,6 +10,8 @@ struct VendorDetailView: View {
     @State private var errorMessage: String?
     @State private var selectedPackage: VendorPackage?
     @State private var showAllPackages = false
+    @State private var packageSearchText = ""
+    @FocusState private var isPackageSearchFocused: Bool
 
     private let packageGridColumns = [
         GridItem(.flexible(), spacing: 12),
@@ -207,13 +209,20 @@ struct VendorDetailView: View {
     }
 
     private func packagesSection(_ packages: [VendorPackage], vendor: Vendor) -> some View {
+        let query = packageSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isSearching = !query.isEmpty
+        let filteredPackages = filteredPackages(from: packages, query: query)
         let visibleLimit = 4
-        let visiblePackages = showAllPackages || packages.count <= visibleLimit
-            ? packages
-            : Array(packages.prefix(visibleLimit))
-        let remainingCount = max(packages.count - visibleLimit, 0)
+        let visiblePackages = isSearching || showAllPackages || filteredPackages.count <= visibleLimit
+            ? filteredPackages
+            : Array(filteredPackages.prefix(visibleLimit))
+        let remainingCount = isSearching ? 0 : max(filteredPackages.count - visibleLimit, 0)
 
         return VStack(alignment: .leading, spacing: 12) {
+            if !packages.isEmpty {
+                packageSearchBar
+            }
+
             HStack(alignment: .firstTextBaseline) {
                 Text(L10n.Vendor.packages)
                     .font(.system(size: 16, weight: .semibold, design: .serif))
@@ -221,7 +230,7 @@ struct VendorDetailView: View {
 
                 Spacer(minLength: 8)
 
-                if packages.count > visibleLimit {
+                if !isSearching && filteredPackages.count > visibleLimit {
                     Button(showAllPackages ? L10n.Vendor.showLess : L10n.Vendor.showMore) {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             showAllPackages.toggle()
@@ -234,6 +243,13 @@ struct VendorDetailView: View {
 
             if packages.isEmpty {
                 Text(L10n.Vendor.noPackages)
+                    .font(AppFont.regular(13))
+                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .premiumGlassCard(cornerRadius: 16)
+            } else if filteredPackages.isEmpty {
+                Text(L10n.Vendor.packageSearchEmpty)
                     .font(AppFont.regular(13))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
                     .padding(14)
@@ -271,6 +287,65 @@ struct VendorDetailView: View {
                     .buttonStyle(.plain)
                 }
             }
+        }
+    }
+
+    private var packageSearchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(isPackageSearchFocused ? AppTheme.iconOnChip : AppTheme.inkMuted(0.45))
+
+            TextField(L10n.Vendor.packageSearchPlaceholder, text: $packageSearchText)
+                .font(AppFont.regular(13))
+                .foregroundStyle(AppTheme.titleOnGlass)
+                .focused($isPackageSearchFocused)
+                .submitLabel(.search)
+                .onSubmit {
+                    isPackageSearchFocused = false
+                }
+
+            if !packageSearchText.isEmpty {
+                Button {
+                    packageSearchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(AppTheme.inkMuted(0.4))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .premiumGlassCard(cornerRadius: 24)
+        .overlay {
+            Capsule()
+                .stroke(
+                    isPackageSearchFocused ? AppTheme.sageDark.opacity(0.35) : Color.clear,
+                    lineWidth: isPackageSearchFocused ? 1.5 : 0
+                )
+        }
+    }
+
+    private func filteredPackages(from packages: [VendorPackage], query: String) -> [VendorPackage] {
+        guard !query.isEmpty else { return packages }
+
+        let needle = query.lowercased()
+        return packages.filter { package in
+            if package.name.lowercased().contains(needle) {
+                return true
+            }
+            if let description = package.description?.lowercased(), description.contains(needle) {
+                return true
+            }
+            if let price = package.price?.lowercased(), price.contains(needle) {
+                return true
+            }
+            if let priceLabel = package.priceTypeLabel?.lowercased(), priceLabel.contains(needle) {
+                return true
+            }
+            return false
         }
     }
 
@@ -411,6 +486,8 @@ struct VendorDetailView: View {
             vendor = envelope.data
             selectedPackage = nil
             showAllPackages = false
+            packageSearchText = ""
+            isPackageSearchFocused = false
         } catch {
             vendor = nil
             errorMessage = error.userFacingMessage
