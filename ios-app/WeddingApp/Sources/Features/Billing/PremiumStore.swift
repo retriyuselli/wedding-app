@@ -46,7 +46,11 @@ final class PremiumStore: ObservableObject {
         defer { isLoading = false }
         do {
             products = try await Product.products(for: BillingProduct.allProIds)
-            errorMessage = nil
+            if proProduct == nil {
+                errorMessage = L10n.Premium.productUnavailable
+            } else {
+                errorMessage = nil
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -7,12 +7,21 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Carbon;
 
 class UserForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $proProductOptions = collect(config('billing.pro_product_ids', ['wedding_pro_unlock']))
+            ->mapWithKeys(fn (string $id): array => [$id => $id])
+            ->all();
+
+        $defaultProProductId = array_key_first($proProductOptions) ?: 'wedding_pro_unlock';
+
         return $schema
             ->columns(1)
             ->components([
@@ -42,7 +51,7 @@ class UserForm
                             ->label('Email terverifikasi')
                             ->helperText('Aktifkan jika email sudah dikonfirmasi.')
                             ->formatStateUsing(fn (mixed $state): bool => filled($state))
-                            ->dehydrateStateUsing(fn (bool $state): ?\Illuminate\Support\Carbon => $state ? now() : null)
+                            ->dehydrateStateUsing(fn (bool $state): ?Carbon => $state ? now() : null)
                             ->inline(false),
                     ]),
 
@@ -81,6 +90,56 @@ class UserForm
                             ->searchable()
                             ->native(false)
                             ->helperText('Contoh: super_admin untuk akses penuh, termasuk kirim notifikasi.')
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Wedding Pro')
+                    ->description('Status Premium Non-Consumable di app (IAP wedding_pro_unlock). Bisa diaktifkan manual untuk demo / App Review.')
+                    ->columns(2)
+                    ->schema([
+                        Toggle::make('is_premium')
+                            ->label('Wedding Pro aktif')
+                            ->helperText('Jika aktif, Checklist / Tamu / Budget terbuka tanpa paywall.')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state, Set $set, Get $get) use ($defaultProProductId): void {
+                                if ($state) {
+                                    if (blank($get('premium_product_id'))) {
+                                        $set('premium_product_id', $defaultProProductId);
+                                    }
+
+                                    if (blank($get('premium_activated_at'))) {
+                                        $set('premium_activated_at', now());
+                                    }
+
+                                    return;
+                                }
+
+                                $set('premium_product_id', null);
+                                $set('premium_activated_at', null);
+                                $set('apple_original_transaction_id', null);
+                            })
+                            ->inline(false),
+                        Select::make('premium_product_id')
+                            ->label('Product ID')
+                            ->options($proProductOptions)
+                            ->native(false)
+                            ->searchable()
+                            ->placeholder('Pilih product IAP')
+                            ->visible(fn (Get $get): bool => (bool) $get('is_premium'))
+                            ->required(fn (Get $get): bool => (bool) $get('is_premium'))
+                            ->helperText('Harus cocok dengan App Store Connect.'),
+                        DateTimePicker::make('premium_activated_at')
+                            ->label('Aktif sejak')
+                            ->seconds(false)
+                            ->native(false)
+                            ->visible(fn (Get $get): bool => (bool) $get('is_premium'))
+                            ->required(fn (Get $get): bool => (bool) $get('is_premium')),
+                        TextInput::make('apple_original_transaction_id')
+                            ->label('Apple original transaction ID')
+                            ->maxLength(255)
+                            ->placeholder('Kosongkan jika aktivasi manual')
+                            ->helperText('Diisi otomatis dari IAP. Untuk demo boleh diisi ID fiktif unik.')
+                            ->visible(fn (Get $get): bool => (bool) $get('is_premium'))
                             ->columnSpanFull(),
                     ]),
 

@@ -22,6 +22,11 @@ struct PaywallView: View {
                             Text(errorMessage)
                                 .font(AppFont.regular(13))
                                 .foregroundStyle(.red)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        if premium.proProduct == nil {
+                            reloadProductsButton
                         }
 
                         purchaseButton
@@ -91,6 +96,27 @@ struct PaywallView: View {
         }
     }
 
+    private var reloadProductsButton: some View {
+        Button {
+            Task { await premium.refreshProducts() }
+        } label: {
+            HStack(spacing: 8) {
+                if premium.isLoading {
+                    ProgressView()
+                } else {
+                    Image(systemName: "arrow.clockwise")
+                    Text(L10n.Premium.reloadProducts)
+                        .font(AppFont.medium(14))
+                }
+            }
+            .foregroundStyle(AppTheme.sageMuted(0.95))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
+        .disabled(premium.isLoading || premium.purchaseInFlight)
+    }
+
     private var purchaseButton: some View {
         Button {
             Task {
@@ -122,7 +148,8 @@ struct PaywallView: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(premium.purchaseInFlight)
+        .disabled(premium.purchaseInFlight || premium.isLoading || premium.proProduct == nil)
+        .opacity(premium.proProduct == nil ? 0.55 : 1)
     }
 
     private var restoreButton: some View {

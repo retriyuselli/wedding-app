@@ -1157,7 +1157,8 @@
 "premium.buy_fallback" = "Buka Wedding Pro";
 "premium.restore" = "Pulihkan Pembelian";
 "premium.footnote" = "Pembelian sekali bayar, terhubung ke Apple ID. Gunakan Pulihkan Pembelian jika sudah pernah membeli di perangkat lain.";
-"premium.product_unavailable" = "Produk belum tersedia. Coba lagi sebentar.";
+"premium.product_unavailable" = "Produk Wedding Pro belum tersedia dari App Store. Periksa koneksi, lalu ketuk Muat ulang produk. Jika masih gagal, produk IAP mungkin belum Ready di App Store Connect.";
+"premium.reload_products" = "Muat ulang produk";
 "premium.purchase_pending" = "Pembelian menunggu konfirmasi.";
 "premium.purchase_failed" = "Pembelian gagal. Silakan coba lagi.";
 "premium.restore_empty" = "Tidak ada pembelian Wedding Pro yang ditemukan.";

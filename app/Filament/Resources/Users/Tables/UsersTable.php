@@ -79,6 +79,19 @@ class UsersTable
                         ? 'Terverifikasi '.$record->email_verified_at->format('d M Y H:i')
                         : 'Belum verifikasi')
                     ->state(fn (User $record): bool => filled($record->email_verified_at)),
+                TextColumn::make('is_premium')
+                    ->label('Pro')
+                    ->badge()
+                    ->alignCenter()
+                    ->state(fn (User $record): string => $record->isPremium() ? 'Pro' : 'Free')
+                    ->color(fn (string $state): string => $state === 'Pro' ? 'success' : 'gray')
+                    ->icon(fn (string $state): string => $state === 'Pro'
+                        ? 'heroicon-o-sparkles'
+                        : 'heroicon-o-lock-closed')
+                    ->tooltip(fn (User $record): string => $record->isPremium()
+                        ? 'Aktif sejak '.($record->premium_activated_at?->format('d M Y H:i') ?? '—')
+                        : 'Belum Wedding Pro')
+                    ->sortable(),
                 TextColumn::make('login_provider')
                     ->label('Login')
                     ->state(function (User $record): string {
@@ -122,6 +135,12 @@ class UsersTable
                     ->trueLabel('Sudah verifikasi')
                     ->falseLabel('Belum verifikasi')
                     ->placeholder('Semua'),
+                TernaryFilter::make('is_premium')
+                    ->label('Wedding Pro')
+                    ->boolean()
+                    ->trueLabel('Pro aktif')
+                    ->falseLabel('Free')
+                    ->placeholder('Semua'),
                 SelectFilter::make('roles')
                     ->label('Role')
                     ->relationship('roles', 'name')
@@ -161,6 +180,41 @@ class UsersTable
                     ->modalHeading('Verifikasi email user?')
                     ->modalDescription(fn (User $record): string => "Tandai {$record->email} sebagai sudah terverifikasi.")
                     ->action(fn (User $record) => $record->forceFill(['email_verified_at' => now()])->save()),
+                Action::make('activateWeddingPro')
+                    ->label('Aktifkan Pro')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('success')
+                    ->visible(fn (User $record): bool => ! $record->isPremium())
+                    ->requiresConfirmation()
+                    ->modalHeading('Aktifkan Wedding Pro?')
+                    ->modalDescription(fn (User $record): string => "User {$record->email} akan mendapat akses Premium (Checklist, Tamu, Budget).")
+                    ->action(function (User $record): void {
+                        $productId = config('billing.pro_product_ids.0', 'wedding_pro_unlock');
+
+                        $record->forceFill([
+                            'is_premium' => true,
+                            'premium_product_id' => $productId,
+                            'premium_activated_at' => $record->premium_activated_at ?? now(),
+                            'apple_original_transaction_id' => $record->apple_original_transaction_id
+                                ?: 'admin-manual-'.$record->id,
+                        ])->save();
+                    }),
+                Action::make('revokeWeddingPro')
+                    ->label('Cabut Pro')
+                    ->icon('heroicon-o-lock-closed')
+                    ->color('warning')
+                    ->visible(fn (User $record): bool => $record->isPremium())
+                    ->requiresConfirmation()
+                    ->modalHeading('Cabut Wedding Pro?')
+                    ->modalDescription(fn (User $record): string => "User {$record->email} akan kembali ke Free dan paywall aktif lagi.")
+                    ->action(function (User $record): void {
+                        $record->forceFill([
+                            'is_premium' => false,
+                            'premium_product_id' => null,
+                            'premium_activated_at' => null,
+                            'apple_original_transaction_id' => null,
+                        ])->save();
+                    }),
                 DeleteAction::make()
                     ->visible(fn (User $record): bool => Auth::id() !== $record->id),
             ])
@@ -177,6 +231,49 @@ class UsersTable
                                 if (blank($record->email_verified_at)) {
                                     $record->forceFill(['email_verified_at' => now()])->save();
                                 }
+                            });
+                        }),
+                    BulkAction::make('activateWeddingProSelected')
+                        ->label('Aktifkan Wedding Pro')
+                        ->icon('heroicon-o-sparkles')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->action(function (Collection $records): void {
+                            $productId = config('billing.pro_product_ids.0', 'wedding_pro_unlock');
+
+                            $records->each(function (User $record) use ($productId): void {
+                                if ($record->isPremium()) {
+                                    return;
+                                }
+
+                                $record->forceFill([
+                                    'is_premium' => true,
+                                    'premium_product_id' => $productId,
+                                    'premium_activated_at' => now(),
+                                    'apple_original_transaction_id' => $record->apple_original_transaction_id
+                                        ?: 'admin-manual-'.$record->id,
+                                ])->save();
+                            });
+                        }),
+                    BulkAction::make('revokeWeddingProSelected')
+                        ->label('Cabut Wedding Pro')
+                        ->icon('heroicon-o-lock-closed')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->action(function (Collection $records): void {
+                            $records->each(function (User $record): void {
+                                if (! $record->isPremium()) {
+                                    return;
+                                }
+
+                                $record->forceFill([
+                                    'is_premium' => false,
+                                    'premium_product_id' => null,
+                                    'premium_activated_at' => null,
+                                    'apple_original_transaction_id' => null,
+                                ])->save();
                             });
                         }),
                     DeleteBulkAction::make()

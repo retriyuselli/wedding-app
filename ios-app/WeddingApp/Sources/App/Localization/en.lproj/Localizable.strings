@@ -1157,7 +1157,8 @@
 "premium.buy_fallback" = "Unlock Wedding Pro";
 "premium.restore" = "Restore Purchases";
 "premium.footnote" = "One-time purchase linked to your Apple ID. Use Restore Purchases if you already bought on another device.";
-"premium.product_unavailable" = "Product is unavailable. Please try again shortly.";
+"premium.product_unavailable" = "Wedding Pro is not available from the App Store yet. Check your connection, then tap Reload products. If it still fails, the IAP may not be Ready in App Store Connect.";
+"premium.reload_products" = "Reload products";
 "premium.purchase_pending" = "Purchase is pending confirmation.";
 "premium.purchase_failed" = "Purchase failed. Please try again.";
 "premium.restore_empty" = "No Wedding Pro purchase was found.";

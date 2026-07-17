@@ -28,6 +28,7 @@ class UserResourceFormTest extends TestCase
             ->assertSee('Informasi Akun')
             ->assertSee('Keamanan')
             ->assertSee('Role & Akses')
+            ->assertSee('Wedding Pro')
             ->assertSee('Konfirmasi Password');
     }
 
@@ -44,7 +45,77 @@ class UserResourceFormTest extends TestCase
             ->assertSuccessful()
             ->assertSee('Pengantin Contoh')
             ->assertSee('Login Sosial')
+            ->assertSee('Wedding Pro')
             ->assertSee('Biarkan kosong untuk mempertahankan password saat ini.');
+    }
+
+    public function test_super_admin_can_activate_wedding_pro_from_edit_form(): void
+    {
+        $admin = $this->actingAsSuperAdmin();
+        $user = User::factory()->create([
+            'email' => 'pro-form@example.com',
+            'is_premium' => false,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['record' => $user->getRouteKey()])
+            ->fillForm([
+                'is_premium' => true,
+                'premium_product_id' => 'wedding_pro_unlock',
+                'premium_activated_at' => now()->toDateTimeString(),
+                'apple_original_transaction_id' => 'admin-demo-pro-form',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $user->refresh();
+
+        $this->assertTrue($user->isPremium());
+        $this->assertSame('wedding_pro_unlock', $user->premium_product_id);
+        $this->assertNotNull($user->premium_activated_at);
+        $this->assertSame('admin-demo-pro-form', $user->apple_original_transaction_id);
+    }
+
+    public function test_super_admin_can_activate_wedding_pro_from_table_action(): void
+    {
+        $admin = $this->actingAsSuperAdmin();
+        $user = User::factory()->create([
+            'email' => 'pro-table@example.com',
+            'is_premium' => false,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callTableAction('activateWeddingPro', $user);
+
+        $user->refresh();
+
+        $this->assertTrue($user->isPremium());
+        $this->assertSame('wedding_pro_unlock', $user->premium_product_id);
+        $this->assertNotNull($user->premium_activated_at);
+    }
+
+    public function test_super_admin_can_revoke_wedding_pro_from_table_action(): void
+    {
+        $admin = $this->actingAsSuperAdmin();
+        $user = User::factory()->create([
+            'email' => 'revoke-pro@example.com',
+            'is_premium' => true,
+            'premium_product_id' => 'wedding_pro_unlock',
+            'premium_activated_at' => now(),
+            'apple_original_transaction_id' => 'admin-demo-revoke',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callTableAction('revokeWeddingPro', $user);
+
+        $user->refresh();
+
+        $this->assertFalse($user->isPremium());
+        $this->assertNull($user->premium_product_id);
+        $this->assertNull($user->premium_activated_at);
+        $this->assertNull($user->apple_original_transaction_id);
     }
 
     public function test_password_cast_hashes_once_without_manual_hash_make(): void
@@ -71,6 +142,7 @@ class UserResourceFormTest extends TestCase
             ->assertSee('User List Check')
             ->assertSee('Pengguna')
             ->assertSee('Bergabung')
+            ->assertSee('Pro')
             ->assertCanSeeTableRecords(User::query()->where('email', 'userlist@example.com')->get());
     }
 

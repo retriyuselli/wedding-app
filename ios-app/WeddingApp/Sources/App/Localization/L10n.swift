@@ -1175,6 +1175,7 @@ enum L10n {
         static var restore: String { "premium.restore".localized }
         static var footnote: String { "premium.footnote".localized }
         static var productUnavailable: String { "premium.product_unavailable".localized }
+        static var reloadProducts: String { "premium.reload_products".localized }
         static var purchasePending: String { "premium.purchase_pending".localized }
         static var purchaseFailed: String { "premium.purchase_failed".localized }
         static var restoreEmpty: String { "premium.restore_empty".localized }
