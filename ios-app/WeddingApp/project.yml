@@ -70,6 +70,9 @@ targets:
           - CormorantGaramond.ttf
         UIBackgroundModes:
           - remote-notification
+        NSPhotoLibraryUsageDescription: "Wedding App membutuhkan akses foto untuk mengunggah foto pasangan dan bukti pembayaran."
+        NSCameraUsageDescription: "Wedding App membutuhkan akses kamera untuk mengambil foto pasangan dan bukti pembayaran."
+        NSContactsUsageDescription: "Wedding App dapat memeriksa izin kontak jika fitur impor tamu dari kontak digunakan."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.weddingapp.ios

@@ -113,8 +113,6 @@ struct GuestView: View {
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
     @State private var currentPage = 1
-    @State private var showComingSoon = false
-    @State private var comingSoonTitle = ""
 
     private let pageSize = 5
 
@@ -400,11 +398,6 @@ struct GuestView: View {
                 Button(L10n.Common.cancel, role: .cancel) {}
             } message: {
                 Text(L10n.Guest.deleteAllConfirmMessage(segment.title, currentSegmentCount))
-            }
-            .alert(L10n.Common.comingSoon, isPresented: $showComingSoon) {
-                Button(L10n.Common.ok, role: .cancel) {}
-            } message: {
-                Text(L10n.Common.comingSoonMessage)
             }
             .sheet(isPresented: $showPaywall) {
                 PaywallView(onUnlocked: {
@@ -936,56 +929,17 @@ struct GuestView: View {
     }
 
     private var actionBar: some View {
-        HStack(spacing: 0) {
-            actionItem(
-                icon: "square.and.arrow.up",
-                title: L10n.Guest.shareInvite,
-                sub: L10n.Guest.shareInviteSub
-            ) {
-                dismissSearchKeyboard()
-                comingSoonTitle = L10n.Guest.shareInvite
-                showComingSoon = true
+        Button {
+            dismissSearchKeyboard()
+            runPremiumOrPaywall {
+                showExportSheet = true
             }
-            Divider().frame(height: 34)
-            actionItem(
-                icon: "qrcode.viewfinder",
-                title: L10n.Guest.qrCheckIn,
-                sub: L10n.Guest.qrCheckInSub
-            ) {
-                dismissSearchKeyboard()
-                comingSoonTitle = L10n.Guest.qrCheckIn
-                showComingSoon = true
-            }
-            Divider().frame(height: 34)
-            actionItem(
-                icon: "arrow.down.doc",
-                title: L10n.Guest.exportData,
-                sub: L10n.Guest.exportDataSub
-            ) {
-                dismissSearchKeyboard()
-                runPremiumOrPaywall {
-                    showExportSheet = true
-                }
-            }
-        }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 6)
-        .premiumGlassCard(cornerRadius: 22)
-        .padding(.top, 4)
-    }
-
-    private func actionItem(
-        icon: String,
-        title: String,
-        sub: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            VStack(spacing: 5) {
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .medium))
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "arrow.down.doc")
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(AppTheme.iconOnChip)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 44, height: 44)
                     .background {
                         Circle()
                             .fill(AppTheme.iconChipFill)
@@ -995,20 +949,28 @@ struct GuestView: View {
                         Circle()
                             .stroke(AppTheme.iconChipStroke, lineWidth: 1)
                     }
-                Text(title)
-                    .font(AppFont.semibold(11))
-                    .foregroundStyle(AppTheme.titleOnGlass)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                Text(sub)
-                    .font(AppFont.regular(9))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.Guest.exportData)
+                        .font(AppFont.semibold(14))
+                        .foregroundStyle(AppTheme.titleOnGlass)
+                    Text(L10n.Guest.exportDataSub)
+                        .font(AppFont.regular(12))
+                        .foregroundStyle(AppTheme.inkMuted(0.55))
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(AppTheme.inkMuted(0.45))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
             }
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
         }
         .buttonStyle(.plain)
+        .premiumGlassCard(cornerRadius: 22)
+        .padding(.top, 4)
     }
 
     private func dismissSearchKeyboard() {

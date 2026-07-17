@@ -33,6 +33,12 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Wedding App membutuhkan akses kamera untuk mengambil foto pasangan dan bukti pembayaran.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Wedding App dapat memeriksa izin kontak jika fitur impor tamu dari kontak digunakan.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Wedding App membutuhkan akses foto untuk mengunggah foto pasangan dan bukti pembayaran.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Poppins-Regular.ttf</string>
@@ -48,9 +54,5 @@
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
 </dict>
 </plist>

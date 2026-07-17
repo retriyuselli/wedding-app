@@ -9,7 +9,6 @@ private struct FAQItem: Identifiable {
 struct HelpFAQView: View {
     @State private var searchText = ""
     @State private var expandedFAQ: UUID?
-    @State private var showComingSoon = false
 
     private static let supportEmail = HelpContent.supportEmail
     private var supportEmail: String { Self.supportEmail }
@@ -56,11 +55,6 @@ struct HelpFAQView: View {
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
-        .alert(L10n.Common.comingSoon, isPresented: $showComingSoon) {
-            Button(L10n.Common.ok, role: .cancel) {}
-        } message: {
-            Text(L10n.Common.comingSoonMessage)
-        }
     }
 
     // MARK: - Search
@@ -138,18 +132,6 @@ struct HelpFAQView: View {
                     .font(AppFont.medium(15))
                     .foregroundStyle(AppTheme.ink)
                 Spacer()
-                Button {
-                    showComingSoon = true
-                } label: {
-                    HStack(spacing: 3) {
-                        Text(L10n.Common.seeAll)
-                            .font(AppFont.regular(12))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .semibold))
-                    }
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
-                }
-                .buttonStyle(.plain)
             }
 
             if filteredFAQs.isEmpty {
