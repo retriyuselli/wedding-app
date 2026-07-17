@@ -6,24 +6,22 @@ use InvalidArgumentException;
 
 class AppleTransactionVerifier
 {
+    public function __construct(
+        private AppleStoreKitJwsVerifier $jwsVerifier,
+    ) {}
+
     /**
-     * Decode and lightly validate a StoreKit 2 signed transaction JWS.
+     * Verify a StoreKit 2 signed transaction JWS and return normalized transaction data.
      *
      * @return array{product_id: string, transaction_id: string, original_transaction_id: string}
      */
-    public function verify(string $signedTransaction, string $expectedProductId, string $expectedTransactionId, string $expectedOriginalTransactionId): array
-    {
-        $parts = explode('.', $signedTransaction);
-        if (count($parts) !== 3) {
-            throw new InvalidArgumentException('Format transaksi Apple tidak valid.');
-        }
-
-        $payloadJson = $this->base64UrlDecode($parts[1]);
-        $payload = json_decode($payloadJson, true);
-
-        if (! is_array($payload)) {
-            throw new InvalidArgumentException('Payload transaksi Apple tidak valid.');
-        }
+    public function verify(
+        string $signedTransaction,
+        string $expectedProductId,
+        string $expectedTransactionId,
+        string $expectedOriginalTransactionId,
+    ): array {
+        $payload = $this->jwsVerifier->verify($signedTransaction);
 
         $productId = (string) ($payload['productId'] ?? '');
         $transactionId = (string) ($payload['transactionId'] ?? '');
@@ -54,20 +52,5 @@ class AppleTransactionVerifier
             'transaction_id' => $transactionId,
             'original_transaction_id' => $originalTransactionId,
         ];
-    }
-
-    private function base64UrlDecode(string $value): string
-    {
-        $remainder = strlen($value) % 4;
-        if ($remainder > 0) {
-            $value .= str_repeat('=', 4 - $remainder);
-        }
-
-        $decoded = base64_decode(strtr($value, '-_', '+/'), true);
-        if ($decoded === false) {
-            throw new InvalidArgumentException('Gagal mendecode transaksi Apple.');
-        }
-
-        return $decoded;
     }
 }

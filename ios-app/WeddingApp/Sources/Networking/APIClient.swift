@@ -296,12 +296,25 @@ final class APIClient {
     }
 
     private func shouldAttachAuthorization(for path: String) -> Bool {
-        !["auth/login", "auth/google", "auth/apple", "auth/register", "auth/forgot-password"].contains(path)
+        !Self.publicAuthPaths.contains(path)
     }
 
     private func shouldBroadcastSessionExpired(for path: String) -> Bool {
-        !["auth/me", "auth/login", "auth/google", "auth/apple", "auth/register", "auth/forgot-password"].contains(path)
+        if path == "auth/me" {
+            return false
+        }
+
+        return !Self.publicAuthPaths.contains(path)
     }
+
+    private static let publicAuthPaths: Set<String> = [
+        "auth/login",
+        "auth/google",
+        "auth/apple",
+        "auth/register",
+        "auth/forgot-password",
+        "auth/two-factor/verify",
+    ]
 }
 
 private extension Data {

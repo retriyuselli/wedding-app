@@ -44,12 +44,13 @@ Route::prefix('v1')->group(function () {
 
     Route::get('wedding-quotes', [WeddingQuoteController::class, 'index']);
 
-    Route::post('auth/register', [AuthController::class, 'register']);
-    Route::post('auth/login', [AuthController::class, 'login']);
-    Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('auth/google', [AuthController::class, 'google']);
-    Route::post('auth/apple', [AuthController::class, 'apple']);
-    Route::post('auth/two-factor/verify', [TwoFactorController::class, 'verifyLogin']);
+    Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:auth');
+    Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:auth');
+    Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth');
+    Route::post('auth/google', [AuthController::class, 'google'])->middleware('throttle:auth');
+    Route::post('auth/apple', [AuthController::class, 'apple'])->middleware('throttle:auth');
+    Route::post('auth/two-factor/verify', [TwoFactorController::class, 'verifyLogin'])
+        ->middleware('throttle:two-factor');
 
     Route::get('help-center', [HelpCenterController::class, 'index']);
 
@@ -94,7 +95,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('premium');
 
         Route::get('billing/entitlement', [BillingController::class, 'entitlement']);
-        Route::post('billing/apple/verify', [BillingController::class, 'verifyApple']);
+        Route::post('billing/apple/verify', [BillingController::class, 'verifyApple'])
+            ->middleware('throttle:billing-verify');
 
         Route::get('vendors', [VendorController::class, 'index']);
         Route::get('vendors/{vendor}/packages', [VendorController::class, 'packages']);

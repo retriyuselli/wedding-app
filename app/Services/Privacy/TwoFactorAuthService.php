@@ -15,6 +15,10 @@ class TwoFactorAuthService
 
     private const PENDING_TTL_SECONDS = 600;
 
+    private const MAX_FAILED_ATTEMPTS = 5;
+
+    private const LOCKOUT_SECONDS = 900;
+
     public function isEnabled(User $user): bool
     {
         return (bool) $user->two_factor_enabled;
@@ -132,13 +136,33 @@ class TwoFactorAuthService
 
     private function assertValidCode(User $user, string $purpose, string $code): void
     {
+        if (Cache::has($this->lockoutKey($user, $purpose))) {
+            throw ValidationException::withMessages([
+                'code' => ['Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.'],
+            ]);
+        }
+
         $hashed = Cache::get($this->codeKey($user, $purpose));
 
         if (! is_string($hashed) || ! Hash::check($code, $hashed)) {
+            $attempts = (int) Cache::get($this->attemptKey($user, $purpose), 0) + 1;
+            Cache::put($this->attemptKey($user, $purpose), $attempts, self::CODE_TTL_SECONDS);
+
+            if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
+                Cache::put($this->lockoutKey($user, $purpose), true, self::LOCKOUT_SECONDS);
+                Cache::forget($this->attemptKey($user, $purpose));
+
+                throw ValidationException::withMessages([
+                    'code' => ['Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.'],
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'code' => ['Kode verifikasi tidak valid atau sudah kedaluwarsa.'],
             ]);
         }
+
+        Cache::forget($this->attemptKey($user, $purpose));
     }
 
     private function forgetCode(User $user, string $purpose): void
@@ -154,5 +178,15 @@ class TwoFactorAuthService
     private function pendingKey(string $token): string
     {
         return "two_factor:pending:{$token}";
+    }
+
+    private function attemptKey(User $user, string $purpose): string
+    {
+        return "two_factor:attempts:{$purpose}:{$user->id}";
+    }
+
+    private function lockoutKey(User $user, string $purpose): string
+    {
+        return "two_factor:lockout:{$purpose}:{$user->id}";
     }
 }

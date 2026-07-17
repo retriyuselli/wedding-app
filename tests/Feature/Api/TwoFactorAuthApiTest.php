@@ -97,6 +97,39 @@ class TwoFactorAuthApiTest extends TestCase
         $this->assertFalse($user->fresh()->two_factor_enabled);
     }
 
+    public function test_two_factor_verify_locks_after_repeated_invalid_codes(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+        $user->forceFill([
+            'password' => Hash::make('password'),
+            'two_factor_enabled' => true,
+        ])->save();
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'device_name' => 'iPhone Test',
+        ]);
+
+        $token = $response->json('two_factor_token');
+
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->postJson('/api/v1/auth/two-factor/verify', [
+                'two_factor_token' => $token,
+                'code' => '000000',
+                'device_name' => 'iPhone Test',
+            ])->assertUnprocessable();
+        }
+
+        $this->postJson('/api/v1/auth/two-factor/verify', [
+            'two_factor_token' => $token,
+            'code' => '000000',
+            'device_name' => 'iPhone Test',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['code']);
+    }
+
     private function latestPlainCode(User $user, string $purpose): string
     {
         $plain = Cache::get("two_factor:{$purpose}:{$user->id}:plain");
