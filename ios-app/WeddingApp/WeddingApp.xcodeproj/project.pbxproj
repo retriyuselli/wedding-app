@@ -187,7 +187,7 @@
 		2B0F9F2299000C7AF7376126 /* AppPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPermissionsView.swift; sourceTree = "<group>"; };
 		2BC0C8F85F08E30963613F0F /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatters.swift; sourceTree = "<group>"; };
 		2C24DCB0F7989B03AC84D85E /* NotificationsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSheet.swift; sourceTree = "<group>"; };
-		2D048B0466FEE8CD9E93A4B4 /* Products.storekit */ = {isa = PBXFileReference; path = Products.storekit; sourceTree = "<group>"; };
+		2D048B0466FEE8CD9E93A4B4 /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 		31E1E6AA1CC2C53DC2E65007 /* SharedPrivacyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPrivacyModels.swift; sourceTree = "<group>"; };
 		32E109E11D237A4E33547F78 /* HelpCenterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpCenterViewModel.swift; sourceTree = "<group>"; };
 		332CE37C58326829BF4FF5AC /* CustomerPaymentMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomerPaymentMethod.swift; sourceTree = "<group>"; };
@@ -209,7 +209,7 @@
 		526F0880C7D1B0AF445636E9 /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
 		52DE810C73DE1D501791D578 /* CoupleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoupleView.swift; sourceTree = "<group>"; };
 		533FF60D7EC9C432A96F0682 /* GuestContactLinker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestContactLinker.swift; sourceTree = "<group>"; };
-		534C089B07685E8E3EEBC243 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		534C089B07685E8E3EEBC243 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		572F06071E523ED69487AB40 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		574EE7BB43BCF0266A4905EA /* TwoFactorSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoFactorSettingsView.swift; sourceTree = "<group>"; };
 		593CDE1B148ACE38C2CD2AEB /* CoupleAvatarImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoupleAvatarImage.swift; sourceTree = "<group>"; };
