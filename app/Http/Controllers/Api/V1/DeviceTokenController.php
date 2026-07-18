@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\DeviceTokenResource;
 use App\Models\DeviceToken;
+use App\Models\User;
+use App\Services\BroadcastCustomerNotificationService;
 use App\Services\PushNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,6 +40,8 @@ class DeviceTokenController extends Controller
     public function sendTest(Request $request, PushNotificationService $pushNotificationService): JsonResponse
     {
         $user = $request->user();
+        abort_unless($user->isSuperAdmin(), 403);
+
         $tokenCount = $user->deviceTokens()->count();
 
         if ($tokenCount === 0) {
@@ -60,6 +64,55 @@ class DeviceTokenController extends Controller
                 'sent' => $sent,
                 'token_count' => $tokenCount,
             ],
+        ]);
+    }
+
+    public function sendNotification(
+        Request $request,
+        BroadcastCustomerNotificationService $broadcastService,
+    ): JsonResponse {
+        /** @var User $sender */
+        $sender = $request->user();
+        abort_unless($sender->isSuperAdmin(), 403);
+
+        $data = $request->validate([
+            'send_to_all' => ['required', 'boolean'],
+            'email' => ['nullable', 'required_if:send_to_all,false', 'email', 'exists:users,email'],
+            'title' => ['required', 'string', 'max:120'],
+            'message' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $payload = [
+            'group' => 'system',
+            'title' => $data['title'],
+            'message' => $data['message'],
+            'icon' => 'bell.fill',
+            'destination' => null,
+            'tint' => 'info',
+            'is_unread' => true,
+        ];
+
+        if ($data['send_to_all']) {
+            $result = $broadcastService->sendToAllUsers($payload);
+
+            return response()->json([
+                'data' => [
+                    'recipient_count' => $result['count'],
+                    'push_sent' => $result['push_sent'],
+                ],
+                'message' => "Notifikasi dikirim ke {$result['count']} user.",
+            ]);
+        }
+
+        $recipient = User::query()->where('email', $data['email'])->firstOrFail();
+        $result = $broadcastService->sendToUser($recipient, $payload);
+
+        return response()->json([
+            'data' => [
+                'recipient_count' => 1,
+                'push_sent' => $result['push_sent'],
+            ],
+            'message' => "Notifikasi dikirim ke {$recipient->email}.",
         ]);
     }
 

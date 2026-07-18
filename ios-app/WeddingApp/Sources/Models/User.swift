@@ -9,6 +9,7 @@ struct User: Codable, Identifiable {
     let hasSocialLogin: Bool?
     let twoFactorEnabled: Bool?
     let passwordChangedAt: String?
+    let roles: [String]?
     let isPremium: Bool?
     let premiumProductId: String?
     let premiumActivatedAt: String?
@@ -16,6 +17,7 @@ struct User: Codable, Identifiable {
     let updatedAt: String?
 
     var isPremiumActive: Bool { isPremium == true }
+    var isSuperAdmin: Bool { roles?.contains("super_admin") == true }
 
     /// First registration / join day for the account.
     var joinedAtDate: Date? {

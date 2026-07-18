@@ -1,0 +1,21 @@
+moduledependenciestarget: \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/AppCheckCore.modulemap \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/AppCheckCore.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheck.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/usr/include/DarwinFoundation1.modulemap \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckErrors.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckLogger.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckProvider.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckSettings.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckToken.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckTokenDelegate.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckTokenResult.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckDebugProvider.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACDeviceCheckProvider.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckAvailability.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppAttestProvider.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckAPIService.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckBackoffWrapper.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckErrorUtil.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACURLSessionDataResponse.h

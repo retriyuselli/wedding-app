@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'two_factor_enabled' => (bool) $this->two_factor_enabled,
             'has_social_login' => $this->usesSocialLogin(),
             'password_changed_at' => $this->password_changed_at,
+            'roles' => $this->getRoleNames()->values(),
             'is_premium' => $this->isPremium(),
             'premium_product_id' => $this->premium_product_id,
             'premium_activated_at' => $this->premium_activated_at,

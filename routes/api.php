@@ -180,6 +180,7 @@ Route::prefix('v1')->group(function () {
 
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
         Route::post('device-tokens/test', [DeviceTokenController::class, 'sendTest']);
+        Route::post('device-tokens/send-notification', [DeviceTokenController::class, 'sendNotification']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
 
         Route::get('messages/threads', [MessageController::class, 'threads']);

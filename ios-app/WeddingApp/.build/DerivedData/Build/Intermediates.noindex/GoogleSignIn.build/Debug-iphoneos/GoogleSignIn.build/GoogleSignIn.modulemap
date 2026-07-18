@@ -1,0 +1,4 @@
+module GoogleSignIn {
+umbrella header "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/Public/GoogleSignIn/GoogleSignIn.h"
+export *
+}

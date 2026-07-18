@@ -137,6 +137,13 @@
 "reminders.test_failed" = "Gagal menampilkan notifikasi uji.";
 "reminders.test_local_only" = "Banner lokal dijadwalkan. Push remote belum tersedia (cek login, token, atau API).";
 "reminders.test_remote_sent" = "Banner lokal dijadwalkan. Push remote terkirim ke %d perangkat.";
+"reminders.send_button" = "Kirim notifikasi";
+"reminders.send_title" = "Kirim Notifikasi";
+"reminders.send_to_all" = "Kirim ke semua user";
+"reminders.recipient_email" = "Email penerima";
+"reminders.notification_title" = "Judul notifikasi";
+"reminders.notification_message" = "Isi pesan";
+"reminders.sending" = "Mengirim…";
 "more.help" = "Bantuan & FAQ";
 "more.help_sub" = "Pusat bantuan dan pertanyaan umum";
 "more.about" = "Tentang Wedding App";

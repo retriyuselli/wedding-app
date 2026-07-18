@@ -51,14 +51,14 @@ struct AboutWeddingAppView: View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top, spacing: 14) {
-                    Image("WeddingAppCoupleLogo")
+                    Image("AboutAppIcon")
                         .resizable()
-                        .scaledToFill()
+                        .scaledToFit()
                         .frame(width: 56, height: 56)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .overlay {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(AppTheme.sage.opacity(0.15), lineWidth: 1)
+                                .stroke(Color.white.opacity(0.35), lineWidth: 1)
                         }
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -78,28 +78,10 @@ struct AboutWeddingAppView: View {
                     .foregroundStyle(AppTheme.ink.opacity(0.58))
                     .fixedSize(horizontal: false, vertical: true)
                     .lineSpacing(3)
-                    .padding(.trailing, 108)
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .premiumGlassCard(cornerRadius: 22)
-
-            ZStack(alignment: .bottomTrailing) {
-                Image("CouplePortrait")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 118, height: 132)
-                    .clipShape(
-                        UnevenRoundedRectangle(
-                            topLeadingRadius: 18,
-                            bottomLeadingRadius: 0,
-                            bottomTrailingRadius: 22,
-                            topTrailingRadius: 0,
-                            style: .continuous
-                        )
-                    )
-            }
-            .padding(.top, 8)
         }
     }
 

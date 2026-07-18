@@ -1,0 +1,100 @@
+{
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/Auth/RegisterView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RegisterView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RegisterView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RegisterView.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RegisterView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RegisterView.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/Billing/PaywallView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaywallView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaywallView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaywallView.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaywallView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaywallView.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/Billing/PremiumStore.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PremiumStore.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PremiumStore.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PremiumStore.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PremiumStore.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PremiumStore.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/More/PrivacyPolicyContent.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyContent.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyContent.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyContent.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyContent.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyContent.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/More/PrivacyPolicyView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyView.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyPolicyView.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/More/PrivacySecurityView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityView.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityView.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/More/RemindersPreferencesView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RemindersPreferencesView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RemindersPreferencesView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RemindersPreferencesView.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RemindersPreferencesView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/RemindersPreferencesView.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/Privacy/Models/PrivacyModels.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyModels.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyModels.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyModels.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyModels.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyModels.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/Privacy/Repositories/PrivacyRepository.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyRepository.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyRepository.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyRepository.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyRepository.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyRepository.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/Privacy/Services/PrivacyAPIService.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyAPIService.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyAPIService.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyAPIService.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyAPIService.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacyAPIService.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Features/Privacy/ViewModels/PrivacySecurityViewModel.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityViewModel.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityViewModel.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityViewModel.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityViewModel.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PrivacySecurityViewModel.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Models/PaymentSchedule.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaymentSchedule.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaymentSchedule.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaymentSchedule.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaymentSchedule.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PaymentSchedule.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Models/PreparationTask.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PreparationTask.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PreparationTask.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PreparationTask.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PreparationTask.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PreparationTask.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/Sources/Services/PushNotificationManager.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PushNotificationManager.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PushNotificationManager.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PushNotificationManager.dia",
+    "object" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PushNotificationManager.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/WeddingApp.build/Debug-iphoneos/WeddingApp.build/Objects-normal/arm64/PushNotificationManager.swiftdeps"
+  }
+}

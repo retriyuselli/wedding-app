@@ -1,0 +1,27 @@
+dependencies: \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDAuthorizationService.m \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/Build/Intermediates.noindex/AppAuth.build/Debug-iphoneos/AppAuthCore.build/DerivedSources/resource_bundle_accessor.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDAuthorizationService.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDAuthorizationRequest.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDExternalUserAgentRequest.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDResponseTypes.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDScopes.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDAuthorizationResponse.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDDefines.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDEndSessionRequest.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDEndSessionResponse.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDErrorUtilities.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDError.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDExternalUserAgent.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDExternalUserAgentSession.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDIDToken.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDRegistrationRequest.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDRegistrationResponse.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDServiceConfiguration.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDServiceDiscovery.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDTokenRequest.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDGrantTypes.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDTokenResponse.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDURLQueryComponent.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDURLSessionProvider.h

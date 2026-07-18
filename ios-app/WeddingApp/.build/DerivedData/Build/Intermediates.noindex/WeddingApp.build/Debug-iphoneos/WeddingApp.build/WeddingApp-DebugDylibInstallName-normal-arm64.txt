@@ -1,0 +1,1 @@
+@rpath/WeddingApp.debug.dylib

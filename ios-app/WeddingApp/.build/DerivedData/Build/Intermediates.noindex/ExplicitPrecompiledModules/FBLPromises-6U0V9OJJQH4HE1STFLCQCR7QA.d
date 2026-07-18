@@ -1,0 +1,23 @@
+moduledependenciestarget: \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/module.modulemap \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromises.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+All.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromiseError.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Always.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Any.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Async.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Await.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Catch.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Delay.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Do.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Race.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Recover.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Reduce.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Retry.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Then.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Timeout.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Validate.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Wrap.h \
+  /Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/promises/Sources/FBLPromises/include/FBLPromise+Testing.h

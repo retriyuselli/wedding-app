@@ -137,6 +137,13 @@
 "reminders.test_failed" = "Couldn't show the test notification.";
 "reminders.test_local_only" = "Local banner scheduled. Remote push isn't available yet (check login, token, or API).";
 "reminders.test_remote_sent" = "Local banner scheduled. Remote push sent to %d device(s).";
+"reminders.send_button" = "Send notification";
+"reminders.send_title" = "Send Notification";
+"reminders.send_to_all" = "Send to all users";
+"reminders.recipient_email" = "Recipient email";
+"reminders.notification_title" = "Notification title";
+"reminders.notification_message" = "Message";
+"reminders.sending" = "Sending…";
 "more.help" = "Help & FAQ";
 "more.help_sub" = "Help center and common questions";
 "more.about" = "About Wedding App";

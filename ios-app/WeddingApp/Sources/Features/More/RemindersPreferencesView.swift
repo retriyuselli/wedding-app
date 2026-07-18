@@ -8,9 +8,14 @@ struct RemindersPreferencesView: View {
     @ObservedObject private var pushManager = PushNotificationManager.shared
     @State private var isSendingTest = false
     @State private var showPaywall = false
+    @State private var showNotificationComposer = false
 
     private var isPremium: Bool {
         premium.isPremium(user: session.currentUser)
+    }
+
+    private var isSuperAdmin: Bool {
+        session.currentUser?.isSuperAdmin == true
     }
 
     private var isAuthorized: Bool {
@@ -62,13 +67,17 @@ struct RemindersPreferencesView: View {
 
                     preferenceCard
 
-                    testBannerButton
+                    if isSuperAdmin {
+                        testBannerButton
 
-                    if let message = pushManager.lastTestMessage {
-                        Text(message)
-                            .font(AppFont.regular(12))
-                            .foregroundStyle(AppTheme.inkMuted(0.55))
-                            .fixedSize(horizontal: false, vertical: true)
+                        sendNotificationButton
+
+                        if let message = pushManager.lastTestMessage {
+                            Text(message)
+                                .font(AppFont.regular(12))
+                                .foregroundStyle(AppTheme.inkMuted(0.55))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
 
                     openSettingsButton
@@ -102,6 +111,9 @@ struct RemindersPreferencesView: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView()
                 .environmentObject(session)
+        }
+        .sheet(isPresented: $showNotificationComposer) {
+            AdminNotificationComposerView()
         }
     }
 
@@ -196,6 +208,32 @@ struct RemindersPreferencesView: View {
         .disabled(isSendingTest)
     }
 
+    private var sendNotificationButton: some View {
+        Button {
+            showNotificationComposer = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "paperplane.fill")
+                    .font(.system(size: 15, weight: .medium))
+
+                Text(L10n.Reminders.sendButton)
+                    .font(AppFont.medium(14))
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(.white)
+            .padding(14)
+            .background(
+                AppTheme.quoteGradientMid,
+                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
     private var openSettingsButton: some View {
         Button {
             openSystemSettings()
@@ -256,5 +294,139 @@ struct RemindersPreferencesView: View {
     private func openSystemSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(url)
+    }
+}
+
+private struct AdminNotificationComposerView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var pushManager = PushNotificationManager.shared
+
+    @State private var sendToAll = false
+    @State private var recipientEmail = ""
+    @State private var title = ""
+    @State private var message = ""
+    @State private var isSending = false
+    @State private var feedbackMessage = ""
+    @State private var showFeedback = false
+    @State private var didSend = false
+
+    private var canSend: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && (sendToAll || !recipientEmail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            && !isSending
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                LuxuryWeddingBackground()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 14) {
+                        Toggle(L10n.Reminders.sendToAll, isOn: $sendToAll)
+                            .font(AppFont.medium(14))
+                            .foregroundStyle(AppTheme.titleOnGlass)
+                            .tint(AppTheme.sageDark)
+                            .padding(14)
+                            .premiumGlassCard(cornerRadius: 16)
+
+                        if !sendToAll {
+                            TextField(L10n.Reminders.recipientEmail, text: $recipientEmail)
+                                .keyboardType(.emailAddress)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .font(AppFont.regular(14))
+                                .padding(14)
+                                .premiumGlassCard(cornerRadius: 16)
+                        }
+
+                        TextField(L10n.Reminders.notificationTitle, text: $title)
+                            .font(AppFont.regular(14))
+                            .padding(14)
+                            .premiumGlassCard(cornerRadius: 16)
+
+                        TextEditor(text: $message)
+                            .font(AppFont.regular(14))
+                            .scrollContentBackground(.hidden)
+                            .frame(minHeight: 130)
+                            .padding(10)
+                            .premiumGlassCard(cornerRadius: 16)
+                            .overlay(alignment: .topLeading) {
+                                if message.isEmpty {
+                                    Text(L10n.Reminders.notificationMessage)
+                                        .font(AppFont.regular(14))
+                                        .foregroundStyle(AppTheme.inkMuted(0.45))
+                                        .padding(.horizontal, 15)
+                                        .padding(.vertical, 18)
+                                        .allowsHitTesting(false)
+                                }
+                            }
+
+                        Button {
+                            Task { await send() }
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isSending {
+                                    ProgressView().tint(.white)
+                                } else {
+                                    Image(systemName: "paperplane.fill")
+                                }
+
+                                Text(isSending ? L10n.Reminders.sending : L10n.Reminders.sendButton)
+                                    .font(AppFont.medium(15))
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                AppTheme.quoteGradientMid,
+                                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!canSend)
+                        .opacity(canSend ? 1 : 0.55)
+                    }
+                    .padding(20)
+                }
+            }
+            .navigationTitle(L10n.Reminders.sendTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.Common.close) { dismiss() }
+                }
+            }
+            .alert(didSend ? L10n.Common.success : L10n.Common.warning, isPresented: $showFeedback) {
+                Button(L10n.Common.ok, role: .cancel) {
+                    if didSend { dismiss() }
+                }
+            } message: {
+                Text(feedbackMessage)
+            }
+        }
+    }
+
+    private func send() async {
+        isSending = true
+        didSend = false
+        defer { isSending = false }
+
+        do {
+            feedbackMessage = try await pushManager.sendAdminNotification(
+                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                message: message.trimmingCharacters(in: .whitespacesAndNewlines),
+                recipientEmail: sendToAll
+                    ? nil
+                    : recipientEmail.trimmingCharacters(in: .whitespacesAndNewlines),
+                sendToAll: sendToAll
+            )
+            didSend = true
+            showFeedback = true
+        } catch {
+            feedbackMessage = error.userFacingMessage
+            showFeedback = true
+        }
     }
 }

@@ -224,6 +224,26 @@ final class PushNotificationManager: NSObject, ObservableObject {
         }
     }
 
+    func sendAdminNotification(
+        title: String,
+        message: String,
+        recipientEmail: String?,
+        sendToAll: Bool
+    ) async throws -> String {
+        let response: AdminNotificationResponse = try await APIClient.shared.request(
+            "device-tokens/send-notification",
+            method: "POST",
+            json: [
+                "send_to_all": sendToAll,
+                "email": recipientEmail ?? NSNull(),
+                "title": title,
+                "message": message,
+            ]
+        )
+
+        return response.message
+    }
+
     func handleRemoteNotification(userInfo: [AnyHashable: Any]) {
         routeDestination(userInfo["destination"] as? String)
     }
@@ -269,4 +289,8 @@ private struct DeviceTokenRegistration: Decodable {
 private struct PushTestResult: Decodable {
     let sent: Int
     let tokenCount: Int
+}
+
+private struct AdminNotificationResponse: Decodable {
+    let message: String
 }

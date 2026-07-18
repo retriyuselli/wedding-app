@@ -6,6 +6,7 @@ use App\Models\DeviceToken;
 use App\Models\User;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class DeviceTokenApiTest extends TestCase
@@ -90,6 +91,7 @@ class DeviceTokenApiTest extends TestCase
         ]);
 
         $user = User::where('email', 'test@example.com')->firstOrFail();
+        $this->makeSuperAdmin($user);
 
         DeviceToken::factory()->for($user)->create([
             'token' => 'apns-test-token',
@@ -106,9 +108,71 @@ class DeviceTokenApiTest extends TestCase
     public function test_send_test_push_requires_device_token(): void
     {
         $user = User::where('email', 'test@example.com')->firstOrFail();
+        $this->makeSuperAdmin($user);
 
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/device-tokens/test')
             ->assertStatus(422);
+    }
+
+    public function test_regular_user_cannot_send_test_or_custom_notification(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/device-tokens/test')
+            ->assertForbidden();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/device-tokens/send-notification', [
+                'send_to_all' => false,
+                'email' => $user->email,
+                'title' => 'Tidak boleh',
+                'message' => 'Pesan ini harus ditolak.',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_super_admin_can_send_notification_to_one_user(): void
+    {
+        config(['push.driver' => 'log']);
+
+        $admin = User::where('email', 'test@example.com')->firstOrFail();
+        $this->makeSuperAdmin($admin);
+
+        $recipient = User::factory()->create([
+            'email' => 'recipient@example.com',
+        ]);
+        DeviceToken::factory()->for($recipient)->create([
+            'token' => 'recipient-push-token',
+            'platform' => 'ios',
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson('/api/v1/device-tokens/send-notification', [
+                'send_to_all' => false,
+                'email' => $recipient->email,
+                'title' => 'Pengumuman',
+                'message' => 'Pesan khusus untuk penerima.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.recipient_count', 1)
+            ->assertJsonPath('data.push_sent', 1);
+
+        $this->assertDatabaseHas('customer_notifications', [
+            'user_id' => $recipient->id,
+            'title' => 'Pengumuman',
+            'message' => 'Pesan khusus untuk penerima.',
+        ]);
+    }
+
+    private function makeSuperAdmin(User $user): void
+    {
+        $role = Role::findOrCreate(
+            config('filament-shield.super_admin.name', 'super_admin'),
+            'web',
+        );
+
+        $user->assignRole($role);
     }
 }

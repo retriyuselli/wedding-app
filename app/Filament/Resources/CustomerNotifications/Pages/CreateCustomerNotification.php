@@ -14,6 +14,8 @@ class CreateCustomerNotification extends CreateRecord
 
     protected int $broadcastCount = 1;
 
+    protected int $pushSentCount = 0;
+
     protected bool $sendToAll = false;
 
     /**
@@ -33,25 +35,26 @@ class CreateCustomerNotification extends CreateRecord
      */
     protected function handleRecordCreation(array $data): Model
     {
+        $service = app(BroadcastCustomerNotificationService::class);
+
         if (! $this->sendToAll) {
             $this->broadcastCount = 1;
+            $result = $service->sendToUser((int) $data['user_id'], $data);
+            $this->pushSentCount = $result['push_sent'];
 
-            return static::getModel()::create($data);
+            return $result['notification'];
         }
 
-        $result = app(BroadcastCustomerNotificationService::class)->sendToAllUsers($data);
+        $result = $service->sendToAllUsers($data);
         $this->broadcastCount = $result['count'];
+        $this->pushSentCount = $result['push_sent'];
 
         return $result['first'];
     }
 
     protected function getCreatedNotificationTitle(): ?string
     {
-        if ($this->broadcastCount > 1) {
-            return "Notifikasi dikirim ke {$this->broadcastCount} user";
-        }
-
-        return parent::getCreatedNotificationTitle();
+        return "Notifikasi dibuat untuk {$this->broadcastCount} user · push terkirim ke {$this->pushSentCount} perangkat";
     }
 
     protected function getRedirectUrl(): string

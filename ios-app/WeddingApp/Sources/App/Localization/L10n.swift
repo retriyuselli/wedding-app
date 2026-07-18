@@ -175,6 +175,13 @@ enum L10n {
         static var testFailed: String { "reminders.test_failed".localized }
         static var testLocalOnly: String { "reminders.test_local_only".localized }
         static func testRemoteSent(_ count: Int) -> String { "reminders.test_remote_sent".localized(count) }
+        static var sendButton: String { "reminders.send_button".localized }
+        static var sendTitle: String { "reminders.send_title".localized }
+        static var sendToAll: String { "reminders.send_to_all".localized }
+        static var recipientEmail: String { "reminders.recipient_email".localized }
+        static var notificationTitle: String { "reminders.notification_title".localized }
+        static var notificationMessage: String { "reminders.notification_message".localized }
+        static var sending: String { "reminders.sending".localized }
     }
 
     enum Language {

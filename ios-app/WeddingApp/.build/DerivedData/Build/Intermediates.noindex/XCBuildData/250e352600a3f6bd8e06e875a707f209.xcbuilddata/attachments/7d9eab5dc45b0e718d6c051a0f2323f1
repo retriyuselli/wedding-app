@@ -1,0 +1,4 @@
+module AppAuth {
+umbrella "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuth"
+export *
+}
