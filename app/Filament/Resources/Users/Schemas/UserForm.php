@@ -83,7 +83,7 @@ class UserForm
                     ]),
 
                 Section::make('Role & Akses')
-                    ->description('Role menentukan akses ke panel admin dan fitur tertentu.')
+                    ->description('Hanya super_admin yang boleh mengubah role (termasuk menaikkan ke super_admin).')
                     ->schema([
                         Select::make('roles')
                             ->label('Role')
@@ -97,7 +97,7 @@ class UserForm
                     ]),
 
                 Section::make('Wedding Pro')
-                    ->description('Status Premium Non-Consumable di app (IAP wedding_pro_unlock). Bisa diaktifkan manual untuk demo / App Review.')
+                    ->description('Status Premium Non-Consumable. Hanya super_admin yang dapat mengubah. Grant manual: biarkan Apple transaction ID kosong (jangan isi ID palsu).')
                     ->columns(2)
                     ->schema([
                         Toggle::make('is_premium')
@@ -140,8 +140,8 @@ class UserForm
                         TextInput::make('apple_original_transaction_id')
                             ->label('Apple original transaction ID')
                             ->maxLength(255)
-                            ->placeholder('Kosongkan jika aktivasi manual')
-                            ->helperText('Diisi otomatis dari IAP. Untuk demo pakai ID unik (jangan 0 / kosong).')
+                            ->placeholder('Kosongkan untuk grant manual / demo')
+                            ->helperText('Diisi otomatis dari IAP. Grant manual: biarkan kosong. Jangan buat ID palsu seperti admin-manual-*.')
                             ->visible(fn (Get $get): bool => (bool) $get('is_premium'))
                             ->rule(function () {
                                 return function (string $attribute, mixed $value, Closure $fail): void {

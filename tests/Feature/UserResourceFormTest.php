@@ -154,6 +154,45 @@ class UserResourceFormTest extends TestCase
         $this->assertTrue($user->isPremium());
         $this->assertSame('wedding_pro_unlock', $user->premium_product_id);
         $this->assertNotNull($user->premium_activated_at);
+        $this->assertNull($user->apple_original_transaction_id);
+    }
+
+    public function test_non_super_admin_cannot_see_activate_wedding_pro_table_action(): void
+    {
+        $staff = $this->actingAsPanelAdmin();
+        $user = User::factory()->create([
+            'email' => 'pro-hidden@example.com',
+            'is_premium' => false,
+        ]);
+
+        Livewire::actingAs($staff)
+            ->test(ListUsers::class)
+            ->assertSuccessful()
+            ->assertTableActionHidden('activateWeddingPro', $user);
+    }
+
+    public function test_non_super_admin_cannot_persist_wedding_pro_from_edit_form(): void
+    {
+        $staff = $this->actingAsPanelAdmin();
+        $user = User::factory()->create([
+            'email' => 'pro-blocked@example.com',
+            'is_premium' => false,
+        ]);
+
+        Livewire::actingAs($staff)
+            ->test(EditUser::class, ['record' => $user->getRouteKey()])
+            ->fillForm([
+                'is_premium' => true,
+                'premium_product_id' => 'wedding_pro_unlock',
+                'premium_activated_at' => now()->toDateTimeString(),
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $user->refresh();
+
+        $this->assertFalse($user->isPremium());
+        $this->assertNull($user->premium_product_id);
     }
 
     public function test_super_admin_can_revoke_wedding_pro_from_table_action(): void
@@ -236,6 +275,30 @@ class UserResourceFormTest extends TestCase
 
         $admin = User::factory()->create([
             'email' => 'superadmin-userform@example.com',
+        ]);
+        $admin->assignRole($role);
+
+        return $admin;
+    }
+
+    private function actingAsPanelAdmin(): User
+    {
+        $role = Role::findOrCreate('admin', 'web');
+
+        foreach ([
+            'ViewAny:User',
+            'View:User',
+            'Create:User',
+            'Update:User',
+            'Delete:User',
+            'DeleteAny:User',
+        ] as $permissionName) {
+            $permission = Permission::findOrCreate($permissionName, 'web');
+            $role->givePermissionTo($permission);
+        }
+
+        $admin = User::factory()->create([
+            'email' => 'paneladmin-userform@example.com',
         ]);
         $admin->assignRole($role);
 

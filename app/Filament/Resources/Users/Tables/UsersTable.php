@@ -209,30 +209,33 @@ class UsersTable
                     ->label('Aktifkan Pro')
                     ->icon('heroicon-o-sparkles')
                     ->color('success')
-                    ->visible(fn (User $record): bool => ! $record->isPremium())
+                    ->visible(fn (User $record): bool => self::actorIsSuperAdmin() && ! $record->isPremium())
                     ->requiresConfirmation()
                     ->modalHeading('Aktifkan Wedding Pro?')
-                    ->modalDescription(fn (User $record): string => "User {$record->email} akan mendapat akses Premium (Checklist, Tamu, Budget).")
+                    ->modalDescription(fn (User $record): string => "User {$record->email} akan mendapat akses Premium (Checklist, Tamu, Budget). Aktivasi manual tidak menulis Apple transaction ID.")
                     ->action(function (User $record): void {
+                        abort_unless(self::actorIsSuperAdmin(), 403);
+
                         $productId = config('billing.pro_product_ids.0', 'wedding_pro_unlock');
 
                         $record->forceFill([
                             'is_premium' => true,
                             'premium_product_id' => $productId,
                             'premium_activated_at' => $record->premium_activated_at ?? now(),
-                            'apple_original_transaction_id' => $record->apple_original_transaction_id
-                                ?: 'admin-manual-'.$record->id,
+                            // Keep existing Apple entitlement key if present; never invent fake Apple IDs.
                         ])->save();
                     }),
                 Action::make('revokeWeddingPro')
                     ->label('Cabut Pro')
                     ->icon('heroicon-o-lock-closed')
                     ->color('warning')
-                    ->visible(fn (User $record): bool => $record->isPremium())
+                    ->visible(fn (User $record): bool => self::actorIsSuperAdmin() && $record->isPremium())
                     ->requiresConfirmation()
                     ->modalHeading('Cabut Wedding Pro?')
                     ->modalDescription(fn (User $record): string => "User {$record->email} akan kembali ke Free dan paywall aktif lagi.")
                     ->action(function (User $record): void {
+                        abort_unless(self::actorIsSuperAdmin(), 403);
+
                         $record->forceFill([
                             'is_premium' => false,
                             'premium_product_id' => null,
@@ -262,9 +265,12 @@ class UsersTable
                         ->label('Aktifkan Wedding Pro')
                         ->icon('heroicon-o-sparkles')
                         ->color('success')
+                        ->visible(fn (): bool => self::actorIsSuperAdmin())
                         ->requiresConfirmation()
                         ->deselectRecordsAfterCompletion()
                         ->action(function (Collection $records): void {
+                            abort_unless(self::actorIsSuperAdmin(), 403);
+
                             $productId = config('billing.pro_product_ids.0', 'wedding_pro_unlock');
 
                             $records->each(function (User $record) use ($productId): void {
@@ -276,8 +282,6 @@ class UsersTable
                                     'is_premium' => true,
                                     'premium_product_id' => $productId,
                                     'premium_activated_at' => now(),
-                                    'apple_original_transaction_id' => $record->apple_original_transaction_id
-                                        ?: 'admin-manual-'.$record->id,
                                 ])->save();
                             });
                         }),
@@ -285,9 +289,12 @@ class UsersTable
                         ->label('Cabut Wedding Pro')
                         ->icon('heroicon-o-lock-closed')
                         ->color('warning')
+                        ->visible(fn (): bool => self::actorIsSuperAdmin())
                         ->requiresConfirmation()
                         ->deselectRecordsAfterCompletion()
                         ->action(function (Collection $records): void {
+                            abort_unless(self::actorIsSuperAdmin(), 403);
+
                             $records->each(function (User $record): void {
                                 if (! $record->isPremium()) {
                                     return;
@@ -312,5 +319,12 @@ class UsersTable
             ->emptyStateHeading('Belum ada user')
             ->emptyStateDescription('User pengantin dan admin akan muncul di sini setelah dibuat atau registrasi.')
             ->emptyStateIcon('heroicon-o-users');
+    }
+
+    private static function actorIsSuperAdmin(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->isSuperAdmin();
     }
 }

@@ -49,6 +49,7 @@ struct WeddingAppApp: App {
                 .splashScreenOverlay()
                 .onAppear {
                     GoogleSignInService.shared.configureIfNeeded()
+                    PremiumStore.shared.bind(session: session)
                 }
                 .onOpenURL { url in
                     _ = GoogleSignInService.shared.handle(url: url)

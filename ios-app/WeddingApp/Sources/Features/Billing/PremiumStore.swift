@@ -13,6 +13,7 @@ final class PremiumStore: ObservableObject {
     @Published private(set) var sharedPremiumAccess: [SharedPremiumAccess] = []
 
     private var updatesTask: Task<Void, Never>?
+    private weak var session: SessionStore?
 
     var proProduct: Product? {
         products.first { $0.id == BillingProduct.proUnlock }
@@ -34,6 +35,11 @@ final class PremiumStore: ObservableObject {
 
     deinit {
         updatesTask?.cancel()
+    }
+
+    /// Bind the app session so Transaction.updates can sync Pro to the logged-in account.
+    func bind(session: SessionStore) {
+        self.session = session
     }
 
     func isPremium(user: User?) -> Bool {
@@ -103,6 +109,8 @@ final class PremiumStore: ObservableObject {
 
     @discardableResult
     func purchasePro(session: SessionStore) async -> Bool {
+        bind(session: session)
+
         do {
             await refreshLocalEntitlements()
             if localEntitled {
@@ -140,9 +148,15 @@ final class PremiumStore: ObservableObject {
                     signedTransaction: verification.jwsRepresentation,
                     session: session
                 )
-                await transaction.finish()
+                // Only finish after server verify succeeds so StoreKit can redeliver on failure.
+                if synced {
+                    await transaction.finish()
+                    await refreshLocalEntitlements()
+                    return true
+                }
+
                 await refreshLocalEntitlements()
-                return synced
+                return false
             case .userCancelled:
                 return false
             case .pending:
@@ -160,6 +174,7 @@ final class PremiumStore: ObservableObject {
 
     @discardableResult
     func restorePurchases(session: SessionStore) async -> Bool {
+        bind(session: session)
         purchaseInFlight = true
         errorMessage = nil
         defer { purchaseInFlight = false }
@@ -185,6 +200,7 @@ final class PremiumStore: ObservableObject {
                     session: session
                 ) {
                     restored = true
+                    await transaction.finish()
                 } else {
                     lastSyncError = errorMessage
                 }
@@ -217,8 +233,29 @@ final class PremiumStore: ObservableObject {
                   BillingProduct.allProIds.contains(transaction.productID) else {
                 continue
             }
-            localEntitled = true
-            await transaction.finish()
+
+            // Without a logged-in session, leave unfinished so StoreKit retries after login.
+            guard KeychainStore.loadToken() != nil, let session else {
+                localEntitled = true
+                continue
+            }
+
+            let synced = await syncToServer(
+                productId: transaction.productID,
+                transactionId: String(transaction.id),
+                originalTransactionId: String(transaction.originalID),
+                signedTransaction: result.jwsRepresentation,
+                session: session
+            )
+
+            if synced {
+                localEntitled = true
+                await transaction.finish()
+            } else {
+                #if DEBUG
+                print("[Premium] Transaction.updates sync failed; leaving unfinished for retry")
+                #endif
+            }
         }
     }
 
