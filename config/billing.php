@@ -22,10 +22,25 @@ return [
     */
     'apple_bundle_id' => env('APPLE_BUNDLE_ID', 'com.weddingapp.ios'),
 
-    'apple_root_ca_path' => env(
-        'APPLE_ROOT_CA_PATH',
-        storage_path('certs/AppleRootCA-G3.pem'),
-    ),
+    // Relative env values (e.g. storage/certs/...) are resolved from the project
+    // root. Absolute paths are kept as-is. This avoids failures when the process
+    // CWD is public/ (php artisan serve / php-fpm).
+    'apple_root_ca_path' => (static function (): string {
+        $configured = env('APPLE_ROOT_CA_PATH');
+
+        if (! is_string($configured) || $configured === '') {
+            return storage_path('certs/AppleRootCA-G3.pem');
+        }
+
+        if (
+            str_starts_with($configured, DIRECTORY_SEPARATOR)
+            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $configured) === 1
+        ) {
+            return $configured;
+        }
+
+        return base_path($configured);
+    })(),
 
     /*
      * NEVER enable in production. Allows decoding JWS without signature checks (tests only).

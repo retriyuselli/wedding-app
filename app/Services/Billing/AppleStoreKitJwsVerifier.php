@@ -149,7 +149,8 @@ class AppleStoreKitJwsVerifier
 
     private function appleRootCaPem(): string
     {
-        $path = (string) config('billing.apple_root_ca_path');
+        $path = $this->resolveAppleRootCaPath((string) config('billing.apple_root_ca_path'));
+
         if (! is_file($path)) {
             throw new InvalidArgumentException('File Root CA Apple tidak ditemukan.');
         }
@@ -160,6 +161,31 @@ class AppleStoreKitJwsVerifier
         }
 
         return $pem;
+    }
+
+    private function resolveAppleRootCaPath(string $path): string
+    {
+        if ($path === '') {
+            return storage_path('certs/AppleRootCA-G3.pem');
+        }
+
+        if (is_file($path)) {
+            return $path;
+        }
+
+        if (
+            ! str_starts_with($path, DIRECTORY_SEPARATOR)
+            && preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) !== 1
+        ) {
+            $fromBase = base_path($path);
+            if (is_file($fromBase)) {
+                return $fromBase;
+            }
+
+            return $fromBase;
+        }
+
+        return $path;
     }
 
     private function certificateToPem(string $encoded): string

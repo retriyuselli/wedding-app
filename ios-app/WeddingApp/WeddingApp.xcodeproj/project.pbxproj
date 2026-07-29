@@ -201,7 +201,7 @@
 		3F2E1E70A6F0FBC009D57C52 /* DataExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportView.swift; sourceTree = "<group>"; };
 		4429372149863DB95BDA137D /* SharedDirectoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDirectoryView.swift; sourceTree = "<group>"; };
 		463B7B02EAA92D28939FF73E /* PrivacySecurityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySecurityView.swift; sourceTree = "<group>"; };
-		46D8AD39291CE696AD47C739 /* WeddingApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WeddingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		46D8AD39291CE696AD47C739 /* WeddingApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WeddingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E57979FBEA0C155CE8EDFA9 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		4F8C255E3C4744D9A51D5A3F /* AboutWeddingAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWeddingAppView.swift; sourceTree = "<group>"; };
 		50F98766A9F27330C7919FAF /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
@@ -951,7 +951,7 @@
 				CODE_SIGN_ENTITLEMENTS = WeddingApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				INFOPLIST_FILE = Generated/Info.plist;
@@ -1043,7 +1043,7 @@
 				CODE_SIGN_ENTITLEMENTS = WeddingApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				INFOPLIST_FILE = Generated/Info.plist;

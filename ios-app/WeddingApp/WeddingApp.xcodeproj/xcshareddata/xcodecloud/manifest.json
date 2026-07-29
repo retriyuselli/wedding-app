@@ -1,0 +1,9 @@
+{
+  "id" : "f20c59e8-51cc-4c0b-b85d-bbfc6da8e20c",
+  "targets" : [
+    {
+      "id" : "bc1619eb-0d9c-490d-a895-6f7599bcf3f4",
+      "name" : "WeddingApp"
+    }
+  ]
+}
