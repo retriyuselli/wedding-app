@@ -103,7 +103,7 @@
 "more.saved_vendors" = "Vendor Tersimpan";
 "more.saved_vendors_sub" = "Daftar vendor pilihan Anda";
 "more.inspiration" = "Inspirasi & Ide";
-"more.inspiration_sub" = "Simpan inspirasi dan referensi";
+"more.inspiration_sub" = "Segera hadir di update berikutnya";
 "more.documents" = "Dokumen";
 "more.documents_sub" = "Simpan dokumen penting pernikahan";
 "more.wedding_pro" = "Wedding Pro";
@@ -590,6 +590,8 @@
 /* Inspiration */
 "inspiration.title" = "Inspirasi & Ide";
 "inspiration.subtitle" = "Temukan inspirasi untuk hari bahagia Anda";
+"inspiration.coming_soon_title" = "Segera Hadir";
+"inspiration.coming_soon_message" = "Koleksi inspirasi & ide pernikahan sedang disiapkan dan akan tersedia di update berikutnya.";
 "inspiration.search_placeholder" = "Cari inspirasi";
 "inspiration.latest" = "Inspirasi Terbaru";
 "inspiration.saved" = "Inspirasi Tersimpan";

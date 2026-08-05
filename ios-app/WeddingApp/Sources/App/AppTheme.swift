@@ -255,7 +255,7 @@ enum AppTheme {
                 }
                 let ink = AppearanceStore.currentPalette.definition.ink.light
                 // Midnight white cards need slightly stronger caption ink for readability.
-                let alpha: CGFloat = AppearanceStore.currentPalette.prefersLightContentChrome ? 0.62 : 0.45
+                let alpha: CGFloat = AppearanceStore.currentPalette.prefersLightContentChrome ? 0.72 : 0.62
                 return UIColor(red: ink.0, green: ink.1, blue: ink.2, alpha: alpha)
             }
         )
@@ -266,7 +266,8 @@ enum AppTheme {
         Color(
             uiColor: UIColor { _ in
                 let ink = AppearanceStore.currentPalette.definition.ink.light
-                let alpha: CGFloat = AppearanceStore.currentPalette.prefersLightContentChrome ? 0.68 : 0.55
+                // Keep captions clearly readable on white / pale sage — 0.55 washed out too easily.
+                let alpha: CGFloat = AppearanceStore.currentPalette.prefersLightContentChrome ? 0.78 : 0.72
                 return UIColor(red: ink.0, green: ink.1, blue: ink.2, alpha: alpha)
             }
         )

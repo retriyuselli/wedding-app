@@ -732,6 +732,8 @@ enum L10n {
     enum Inspiration {
         static var title: String { "inspiration.title".localized }
         static var subtitle: String { "inspiration.subtitle".localized }
+        static var comingSoonTitle: String { "inspiration.coming_soon_title".localized }
+        static var comingSoonMessage: String { "inspiration.coming_soon_message".localized }
         static var searchPlaceholder: String { "inspiration.search_placeholder".localized }
         static var latest: String { "inspiration.latest".localized }
         static var saved: String { "inspiration.saved".localized }

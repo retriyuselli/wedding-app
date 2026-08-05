@@ -357,11 +357,11 @@ struct BudgetSummaryDetailView: View {
                 .minimumScaleFactor(0.7)
             Text("\(percent)%")
                 .font(AppFont.regular(10))
-                .foregroundStyle(AppTheme.captionOnLightSurface)
+                .foregroundStyle(AppTheme.sageMuted(0.75))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
-        .background(AppTheme.lightSage.opacity(0.45), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 

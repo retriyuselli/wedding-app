@@ -79,16 +79,51 @@ struct InspirationView: View {
                 .padding(.bottom, 28)
             }
             .scrollDismissesKeyboard(.interactively)
-            .premiumContentLock(isPremium: isPremium, showPaywall: $showPaywall)
+            // Preview the catalog behind Coming Soon — visible but not interactive.
+            .opacity(0.38)
+            .allowsHitTesting(false)
+
+            Color.black.opacity(0.18)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+
+            InspirationComingSoonOverlay()
+                .padding(.horizontal, 28)
+
+            // Keep back navigation usable above the modal.
+            VStack {
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "arrow.left")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(AppTheme.iconOnChrome)
+                            .frame(width: 42, height: 42)
+                            .background(AppTheme.chrome, in: Circle())
+                            .overlay {
+                                Circle().stroke(AppTheme.hairline, lineWidth: 1)
+                            }
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+
+                Spacer()
+            }
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
         .overlay {
-            if isPremium && isLoading && items.isEmpty {
+            if isLoading && items.isEmpty {
                 ProgressView()
             }
         }
         .task {
+            // Always load preview/catalog so the dimmed background looks real.
             if isPremium {
                 await load()
             } else {
@@ -473,6 +508,43 @@ struct InspirationView: View {
         """
         items = (try? decoder.decode([InspirationItem].self, from: Data(json.utf8))) ?? []
         recomputeDisplayedItems()
+    }
+}
+
+/// Modal card over the dimmed inspiration catalog until content materials are ready.
+private struct InspirationComingSoonOverlay: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 28, weight: .medium))
+                .foregroundStyle(AppTheme.iconOnChip)
+                .frame(width: 64, height: 64)
+                .background(AppTheme.iconChipFill, in: Circle())
+                .overlay {
+                    Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                }
+
+            Text(L10n.Inspiration.comingSoonTitle)
+                .font(AppFont.semibold(18))
+                .foregroundStyle(AppTheme.titleOnGlass)
+
+            Text(L10n.Inspiration.comingSoonMessage)
+                .font(AppFont.regular(13))
+                .foregroundStyle(AppTheme.inkMuted(0.72))
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity)
+        .background {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(AppTheme.surface)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(AppTheme.hairline, lineWidth: 1)
+        }
+        .shadow(color: AppTheme.sageDark.opacity(0.14), radius: 18, y: 10)
     }
 }
 

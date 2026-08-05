@@ -103,7 +103,7 @@
 "more.saved_vendors" = "Saved Vendors";
 "more.saved_vendors_sub" = "Your favorite vendor list";
 "more.inspiration" = "Inspiration & Ideas";
-"more.inspiration_sub" = "Save inspiration and references";
+"more.inspiration_sub" = "Coming soon in a future update";
 "more.documents" = "Documents";
 "more.documents_sub" = "Store important wedding documents";
 "more.wedding_pro" = "Wedding Pro";
@@ -590,6 +590,8 @@
 /* Inspiration */
 "inspiration.title" = "Inspiration & Ideas";
 "inspiration.subtitle" = "Find inspiration for your special day";
+"inspiration.coming_soon_title" = "Coming Soon";
+"inspiration.coming_soon_message" = "Wedding inspiration & ideas are being prepared and will be available in a future update.";
 "inspiration.search_placeholder" = "Search inspiration";
 "inspiration.latest" = "Latest Inspiration";
 "inspiration.saved" = "Saved Inspiration";
