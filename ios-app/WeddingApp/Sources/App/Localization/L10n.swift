@@ -213,6 +213,8 @@ enum L10n {
         static var paletteChampagneSub: String { "settings.palette_champagne_sub".localized }
         static var paletteOcean: String { "settings.palette_ocean".localized }
         static var paletteOceanSub: String { "settings.palette_ocean_sub".localized }
+        static var paletteMidnight: String { "settings.palette_midnight".localized }
+        static var paletteMidnightSub: String { "settings.palette_midnight_sub".localized }
         static var themeSystem: String { "settings.theme_system".localized }
         static var themeSystemSub: String { "settings.theme_system_sub".localized }
         static var themeLight: String { "settings.theme_light".localized }
@@ -914,6 +916,31 @@ enum L10n {
         static var viewerRoleCouple: String { "privacy.viewer_role_couple".localized }
         static var viewerRoleVendor: String { "privacy.viewer_role_vendor".localized }
         static var viewerRoleAuthenticated: String { "privacy.viewer_role_authenticated".localized }
+        static var statusSecure: String { "privacy.status_secure".localized }
+        static var statusAttention: String { "privacy.status_attention".localized }
+        static var twoFactorEnable: String { "privacy.two_factor_enable".localized }
+        static var twoFactorDisable: String { "privacy.two_factor_disable".localized }
+        static var twoFactorSendingCode: String { "privacy.two_factor_sending_code".localized }
+        static var twoFactorVerifying: String { "privacy.two_factor_verifying".localized }
+        static var twoFactorConfirmCode: String { "privacy.two_factor_confirm_code".localized }
+        static var twoFactorCodePlaceholder: String { "privacy.two_factor_code_placeholder".localized }
+        static var trustThisDevice: String { "privacy.trust_this_device".localized }
+        static var deviceTrusted: String { "privacy.device_trusted".localized }
+        static var deviceUntrusted: String { "privacy.device_untrusted".localized }
+        static var deleteDeviceTitle: String { "privacy.delete_device_title".localized }
+        static var deviceTrustedSuccess: String { "privacy.device_trusted_success".localized }
+        static var deviceTrustRevoked: String { "privacy.device_trust_revoked".localized }
+        static var deviceTrustGranted: String { "privacy.device_trust_granted".localized }
+        static var deviceDeletedSuccess: String { "privacy.device_deleted_success".localized }
+        static var exportPreparing: String { "privacy.export_preparing".localized }
+        static var exportDownload: String { "privacy.export_download".localized }
+        static var exportShare: String { "privacy.export_share".localized }
+        static var exportReady: String { "privacy.export_ready".localized }
+        static var permissionAllowed: String { "privacy.permission_allowed".localized }
+        static var permissionDenied: String { "privacy.permission_denied".localized }
+        static var permissionNotSet: String { "privacy.permission_not_set".localized }
+        static var permissionUnknown: String { "privacy.permission_unknown".localized }
+        static var permissionOpenSettingsHint: String { "privacy.permission_open_settings_hint".localized }
 
     }
 
@@ -1032,6 +1059,10 @@ enum L10n {
         static var groomLabel: String { "onboarding.groom_label".localized }
         static var bridePlaceholder: String { "onboarding.bride_placeholder".localized }
         static var groomPlaceholder: String { "onboarding.groom_placeholder".localized }
+        static var couplePhotoLabel: String { "onboarding.couple_photo_label".localized }
+        static var couplePhotoUpload: String { "onboarding.couple_photo_upload".localized }
+        static var couplePhotoChange: String { "onboarding.couple_photo_change".localized }
+        static var couplePhotoHint: String { "onboarding.couple_photo_hint".localized }
 
         static var eventsEyebrow: String { "onboarding.events_eyebrow".localized }
         static var eventsTitle: String { "onboarding.events_title".localized }
@@ -1241,6 +1272,65 @@ enum L10n {
         static var contactSupport: String { "help.contact_support".localized }
         static var contactSupportSub: String { "help.contact_support_sub".localized }
         static var emailSupport: String { "help.email_support".localized }
+        static var contactTitle: String { "help.contact_title".localized }
+        static var contactSubtitle: String { "help.contact_subtitle".localized }
+        static var contactIntroTitle: String { "help.contact_intro_title".localized }
+        static var contactIntroBody: String { "help.contact_intro_body".localized }
+        static var topicSection: String { "help.topic_section".localized }
+        static var messageSection: String { "help.message_section".localized }
+        static var messagePlaceholder: String { "help.message_placeholder".localized }
+        static var messageTips: String { "help.message_tips".localized }
+        static var sendMessage: String { "help.send_message".localized }
+        static var messageSentTitle: String { "help.message_sent_title".localized }
+        static var messageSentBody: String { "help.message_sent_body".localized }
+        static var viewConversation: String { "help.view_conversation".localized }
+        static var continueSupportChat: String { "help.continue_support_chat".localized }
+        static func supportUnavailable(_ email: String) -> String { "help.support_unavailable".localized(email) }
+        static var emailTitle: String { "help.email_title".localized }
+        static var emailSubtitle: String { "help.email_subtitle".localized }
+        static var emailSubjectSection: String { "help.email_subject_section".localized }
+        static var emailBodySection: String { "help.email_body_section".localized }
+        static var emailBodyPlaceholder: String { "help.email_body_placeholder".localized }
+        static var emailOfficialBlurb: String { "help.email_official_blurb".localized }
+        static var emailPreview: String { "help.email_preview".localized }
+        static var openMailApp: String { "help.open_mail_app".localized }
+        static var emailCopiedTitle: String { "help.email_copied_title".localized }
+        static func emailCopiedBody(_ email: String) -> String { "help.email_copied_body".localized(email) }
+        static var serviceHoursTitle: String { "help.service_hours_title".localized }
+        static var serviceHoursResponse: String { "help.service_hours_response".localized }
+        static var serviceDays: String { "help.service_days".localized }
+        static var serviceHours: String { "help.service_hours".localized }
+        static var defaultUserName: String { "help.default_user_name".localized }
+        static func emailFieldName(_ name: String) -> String { "help.email_field_name".localized(name) }
+        static func emailFieldEmail(_ email: String) -> String { "help.email_field_email".localized(email) }
+        static var emailSentFrom: String { "help.email_sent_from".localized }
+        static var emailSubjectAccount: String { "help.email_subject_account".localized }
+        static var emailSubjectBudget: String { "help.email_subject_budget".localized }
+        static var emailSubjectTechnical: String { "help.email_subject_technical".localized }
+        static var emailSubjectData: String { "help.email_subject_data".localized }
+        static var emailSubjectOther: String { "help.email_subject_other".localized }
+        static var articlesEmptyTitle: String { "help.articles_empty_title".localized }
+        static var articlesEmptyMessage: String { "help.articles_empty_message".localized }
+        static func articlesAvailable(_ count: Int) -> String { "help.articles_available".localized(count) }
+        static func articlesGuide(_ topic: String) -> String { "help.articles_guide".localized(topic) }
+        static var articlesSearchPlaceholder: String { "help.articles_search_placeholder".localized }
+        static func readMinutes(_ minutes: Int) -> String { "help.read_minutes".localized(minutes) }
+        static func readMinutesTopic(_ minutes: Int, _ topic: String) -> String { "help.read_minutes_topic".localized(minutes, topic) }
+        static func stillNeedHelp(_ email: String) -> String { "help.still_need_help".localized(email) }
+        static var topicGettingStarted: String { "help.topic_getting_started".localized }
+        static var topicGettingStartedSub: String { "help.topic_getting_started_sub".localized }
+        static var topicPreparation: String { "help.topic_preparation".localized }
+        static var topicPreparationSub: String { "help.topic_preparation_sub".localized }
+        static var topicBudget: String { "help.topic_budget".localized }
+        static var topicBudgetSub: String { "help.topic_budget_sub".localized }
+        static var topicGuests: String { "help.topic_guests".localized }
+        static var topicGuestsSub: String { "help.topic_guests_sub".localized }
+        static var topicSecurity: String { "help.topic_security".localized }
+        static var topicSecuritySub: String { "help.topic_security_sub".localized }
+        static var faqSection: String { "help.faq_section".localized }
+        static var topicsSection: String { "help.topics_section".localized }
+        static var contactsSection: String { "help.contacts_section".localized }
+        static var searchHelpPlaceholder: String { "help.search_help_placeholder".localized }
         static var faqQ1: String { "help.faq_q1".localized }
         static var faqA1: String { "help.faq_a1".localized }
         static var faqQ2: String { "help.faq_q2".localized }

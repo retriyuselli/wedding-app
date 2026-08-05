@@ -91,6 +91,7 @@ Route::prefix('v1')->group(function () {
         Route::get('wedding-info', [WeddingInfoController::class, 'show']);
         Route::put('wedding-info', [WeddingInfoController::class, 'update']);
         Route::post('wedding-info', [WeddingInfoController::class, 'update']);
+        Route::get('wedding-info/photo', [WeddingInfoController::class, 'photo']);
         Route::post('wedding-info/photo', [WeddingInfoController::class, 'uploadPhoto'])
             ->middleware('premium');
         // Deleting own photo is always allowed (cleanup / privacy), even if Pro lapsed.

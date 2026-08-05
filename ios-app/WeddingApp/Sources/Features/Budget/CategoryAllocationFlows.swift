@@ -16,10 +16,11 @@ struct EditCategoryAllocationView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     categoryHeader
 
                     if let errorMessage {
@@ -40,7 +41,10 @@ struct EditCategoryAllocationView: View {
                                 .foregroundStyle(AppTheme.ink)
                                 .keyboardType(.numberPad)
                                 .onChange(of: amountText) { _, newValue in
-                                    amountText = CurrencyFormatter.formatAmountInput(newValue)
+                                    let formatted = CurrencyFormatter.formatAmountInput(newValue)
+                                    if formatted != amountText {
+                                        amountText = formatted
+                                    }
                                 }
                         }
 
@@ -66,13 +70,15 @@ struct EditCategoryAllocationView: View {
                     usageSummary
 
                     if isEditing {
-                        Button(role: .destructive) {
+                        Button {
                             Task { await deleteAllocation() }
                         } label: {
                             Label(L10n.Budget.deleteAllocation, systemImage: "trash")
                                 .font(AppFont.medium(14))
+                                .foregroundStyle(Color.red.opacity(0.95))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
+                                .background(Color.red.opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .padding(.top, 8)
@@ -102,13 +108,13 @@ struct EditCategoryAllocationView: View {
                     .foregroundStyle(AppTheme.sageDark)
                 Text(L10n.Budget.spentCommitmentLine(CurrencyFormatter.rupiah(category.spent), CurrencyFormatter.rupiah(category.commitment)))
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
 
             Spacer()
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var usageSummary: some View {
@@ -120,7 +126,7 @@ struct EditCategoryAllocationView: View {
             HStack {
                 Text(L10n.Budget.recorded)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                 Spacer()
                 Text(CurrencyFormatter.rupiah(category.totalRecorded))
                     .font(AppFont.medium(13))
@@ -131,29 +137,29 @@ struct EditCategoryAllocationView: View {
                 HStack {
                     Text(L10n.Budget.allocationRemaining)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                     Spacer()
                     Text(CurrencyFormatter.rupiah(max(planned - category.spent - category.commitment, 0)))
                         .font(AppFont.medium(13))
-                        .foregroundStyle(AppTheme.gold)
+                        .foregroundStyle(AppTheme.goldOnLightSurface)
                 }
             }
         }
         .padding(14)
-        .background(AppTheme.lightSage.opacity(0.45), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .premiumListRow(cornerRadius: 16)
     }
 
     private func formSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             VStack(spacing: 10) {
                 content()
             }
             .padding(14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
     }
 
@@ -163,16 +169,19 @@ struct EditCategoryAllocationView: View {
         } label: {
             Text(isEditing ? L10n.Budget.saveChanges : L10n.Budget.saveAllocation)
                 .font(AppFont.medium(15))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(canSave ? AppTheme.sageDark : AppTheme.sage.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(
+                    AppTheme.primaryActionFill(enabled: canSave),
+                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                )
         }
         .buttonStyle(.plain)
         .disabled(!canSave || isLoading)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private var canSave: Bool {
@@ -180,9 +189,7 @@ struct EditCategoryAllocationView: View {
     }
 
     private var parsedAmount: Double? {
-        let digits = amountText.filter(\.isNumber)
-        guard !digits.isEmpty, let value = Double(digits) else { return nil }
-        return value
+        CurrencyFormatter.parseAmountInput(amountText)
     }
 
     private var suggestedRecordedAmount: Double {
@@ -198,7 +205,7 @@ struct EditCategoryAllocationView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.Budget.suggestedFromRecorded(CurrencyFormatter.rupiah(suggestedRecordedAmount)))
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
 
             Spacer(minLength: 8)

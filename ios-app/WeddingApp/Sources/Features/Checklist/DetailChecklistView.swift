@@ -47,7 +47,8 @@ struct TaskDetailView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 22) {
@@ -119,7 +120,12 @@ struct TaskDetailView: View {
                 } label: {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppTheme.ink.opacity(0.8))
+                        .foregroundStyle(AppTheme.iconOnChrome)
+                        .frame(width: 40, height: 40)
+                        .background(AppTheme.chrome, in: Circle())
+                        .overlay {
+                            Circle().stroke(AppTheme.hairline, lineWidth: 1)
+                        }
                 }
                 .buttonStyle(.plain)
 
@@ -138,12 +144,12 @@ struct TaskDetailView: View {
             }
 
             Text(L10n.Checklist.detailTitle)
-                .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(AppFont.serifBold(32))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             Text(L10n.Checklist.detailSubtitle)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.gold)
+                .foregroundStyle(AppTheme.accentOnBackground)
                 .lineSpacing(2)
         }
         .padding(.top, 4)
@@ -152,18 +158,13 @@ struct TaskDetailView: View {
     private func circleIcon(_ name: String) -> some View {
         Image(systemName: name)
             .font(.system(size: 12, weight: .regular))
-            .foregroundStyle(AppTheme.ink.opacity(0.7))
+            .foregroundStyle(AppTheme.iconOnChrome)
             .frame(width: 40, height: 40)
-            .background {
-                Circle()
-                    .fill(Color.white.opacity(0.78))
-                    .background(.ultraThinMaterial, in: Circle())
-            }
+            .background(AppTheme.chrome, in: Circle())
             .overlay {
                 Circle()
-                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                    .stroke(AppTheme.hairline, lineWidth: 1)
             }
-            .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 10, y: 5)
     }
 
     // MARK: - Info Card
@@ -251,7 +252,7 @@ struct TaskDetailView: View {
 
             Text(descriptionText ?? "")
                 .font(AppFont.regular(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(AppTheme.mutedOnBackground)
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -312,11 +313,11 @@ struct TaskDetailView: View {
 
             Text(notesText ?? "")
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(AppTheme.ink.opacity(0.7))
                 .lineSpacing(4)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
-                .background(AppTheme.lightSage.opacity(0.5), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .premiumGlassCard(cornerRadius: 16)
         }
     }
 
@@ -389,15 +390,15 @@ struct TaskDetailView: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 8)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     // MARK: - Helpers
 
     private func sectionTitleText(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 19, weight: .semibold, design: .serif))
-            .foregroundStyle(AppTheme.sageDark)
+            .font(AppFont.serifSemibold(19))
+            .foregroundStyle(AppTheme.titleOnBackground)
     }
 
     private var statusSubtitle: String {
@@ -592,7 +593,8 @@ private struct TaskEditSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                    .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
@@ -638,12 +640,12 @@ private struct TaskEditSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.cancel) { dismiss() }
-                        .foregroundStyle(AppTheme.ink.opacity(0.7))
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L10n.Common.save) { save() }
                         .font(AppFont.medium(15))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.accentOnBackground)
                         .disabled(isSaving || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
@@ -654,7 +656,7 @@ private struct TaskEditSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.Checklist.taskPriority)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(AppTheme.mutedOnBackground)
 
             HStack(spacing: 10) {
                 ForEach(priorityOptions, id: \.self) { option in
@@ -684,7 +686,7 @@ private struct TaskEditSheet: View {
             Toggle(isOn: $hasDueDate.animation()) {
                 Text(L10n.Checklist.taskDueDate)
                     .font(AppFont.medium(13))
-                    .foregroundStyle(AppTheme.ink.opacity(0.6))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
             .tint(AppTheme.sageDark)
 
@@ -703,7 +705,7 @@ private struct TaskEditSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(AppTheme.mutedOnBackground)
 
             content()
                 .padding(14)

@@ -48,7 +48,7 @@ final class AppPermissionsViewModel: ObservableObject {
     func openSystemSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(url)
-        successMessage = "Buka Pengaturan iOS untuk mengubah izin aplikasi."
+        successMessage = L10n.Privacy.permissionOpenSettingsHint
     }
 
     func retry() async {
@@ -61,42 +61,42 @@ final class AppPermissionsViewModel: ObservableObject {
             let settings = await UNUserNotificationCenter.current().notificationSettings()
             switch settings.authorizationStatus {
             case .authorized, .provisional, .ephemeral:
-                return ("Diizinkan", true)
+                return (L10n.Privacy.permissionAllowed, true)
             case .denied:
-                return ("Ditolak", false)
+                return (L10n.Privacy.permissionDenied, false)
             default:
-                return ("Belum diatur", false)
+                return (L10n.Privacy.permissionNotSet, false)
             }
         case "photos":
             let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
             switch status {
             case .authorized, .limited:
-                return ("Diizinkan", true)
+                return (L10n.Privacy.permissionAllowed, true)
             case .denied, .restricted:
-                return ("Ditolak", false)
+                return (L10n.Privacy.permissionDenied, false)
             default:
-                return ("Belum diatur", false)
+                return (L10n.Privacy.permissionNotSet, false)
             }
         case "camera":
             switch AVCaptureDevice.authorizationStatus(for: .video) {
             case .authorized:
-                return ("Diizinkan", true)
+                return (L10n.Privacy.permissionAllowed, true)
             case .denied, .restricted:
-                return ("Ditolak", false)
+                return (L10n.Privacy.permissionDenied, false)
             default:
-                return ("Belum diatur", false)
+                return (L10n.Privacy.permissionNotSet, false)
             }
         case "contacts":
             switch CNContactStore.authorizationStatus(for: .contacts) {
             case .authorized:
-                return ("Diizinkan", true)
+                return (L10n.Privacy.permissionAllowed, true)
             case .denied, .restricted:
-                return ("Ditolak", false)
+                return (L10n.Privacy.permissionDenied, false)
             default:
-                return ("Belum diatur", false)
+                return (L10n.Privacy.permissionNotSet, false)
             }
         default:
-            return ("Tidak diketahui", false)
+            return (L10n.Privacy.permissionUnknown, false)
         }
     }
 }

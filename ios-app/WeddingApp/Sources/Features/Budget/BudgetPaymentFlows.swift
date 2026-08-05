@@ -62,7 +62,7 @@ struct PaymentScheduleListView: View {
                                         .foregroundStyle(AppTheme.ink)
                                     Text(L10n.Budget.setAllocationPromptSub)
                                         .font(AppFont.regular(12))
-                                        .foregroundStyle(AppTheme.ink.opacity(0.5))
+                                        .foregroundStyle(AppTheme.captionOnLightSurface)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
 
@@ -70,10 +70,10 @@ struct PaymentScheduleListView: View {
 
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(AppTheme.ink.opacity(0.28))
+                                    .foregroundStyle(AppTheme.captionOnLightSurface)
                             }
                             .padding(14)
-                            .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .premiumListRow(cornerRadius: 16)
                         }
                         .buttonStyle(.plain)
                         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
@@ -83,10 +83,11 @@ struct PaymentScheduleListView: View {
             }
 
             if sortedSchedules.isEmpty {
-                ContentUnavailableView(
-                    L10n.Budget.noExpenses,
-                    systemImage: "creditcard",
-                    description: Text(L10n.Budget.noExpensesScheduleSub)
+                AppEmptyState(
+                    icon: "creditcard",
+                    title: L10n.Budget.noExpenses,
+                    message: L10n.Budget.noExpensesScheduleSub,
+                    onBackground: false
                 )
             } else {
                 ForEach(sortedSchedules) { schedule in
@@ -130,6 +131,7 @@ struct PaymentScheduleListView: View {
                     showAddExpense = true
                 } label: {
                     Image(systemName: "plus")
+                        .foregroundStyle(AppTheme.accentOnBackground)
                 }
             }
         }
@@ -279,21 +281,23 @@ struct BudgetSummaryDetailView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 summaryCard
 
                 if categories.isEmpty {
-                    ContentUnavailableView(
-                        L10n.Budget.noExpenses,
-                        systemImage: "chart.pie",
-                        description: Text(L10n.Budget.noExpensesSummarySub)
+                    AppEmptyState(
+                        icon: "chart.pie",
+                        title: L10n.Budget.noExpenses,
+                        message: L10n.Budget.noExpensesSummarySub,
+                        onBackground: false
                     )
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
+                    .padding(.vertical, 8)
+                    .premiumListRow(cornerRadius: 20)
                 } else {
                     Text(L10n.Budget.perCategory)
                         .font(AppFont.medium(16))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnBackground)
 
                     VStack(spacing: 10) {
                         ForEach(categories) { category in
@@ -325,27 +329,27 @@ struct BudgetSummaryDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L10n.Budget.totalBudget)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
             Text(CurrencyFormatter.rupiah(metrics.totalBudget))
                 .font(AppFont.medium(22))
                 .foregroundStyle(AppTheme.sageDark)
 
             HStack(spacing: 10) {
                 summaryMetric(title: L10n.Budget.spent, amount: metrics.spent, percent: metrics.percent(metrics.spent), tint: AppTheme.sageDark)
-                summaryMetric(title: L10n.Budget.commitment, amount: metrics.commitment, percent: metrics.percent(metrics.commitment), tint: AppTheme.gold)
-                summaryMetric(title: L10n.Budget.remainingShort, amount: metrics.remaining, percent: metrics.percent(metrics.remaining), tint: AppTheme.ink.opacity(0.55))
+                summaryMetric(title: L10n.Budget.commitment, amount: metrics.commitment, percent: metrics.percent(metrics.commitment), tint: AppTheme.goldOnLightSurface)
+                summaryMetric(title: L10n.Budget.remainingShort, amount: metrics.remaining, percent: metrics.percent(metrics.remaining), tint: AppTheme.labelOnLightSurface)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private func summaryMetric(title: String, amount: Double, percent: Int, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
             Text(CurrencyFormatter.rupiahShort(amount))
                 .font(AppFont.medium(13))
                 .foregroundStyle(tint)
@@ -353,7 +357,7 @@ struct BudgetSummaryDetailView: View {
                 .minimumScaleFactor(0.7)
             Text("\(percent)%")
                 .font(AppFont.regular(10))
-                .foregroundStyle(AppTheme.ink.opacity(0.4))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
@@ -393,22 +397,23 @@ struct BudgetCategoriesView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     if !categories.isEmpty {
                         allocationSummary
                     }
 
                     if categories.isEmpty {
-                        ContentUnavailableView(
-                            L10n.Budget.noCategories,
-                            systemImage: "square.grid.2x2",
-                            description: Text(L10n.Budget.categoriesLoadError)
+                        AppEmptyState(
+                            icon: "square.grid.2x2",
+                            title: L10n.Budget.noCategories,
+                            message: L10n.Budget.categoriesLoadError
                         )
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 32)
+                        .padding(.vertical, 8)
                     } else {
                         VStack(spacing: 12) {
                             ForEach(categories) { category in
@@ -469,7 +474,7 @@ struct BudgetCategoriesView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.Budget.totalCategoryAllocation)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
 
             HStack(alignment: .firstTextBaseline) {
                 Text(CurrencyFormatter.rupiah(totalPlannedAllocation))
@@ -479,14 +484,14 @@ struct BudgetCategoriesView: View {
                 if totalBudget > 0 {
                     Text(L10n.Budget.fromTotal(CurrencyFormatter.rupiah(totalBudget)))
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                 }
             }
 
             if totalBudget > 0 {
                 BudgetBar(
                     progress: min(totalPlannedAllocation / totalBudget, 1),
-                    color: AppTheme.gold
+                    color: AppTheme.goldOnLightSurface
                 )
                 .frame(height: 6)
             }
@@ -494,16 +499,16 @@ struct BudgetCategoriesView: View {
             if totalPlannedAllocation == 0, totalRecordedAcrossCategories > 0 {
                 Text(L10n.Budget.allocationPlanEmpty(CurrencyFormatter.rupiah(totalRecordedAcrossCategories)))
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.gold.opacity(0.9))
+                    .foregroundStyle(AppTheme.goldOnLightSurface)
             } else {
                 Text(L10n.Budget.tapToAllocate)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 }
 
@@ -531,7 +536,7 @@ struct PaymentScheduleRow: View {
                 }
             }
             .font(AppFont.regular(12))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(AppTheme.captionOnLightSurface)
             .lineLimit(1)
 
             HStack {
@@ -546,11 +551,11 @@ struct PaymentScheduleRow: View {
                 if schedule.isPaid, let paidAtDisplay = schedule.paidAtDisplay {
                     Text(L10n.Budget.paidOn(paidAtDisplay))
                         .font(AppFont.regular(11))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                 } else if let dueDate = schedule.dueDate, !dueDate.isEmpty {
                     Text(L10n.Budget.dueOn(dueDate))
                         .font(AppFont.regular(11))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                 }
             }
         }
@@ -580,10 +585,11 @@ struct EditTotalBudgetView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
+                    LazyVStack(alignment: .leading, spacing: 16) {
                         header
 
                         if let errorMessage {
@@ -605,7 +611,10 @@ struct EditTotalBudgetView: View {
                                         .foregroundStyle(AppTheme.ink)
                                         .keyboardType(.numberPad)
                                         .onChange(of: totalBudgetText) { _, newValue in
-                                            totalBudgetText = Self.formatAmountInput(newValue)
+                                            let formatted = CurrencyFormatter.formatAmountInput(newValue)
+                                            if formatted != totalBudgetText {
+                                                totalBudgetText = formatted
+                                            }
                                         }
 
                                     Text(amountPreview)
@@ -617,7 +626,7 @@ struct EditTotalBudgetView: View {
 
                                 Text(L10n.Budget.ceilingHint)
                                     .font(AppFont.regular(11))
-                                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                                    .foregroundStyle(AppTheme.captionOnLightSurface)
                             }
                         }
 
@@ -653,18 +662,13 @@ struct EditTotalBudgetView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.72))
+                    .foregroundStyle(AppTheme.iconOnChrome)
                     .frame(width: 42, height: 42)
-                    .background {
-                        Circle()
-                            .fill(Color.white.opacity(0.78))
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
+                    .background(AppTheme.chrome, in: Circle())
                     .overlay {
                         Circle()
-                            .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                            .stroke(AppTheme.hairline, lineWidth: 1)
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
 
@@ -673,10 +677,10 @@ struct EditTotalBudgetView: View {
             VStack(spacing: 4) {
                 Text(L10n.Budget.setBudget)
                     .font(AppFont.medium(18))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Text(L10n.Budget.setBudgetSub)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.mutedOnBackground)
                     .multilineTextAlignment(.center)
             }
 
@@ -701,27 +705,27 @@ struct EditTotalBudgetView: View {
                     .foregroundStyle(AppTheme.sageDark)
                 Text(L10n.Budget.spendingPlanInfo)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer(minLength: 0)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private func formSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             VStack(spacing: 10) {
                 content()
             }
             .padding(14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
     }
 
@@ -748,17 +752,20 @@ struct EditTotalBudgetView: View {
                 Text(L10n.Budget.saveBudget)
                     .font(AppFont.medium(16))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(canSave ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(
+                AppTheme.primaryActionFill(enabled: canSave),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
         }
         .buttonStyle(.plain)
         .disabled(!canSave || isLoading)
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private var amountPreview: String {
@@ -771,26 +778,14 @@ struct EditTotalBudgetView: View {
     }
 
     private var parsedAmount: Double? {
-        let digits = totalBudgetText.filter(\.isNumber)
-        guard !digits.isEmpty, let value = Double(digits) else { return nil }
-        return value
+        CurrencyFormatter.parseAmountInput(totalBudgetText)
     }
 
     private func populateIfNeeded() {
         if budget.totalBudget > 0 {
-            totalBudgetText = Self.formatAmountInput(String(Int(budget.totalBudget.rounded())))
+            totalBudgetText = CurrencyFormatter.formatAmountInput(String(Int(budget.totalBudget.rounded())))
         }
         notes = budget.notes ?? ""
-    }
-
-    private static func formatAmountInput(_ value: String) -> String {
-        let digits = value.filter(\.isNumber)
-        guard !digits.isEmpty, let number = Int(digits) else { return "" }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = Locale(identifier: "id_ID")
-        formatter.groupingSeparator = "."
-        return formatter.string(from: NSNumber(value: number)) ?? digits
     }
 
     private func save() async {
@@ -848,11 +843,12 @@ struct BudgetReportShareView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                .ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 18) {
+                        LazyVStack(alignment: .leading, spacing: 18) {
                             overviewSection
 
                             if metrics.isOverBudget {
@@ -874,12 +870,14 @@ struct BudgetReportShareView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.close) { dismiss() }
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     if let reportFileURL {
                         ShareLink(item: reportFileURL) {
                             Image(systemName: "square.and.arrow.up")
                         }
+                        .foregroundStyle(AppTheme.accentOnBackground)
                     }
                 }
             }
@@ -893,7 +891,7 @@ struct BudgetReportShareView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L10n.Budget.reportOverview)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
 
             LazyVGrid(
                 columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
@@ -915,7 +913,7 @@ struct BudgetReportShareView: View {
                     title: L10n.Budget.commitment,
                     amount: metrics.commitment,
                     subtitle: "\(metrics.percent(metrics.commitment))%",
-                    tint: AppTheme.gold
+                    tint: AppTheme.goldOnLightSurface
                 )
                 reportMetricCard(
                     title: metrics.isOverBudget ? L10n.Budget.overBudget : L10n.Budget.remaining,
@@ -923,14 +921,14 @@ struct BudgetReportShareView: View {
                     subtitle: metrics.isOverBudget
                         ? L10n.Budget.overBudgetBy(CurrencyFormatter.rupiahShort(metrics.overspend))
                         : "\(metrics.percent(metrics.remaining))%",
-                    tint: metrics.isOverBudget ? Color.red.opacity(0.75) : AppTheme.ink.opacity(0.55)
+                    tint: metrics.isOverBudget ? Color.red.opacity(0.85) : AppTheme.labelOnLightSurface
                 )
             }
 
             HStack {
                 Text(L10n.Budget.incoming)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                 Spacer()
                 Text(CurrencyFormatter.rupiah(incomingTotal))
                     .font(AppFont.medium(13))
@@ -939,7 +937,7 @@ struct BudgetReportShareView: View {
             .padding(.horizontal, 4)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var overBudgetBanner: some View {
@@ -971,15 +969,15 @@ struct BudgetReportShareView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L10n.Budget.reportCategories)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
 
             if sortedCategories.isEmpty {
                 Text(L10n.Budget.noExpenses)
                     .font(AppFont.regular(13))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
-                    .premiumGlassCard(cornerRadius: 18)
+                    .premiumListRow(cornerRadius: 18)
             } else {
                 VStack(spacing: 10) {
                     ForEach(sortedCategories) { category in
@@ -1026,7 +1024,7 @@ struct BudgetReportShareView: View {
             if category.commitment > 0 {
                 Text(L10n.Budget.commitmentAmount(CurrencyFormatter.rupiah(category.commitment)))
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.gold.opacity(0.9))
+                    .foregroundStyle(AppTheme.goldOnLightSurface)
             }
 
             BudgetBar(
@@ -1038,17 +1036,17 @@ struct BudgetReportShareView: View {
             .frame(height: 5)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private func reportMetaChip(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(AppFont.regular(10))
-                .foregroundStyle(AppTheme.ink.opacity(0.4))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
             Text(value)
                 .font(AppFont.medium(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.75))
+                .foregroundStyle(AppTheme.ink.opacity(0.82))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
@@ -1064,7 +1062,7 @@ struct BudgetReportShareView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
                 .lineLimit(1)
 
             Text(CurrencyFormatter.rupiah(amount))
@@ -1076,7 +1074,7 @@ struct BudgetReportShareView: View {
             if let subtitle {
                 Text(subtitle)
                     .font(AppFont.regular(10))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                     .lineLimit(1)
             }
         }
@@ -1099,7 +1097,7 @@ struct BudgetReportShareView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
                 .padding(.bottom, 16)
-                .background(.ultraThinMaterial)
+                .background(AppTheme.surface)
             }
         }
     }

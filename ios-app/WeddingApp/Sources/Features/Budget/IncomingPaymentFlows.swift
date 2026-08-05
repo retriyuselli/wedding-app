@@ -21,11 +21,11 @@ struct IncomingPaymentsSummaryCard: View {
 
                     Text(L10n.Budget.incomingTotalRecorded)
                         .font(AppFont.regular(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.5))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
 
                     Text(L10n.Budget.incomingNotAffectRemaining)
                         .font(AppFont.regular(10))
-                        .foregroundStyle(AppTheme.ink.opacity(0.42))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                 }
 
                 Spacer(minLength: 12)
@@ -34,7 +34,7 @@ struct IncomingPaymentsSummaryCard: View {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(L10n.Budget.confirmed)
                             .font(AppFont.regular(10))
-                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                         Text(CurrencyFormatter.rupiah(metrics.totalConfirmed))
                             .font(AppFont.medium(15))
                             .foregroundStyle(AppTheme.sageDark)
@@ -70,7 +70,7 @@ struct IncomingPaymentsSummaryCard: View {
                                 if !payment.subtitleLine.isEmpty {
                                     Text(payment.subtitleLine)
                                         .font(AppFont.regular(10))
-                                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                                        .foregroundStyle(AppTheme.captionOnLightSurface)
                                         .lineLimit(1)
                                 }
                             }
@@ -94,18 +94,18 @@ struct IncomingPaymentsSummaryCard: View {
             } else {
                 Text(L10n.Budget.noIncoming)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
 
             HStack {
                 Spacer()
                 Label(L10n.Common.seeAll, systemImage: "chevron.right")
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.55))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
         }
         .padding(18)
-        .premiumGlassCard(cornerRadius: 22)
+        .premiumListRow(cornerRadius: 22)
     }
 
     private func statusTint(for payment: IncomingPayment) -> Color {
@@ -144,10 +144,11 @@ struct IncomingPaymentsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     if let errorMessage {
                         Text(errorMessage)
                             .font(AppFont.regular(13))
@@ -162,13 +163,13 @@ struct IncomingPaymentsView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 40)
                     } else if filteredPayments.isEmpty {
-                        ContentUnavailableView(
-                            L10n.Budget.incomingEmpty,
-                            systemImage: "arrow.down.circle",
-                            description: Text(emptyDescription)
+                        AppEmptyState(
+                            icon: "arrow.down.circle",
+                            title: L10n.Budget.incomingEmpty,
+                            message: emptyDescription
                         )
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 24)
+                        .padding(.vertical, 8)
                     } else {
                         VStack(spacing: 10) {
                             ForEach(filteredPayments) { payment in
@@ -229,7 +230,7 @@ struct IncomingPaymentsView: View {
     private var summaryStrip: some View {
         HStack(spacing: 10) {
             summaryMetric(title: L10n.Budget.total, amount: metrics.totalAll, tint: AppTheme.sageDark)
-            summaryMetric(title: L10n.Budget.confirmed, amount: metrics.totalConfirmed, tint: AppTheme.gold)
+            summaryMetric(title: L10n.Budget.confirmed, amount: metrics.totalConfirmed, tint: AppTheme.goldOnLightSurface)
         }
     }
 
@@ -237,7 +238,7 @@ struct IncomingPaymentsView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
             Text(CurrencyFormatter.rupiah(amount))
                 .font(AppFont.medium(16))
                 .foregroundStyle(tint)
@@ -246,7 +247,7 @@ struct IncomingPaymentsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private var filterChips: some View {
@@ -258,11 +259,11 @@ struct IncomingPaymentsView: View {
                     } label: {
                         Text(filter.label)
                             .font(AppFont.medium(12))
-                            .foregroundStyle(selectedFilter == filter ? .white : AppTheme.ink.opacity(0.65))
+                            .foregroundStyle(selectedFilter == filter ? .white : AppTheme.labelOnLightSurface)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(
-                                selectedFilter == filter ? AppTheme.sageDark : AppTheme.mist.opacity(0.65),
+                                selectedFilter == filter ? AppTheme.sageDark : AppTheme.chipIdleFill,
                                 in: Capsule()
                             )
                     }
@@ -278,10 +279,10 @@ struct IncomingPaymentsView: View {
         } label: {
             Label(L10n.Budget.addIncoming, systemImage: "plus")
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.labelOnLightSurface)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(AppTheme.lightSage.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .premiumListRow(cornerRadius: 16)
                 .overlay {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(AppTheme.sage.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
@@ -345,14 +346,14 @@ struct IncomingPaymentRow: View {
                 if !payment.subtitleLine.isEmpty {
                     Text(payment.subtitleLine)
                         .font(AppFont.regular(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                         .lineLimit(1)
                 }
 
                 if let description = payment.description, !description.isEmpty {
                     Text(description)
                         .font(AppFont.regular(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                         .lineLimit(2)
                 }
 
@@ -363,7 +364,7 @@ struct IncomingPaymentRow: View {
                 if let referenceNumber = payment.referenceNumber, !referenceNumber.isEmpty {
                     Text(L10n.Budget.ref(referenceNumber))
                         .font(AppFont.regular(10))
-                        .foregroundStyle(AppTheme.ink.opacity(0.4))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                 }
             }
 
@@ -371,12 +372,12 @@ struct IncomingPaymentRow: View {
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(AppTheme.ink.opacity(0.28))
+                .foregroundStyle(AppTheme.ink.opacity(0.4))
                 .padding(.top, 4)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var statusColor: Color {
@@ -410,10 +411,11 @@ struct AddIncomingPaymentView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     if let errorMessage {
                         Text(errorMessage)
                             .font(AppFont.regular(13))
@@ -437,7 +439,10 @@ struct AddIncomingPaymentView: View {
                                 .foregroundStyle(AppTheme.ink)
                                 .keyboardType(.numberPad)
                                 .onChange(of: amountText) { _, newValue in
-                                    amountText = CurrencyFormatter.formatAmountInput(newValue)
+                                    let formatted = CurrencyFormatter.formatAmountInput(newValue)
+                                    if formatted != amountText {
+                                        amountText = formatted
+                                    }
                                 }
                         }
                     }
@@ -457,13 +462,15 @@ struct AddIncomingPaymentView: View {
                     }
 
                     if isEditing {
-                        Button(role: .destructive) {
+                        Button {
                             Task { await deletePayment() }
                         } label: {
                             Label(L10n.Common.delete, systemImage: "trash")
                                 .font(AppFont.medium(14))
+                                .foregroundStyle(Color.red.opacity(0.95))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
+                                .background(Color.red.opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .padding(.top, 8)
@@ -496,7 +503,7 @@ struct AddIncomingPaymentView: View {
 
             Text(incomingStatusHint)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
         }
     }
 
@@ -515,13 +522,13 @@ struct AddIncomingPaymentView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             VStack(spacing: 10) {
                 content()
             }
             .padding(14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
     }
 
@@ -537,7 +544,14 @@ struct AddIncomingPaymentView: View {
                 .foregroundStyle(AppTheme.sageDark)
                 .frame(width: 24)
 
-            TextField(placeholder, text: text, axis: axis)
+            TextField(
+                "",
+                text: text,
+                prompt: Text(placeholder)
+                    .font(AppFont.regular(14))
+                    .foregroundStyle(AppTheme.captionOnLightSurface),
+                axis: axis
+            )
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink)
                 .lineLimit(axis == .vertical ? 3...5 : 1...1)
@@ -550,16 +564,19 @@ struct AddIncomingPaymentView: View {
         } label: {
             Text(isEditing ? L10n.Budget.saveChanges : L10n.Budget.saveIncoming)
                 .font(AppFont.medium(15))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(canSave ? AppTheme.sageDark : AppTheme.sage.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(
+                    AppTheme.primaryActionFill(enabled: canSave),
+                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                )
         }
         .buttonStyle(.plain)
         .disabled(!canSave || isLoading)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private var canSave: Bool {
@@ -567,9 +584,7 @@ struct AddIncomingPaymentView: View {
     }
 
     private var parsedAmount: Double? {
-        let digits = amountText.filter(\.isNumber)
-        guard !digits.isEmpty, let value = Double(digits) else { return nil }
-        return value
+        CurrencyFormatter.parseAmountInput(amountText)
     }
 
     private func populateIfNeeded() {

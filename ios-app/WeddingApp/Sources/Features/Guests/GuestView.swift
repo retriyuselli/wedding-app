@@ -109,10 +109,17 @@ struct GuestView: View {
     @State private var templateShareItem: ExcelTemplateShareItem?
     @State private var selectedDetail: GuestDetailTarget?
     @State private var selectedFilter: RsvpKind? = nil
+    @State private var isFilterExpanded = false
     @State private var sortOrder: GuestSortOrder = .numberAsc
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
     @State private var currentPage = 1
+    @State private var cachedRows: [GuestRowItem] = []
+    @State private var totalGuests = 0
+    @State private var confirmedGuests = 0
+    @State private var pendingGuests = 0
+    @State private var absentGuests = 0
+    @State private var lastLoadAt: Date?
 
     private let pageSize = 5
 
@@ -128,23 +135,50 @@ struct GuestView: View {
         }
     }
 
-    private var allTargets: [GuestDetailTarget] {
+    private var rows: [GuestRowItem] { cachedRows }
+
+    private var totalPages: Int {
+        max(1, Int(ceil(Double(rows.count) / Double(pageSize))))
+    }
+
+    private var displayedRows: [GuestRowItem] {
+        let page = min(max(currentPage, 1), totalPages)
+        let start = (page - 1) * pageSize
+        guard !rows.isEmpty, start < rows.count else { return [] }
+        let end = min(start + pageSize, rows.count)
+        return Array(rows[start..<end])
+    }
+
+    private var pageRangeLabel: String {
+        guard !rows.isEmpty else { return "" }
+        let page = min(max(currentPage, 1), totalPages)
+        let start = (page - 1) * pageSize + 1
+        let end = min(page * pageSize, rows.count)
+        return "\(start)–\(end) / \(rows.count)"
+    }
+
+    private var guestCount: Int { guests.count }
+    private var vipCount: Int { vipGuests.count }
+    private var familyCount: Int { familyMembers.count }
+
+    private func recomputeGuestCaches() {
+        let targets: [GuestDetailTarget]
         switch segment {
         case .guests:
-            return guests.map(GuestDetailTarget.guest)
+            targets = guests.map(GuestDetailTarget.guest)
         case .vip:
-            return vipGuests.map(GuestDetailTarget.vip)
+            targets = vipGuests.map(GuestDetailTarget.vip)
         case .family:
-            return familyMembers.map(GuestDetailTarget.family)
+            targets = familyMembers.map(GuestDetailTarget.family)
         }
-    }
 
-    private var allRows: [GuestRowItem] {
-        allTargets.map(GuestRowItem.init(target:))
-    }
+        let allRows = targets.map(GuestRowItem.init(target:))
+        totalGuests = allRows.count
+        confirmedGuests = allRows.filter { $0.kind == .confirmed }.count
+        pendingGuests = allRows.filter { $0.kind == .pending }.count
+        absentGuests = allRows.filter { $0.kind == .absent }.count
 
-    private var rows: [GuestRowItem] {
-        allRows
+        cachedRows = allRows
             .filter { row in
                 let matchFilter = selectedFilter == nil || row.kind == selectedFilter
                 let matchSearch = searchText.isEmpty
@@ -169,35 +203,6 @@ struct GuestView: View {
             }
     }
 
-    private var totalPages: Int {
-        max(1, Int(ceil(Double(rows.count) / Double(pageSize))))
-    }
-
-    private var displayedRows: [GuestRowItem] {
-        let page = min(max(currentPage, 1), totalPages)
-        let start = (page - 1) * pageSize
-        guard !rows.isEmpty, start < rows.count else { return [] }
-        let end = min(start + pageSize, rows.count)
-        return Array(rows[start..<end])
-    }
-
-    private var pageRangeLabel: String {
-        guard !rows.isEmpty else { return "" }
-        let page = min(max(currentPage, 1), totalPages)
-        let start = (page - 1) * pageSize + 1
-        let end = min(page * pageSize, rows.count)
-        return "\(start)–\(end) / \(rows.count)"
-    }
-
-    private var totalGuests: Int { allRows.count }
-    private var confirmedGuests: Int { allRows.filter { $0.kind == .confirmed }.count }
-    private var pendingGuests: Int { allRows.filter { $0.kind == .pending }.count }
-    private var absentGuests: Int { allRows.filter { $0.kind == .absent }.count }
-
-    private var guestCount: Int { guests.count }
-    private var vipCount: Int { vipGuests.count }
-    private var familyCount: Int { familyMembers.count }
-
     private var nextSequenceNumber: Int {
         switch segment {
         case .guests:
@@ -216,10 +221,8 @@ struct GuestView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
-
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
+                    LazyVStack(alignment: .leading, spacing: 16) {
                         header
                         segmentTabs
                         statsCard
@@ -231,17 +234,12 @@ struct GuestView: View {
                         actionBar
                     }
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding(.top, 12)
                     .padding(.bottom, 20)
                 }
                 .scrollDismissesKeyboard(.interactively)
-                .simultaneousGesture(
-                    TapGesture().onEnded {
-                        dismissSearchKeyboard()
-                    }
-                )
-                .blur(radius: isPremium ? 0 : 2.5)
-                .opacity(isPremium ? 1 : 0.82)
+                .opacity(isPremium ? 1 : 0.55)
+                .allowsHitTesting(isPremium)
 
                 if !isPremium {
                     VStack(spacing: 14) {
@@ -264,6 +262,9 @@ struct GuestView: View {
                     .padding(.horizontal, 24)
                 }
             }
+            .background {
+                AppTheme.background.ignoresSafeArea()
+            }
             .statusBarBlur()
             .toolbar(.hidden, for: .navigationBar)
             .task {
@@ -283,6 +284,7 @@ struct GuestView: View {
             }
             .onChange(of: segment) { _, _ in
                 selectedFilter = nil
+                isFilterExpanded = false
                 searchText = ""
                 resetPagination()
                 dismissSearchKeyboard()
@@ -312,6 +314,7 @@ struct GuestView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
                 guard isPremium else { return }
+                if let lastLoadAt, Date().timeIntervalSince(lastLoadAt) < 60 { return }
                 Task { await load() }
             }
             .sheet(isPresented: $showAddSheet) {
@@ -359,6 +362,7 @@ struct GuestView: View {
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button(L10n.Common.close) { templateShareItem = nil }
+                                .foregroundStyle(AppTheme.labelOnLightSurface)
                         }
                     }
                 }
@@ -437,19 +441,19 @@ struct GuestView: View {
                 .foregroundStyle(AppTheme.inkMuted(0.45))
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.Guest.title)
-                    .font(.system(size: 32, weight: .bold, design: .serif))
-                    .foregroundStyle(AppTheme.titleOnGlass)
+                    .font(AppFont.serifBold(32))
+                    .foregroundStyle(AppTheme.titleOnBackground)
 
                 Text(L10n.Guest.subtitle)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.gold)
+                    .foregroundStyle(AppTheme.mutedOnBackground)
                     .lineSpacing(2)
             }
 
@@ -472,9 +476,7 @@ struct GuestView: View {
                 let isSelected = segment == item
 
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        segment = item
-                    }
+                    segment = item
                     dismissSearchKeyboard()
                 } label: {
                     VStack(spacing: 4) {
@@ -491,27 +493,17 @@ struct GuestView: View {
                         if isSelected {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 .fill(AppTheme.selectedChipFill)
-                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         }
                     }
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(isSelected ? AppTheme.iconChipStroke : Color.clear, lineWidth: 1)
-                    }
-                    .shadow(color: AppTheme.sageDark.opacity(isSelected ? 0.06 : 0), radius: 8, y: 3)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(4)
-        .background {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(AppTheme.chipIdleFill)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        }
+        .background(AppTheme.chipIdleFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                .stroke(AppTheme.hairline, lineWidth: 1)
         }
     }
 
@@ -519,12 +511,12 @@ struct GuestView: View {
         HStack(spacing: 0) {
             statItem(icon: "person.2", tint: AppTheme.iconOnChip, label: L10n.Guest.totalGuests, value: totalGuests, sub: L10n.Guest.people, subTint: AppTheme.inkMuted(0.4))
             statItem(icon: "checkmark.circle", tint: AppTheme.iconOnChip, label: L10n.Common.confirmed, value: confirmedGuests, sub: "\(percent(confirmedGuests))%", subTint: AppTheme.inkMuted(0.4))
-            statItem(icon: "hourglass", tint: AppTheme.gold, label: L10n.Common.pending, value: pendingGuests, sub: "\(percent(pendingGuests))%", subTint: AppTheme.gold)
+            statItem(icon: "hourglass", tint: AppTheme.goldOnLightSurface, label: L10n.Common.pending, value: pendingGuests, sub: "\(percent(pendingGuests))%", subTint: AppTheme.goldOnLightSurface)
             statItem(icon: "xmark.circle", tint: AppTheme.statusMuted, label: L10n.Common.notAttending, value: absentGuests, sub: "\(percent(absentGuests))%", subTint: AppTheme.statusMuted)
         }
         .padding(.vertical, 16)
         .padding(.horizontal, 6)
-        .premiumGlassCard(cornerRadius: 28)
+        .premiumListRow(cornerRadius: 28)
     }
 
     private func statItem(icon: String, tint: Color, label: String, value: Int, sub: String, subTint: Color) -> some View {
@@ -533,15 +525,7 @@ struct GuestView: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(tint)
                 .frame(width: 38, height: 38)
-                .background {
-                    Circle()
-                        .fill(AppTheme.iconChipFill)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .overlay {
-                    Circle()
-                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
-                }
+                .background(AppTheme.iconChipFill, in: Circle())
 
             Text(label)
                 .font(AppFont.medium(11))
@@ -565,7 +549,7 @@ struct GuestView: View {
         VStack(spacing: 16) {
             HStack {
                 Text(L10n.Guest.rsvpOverview)
-                    .font(.system(size: 16, weight: .semibold, design: .serif))
+                    .font(AppFont.serifSemibold(16))
                     .foregroundStyle(AppTheme.titleOnGlass)
                 Spacer()
                 Text(segment.title)
@@ -577,7 +561,7 @@ struct GuestView: View {
                 DonutChart(
                     segments: [
                         (Double(confirmedGuests), AppTheme.sageDark),
-                        (Double(pendingGuests), AppTheme.gold),
+                        (Double(pendingGuests), AppTheme.goldOnLightSurface),
                         (Double(absentGuests), AppTheme.statusMuted),
                     ]
                 )
@@ -585,13 +569,13 @@ struct GuestView: View {
 
                 VStack(spacing: 12) {
                     legendRow(color: AppTheme.sageDark, title: L10n.Common.confirmed, value: confirmedGuests, percent: percent(confirmedGuests))
-                    legendRow(color: AppTheme.gold, title: L10n.Common.pending, value: pendingGuests, percent: percent(pendingGuests))
+                    legendRow(color: AppTheme.goldOnLightSurface, title: L10n.Common.pending, value: pendingGuests, percent: percent(pendingGuests))
                     legendRow(color: AppTheme.statusMuted, title: L10n.Common.notAttending, value: absentGuests, percent: percent(absentGuests))
                 }
             }
         }
         .padding(18)
-        .premiumGlassCard(cornerRadius: 28)
+        .premiumListRow(cornerRadius: 28)
     }
 
     private func legendRow(color: Color, title: String, value: Int, percent: Int) -> some View {
@@ -612,53 +596,60 @@ struct GuestView: View {
     }
 
     private var filterChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                chip(title: L10n.Common.all, kind: nil)
+        FlowLayout(spacing: 10) {
+            chip(title: L10n.Common.all, kind: nil)
+            if isFilterExpanded {
                 chip(title: L10n.Common.confirmed, kind: .confirmed)
                 chip(title: L10n.Common.pending, kind: .pending)
                 chip(title: L10n.Common.notAttending, kind: .absent)
             }
-            .padding(.horizontal, 2)
-            .padding(.vertical, 2)
+            filterExpandChip
         }
+        .padding(.horizontal, 2)
+        .padding(.vertical, 2)
+        .animation(.easeInOut(duration: 0.2), value: isFilterExpanded)
+    }
+
+    private var filterExpandChip: some View {
+        Button {
+            dismissSearchKeyboard()
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isFilterExpanded.toggle()
+                if !isFilterExpanded, selectedFilter != nil {
+                    selectedFilter = nil
+                }
+            }
+        } label: {
+            Image(systemName: isFilterExpanded ? "minus" : "plus")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(AppTheme.sageMuted(0.72))
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(AppTheme.chipIdleFill))
+                .overlay {
+                    Circle()
+                        .stroke(AppTheme.hairline, lineWidth: 1)
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isFilterExpanded ? L10n.Vendor.showLess : L10n.Vendor.showMore)
     }
 
     private func chip(title: String, kind: RsvpKind?) -> some View {
         let isSelected = selectedFilter == kind
         return Button {
             dismissSearchKeyboard()
-            withAnimation(.easeInOut(duration: 0.2)) { selectedFilter = kind }
+            selectedFilter = kind
         } label: {
             Text(title)
                 .font(AppFont.semibold(13))
                 .foregroundStyle(isSelected ? .white : AppTheme.sageMuted(0.72))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background {
-                    if isSelected {
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [AppTheme.sage, AppTheme.brandGradientEnd],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                    } else {
-                        Capsule()
-                            .fill(AppTheme.chipIdleFill)
-                            .background(.ultraThinMaterial, in: Capsule())
-                    }
-                }
+                .background(Capsule().fill(isSelected ? AppTheme.sageDark : AppTheme.chipIdleFill))
                 .overlay {
                     Capsule()
-                        .stroke(
-                            isSelected ? Color.white.opacity(0.2) : AppTheme.iconChipStroke,
-                            lineWidth: 1
-                        )
+                        .stroke(isSelected ? Color.clear : AppTheme.hairline, lineWidth: 1)
                 }
-                .shadow(color: AppTheme.sageDark.opacity(isSelected ? 0.14 : 0.05), radius: isSelected ? 10 : 6, y: 3)
         }
         .buttonStyle(.plain)
     }
@@ -680,7 +671,7 @@ struct GuestView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .premiumGlassCard(cornerRadius: 16)
+            .premiumListRow(cornerRadius: 16)
 
             Menu {
                 Button {
@@ -717,24 +708,19 @@ struct GuestView: View {
                 Group {
                     if isExcelBusy || isDeletingAll {
                         ProgressView()
-                            .tint(AppTheme.iconOnChip)
+                            .tint(AppTheme.iconOnChrome)
                     } else {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 17, weight: .medium))
-                            .foregroundStyle(AppTheme.iconOnChip)
+                            .foregroundStyle(AppTheme.iconOnChrome)
                     }
                 }
                 .frame(width: 44, height: 44)
-                .background {
-                    Circle()
-                        .fill(AppTheme.iconChipFill)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
+                .background(AppTheme.chrome, in: Circle())
                 .overlay {
                     Circle()
-                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                        .stroke(AppTheme.hairline, lineWidth: 1)
                 }
-                .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .disabled(isExcelBusy || isDeletingAll)
 
@@ -749,15 +735,7 @@ struct GuestView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
-                    .background(
-                        LinearGradient(
-                            colors: [AppTheme.sage, AppTheme.brandGradientEnd],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        in: Capsule()
-                    )
-                    .shadow(color: AppTheme.sageDark.opacity(0.16), radius: 10, y: 4)
+                    .background(AppTheme.sageDark, in: Capsule())
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -768,8 +746,8 @@ struct GuestView: View {
     private var listHeader: some View {
         HStack {
             Text(L10n.Guest.listCount(segment.title, rows.count))
-                .font(.system(size: 14, weight: .semibold, design: .serif))
-                .foregroundStyle(AppTheme.titleOnGlass)
+                .font(AppFont.serifSemibold(14))
+                .foregroundStyle(AppTheme.titleOnBackground)
             Spacer()
             Menu {
                 ForEach(GuestSortOrder.allCases) { order in
@@ -826,32 +804,31 @@ struct GuestView: View {
                 message: L10n.Guest.searchPlaceholder
             )
         } else {
-            LazyVStack(spacing: 10) {
-                ForEach(displayedRows) { row in
-                    GuestRow(
-                        item: row,
-                        iconName: segment.listIcon,
-                        onOpenDetail: {
-                            dismissSearchKeyboard()
-                            runPremiumOrPaywall {
-                                selectedDetail = row.target
-                            }
-                        },
-                        onCall: {
-                            dismissSearchKeyboard()
-                            GuestContactLinker.open(GuestContactLinker.telURL(phone: row.phone ?? ""))
-                        },
-                        onEmail: {
-                            dismissSearchKeyboard()
-                            GuestContactLinker.open(GuestContactLinker.mailtoURL(email: row.email ?? ""))
+            ForEach(displayedRows) { row in
+                GuestRow(
+                    item: row,
+                    iconName: segment.listIcon,
+                    onOpenDetail: {
+                        dismissSearchKeyboard()
+                        runPremiumOrPaywall {
+                            selectedDetail = row.target
                         }
-                    )
-                }
+                    },
+                    onCall: {
+                        dismissSearchKeyboard()
+                        GuestContactLinker.open(GuestContactLinker.telURL(phone: row.phone ?? ""))
+                    },
+                    onEmail: {
+                        dismissSearchKeyboard()
+                        GuestContactLinker.open(GuestContactLinker.mailtoURL(email: row.email ?? ""))
+                    }
+                )
+                .equatable()
+            }
 
-                if totalPages > 1 {
-                    guestPaginationControls
-                        .padding(.top, 8)
-                }
+            if totalPages > 1 {
+                guestPaginationControls
+                    .padding(.top, 8)
             }
         }
     }
@@ -860,7 +837,7 @@ struct GuestView: View {
         VStack(spacing: 10) {
             Text(pageRangeLabel)
                 .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.inkMuted(0.5))
+                .foregroundStyle(AppTheme.mutedOnBackground)
 
             HStack(spacing: 8) {
                 pageNavButton(systemName: "chevron.left", disabled: currentPage <= 1) {
@@ -883,7 +860,7 @@ struct GuestView: View {
                                         } else {
                                             Circle()
                                                 .fill(AppTheme.chipIdleFill)
-                                                .background(.ultraThinMaterial, in: Circle())
+                                                .background(AppTheme.iconChipFill, in: Circle())
                                         }
                                     }
                                     .overlay {
@@ -906,7 +883,7 @@ struct GuestView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 10)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
     }
 
@@ -916,12 +893,9 @@ struct GuestView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(disabled ? AppTheme.inkMuted(0.28) : AppTheme.iconOnChip)
                 .frame(width: 36, height: 36)
-                .background {
-                    Circle()
-                        .fill(AppTheme.iconChipFill)
-                }
+                .background(AppTheme.iconChipFill, in: Circle())
                 .overlay {
-                    Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    Circle().stroke(AppTheme.hairline, lineWidth: 1)
                 }
         }
         .buttonStyle(.plain)
@@ -940,15 +914,7 @@ struct GuestView: View {
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(AppTheme.iconOnChip)
                     .frame(width: 44, height: 44)
-                    .background {
-                        Circle()
-                            .fill(AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                    .overlay {
-                        Circle()
-                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
-                    }
+                    .background(AppTheme.iconChipFill, in: Circle())
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L10n.Guest.exportData)
@@ -969,29 +935,30 @@ struct GuestView: View {
             .padding(.vertical, 14)
         }
         .buttonStyle(.plain)
-        .premiumGlassCard(cornerRadius: 22)
+        .premiumListRow(cornerRadius: 22)
         .padding(.top, 4)
     }
 
     private func dismissSearchKeyboard() {
         isSearchFocused = false
+        KeyboardDismiss.resign()
     }
 
     private func resetPagination() {
         currentPage = 1
+        recomputeGuestCaches()
     }
 
     private func goToPage(_ page: Int) {
         dismissSearchKeyboard()
-        withAnimation(.easeInOut(duration: 0.2)) {
-            currentPage = min(max(1, page), totalPages)
-        }
+        currentPage = min(max(1, page), totalPages)
     }
 
     private func load() async {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
+        lastLoadAt = Date()
 
         do {
             async let guestsEnvelope: Envelope<[Guest]> = APIClient.shared.request("guests")
@@ -1001,6 +968,7 @@ struct GuestView: View {
             guests = try await guestsEnvelope.data
             vipGuests = try await vipEnvelope.data
             familyMembers = try await familyEnvelope.data
+            recomputeGuestCaches()
         } catch {
             guard !error.isRequestCancelled else { return }
             errorMessage = error.userFacingMessage
@@ -1254,12 +1222,22 @@ private struct GuestRowItem: Identifiable {
     }
 }
 
-private struct GuestRow: View {
+private struct GuestRow: View, Equatable {
     let item: GuestRowItem
     var iconName: String = "person.2.fill"
     let onOpenDetail: () -> Void
     let onCall: () -> Void
     let onEmail: () -> Void
+
+    static func == (lhs: GuestRow, rhs: GuestRow) -> Bool {
+        lhs.item.id == rhs.item.id
+            && lhs.item.name == rhs.item.name
+            && lhs.item.subtitle == rhs.item.subtitle
+            && lhs.item.kind == rhs.item.kind
+            && lhs.item.hasPhone == rhs.item.hasPhone
+            && lhs.item.hasEmail == rhs.item.hasEmail
+            && lhs.iconName == rhs.iconName
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -1277,15 +1255,7 @@ private struct GuestRow: View {
                         }
                     }
                     .frame(width: 44, height: 44)
-                    .background {
-                        Circle()
-                            .fill(AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                    .overlay {
-                        Circle()
-                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
-                    }
+                    .background(AppTheme.iconChipFill, in: Circle())
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(item.name)
@@ -1333,7 +1303,11 @@ private struct GuestRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .premiumGlassCard(cornerRadius: 20)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(AppTheme.hairline.opacity(0.7), lineWidth: 1)
+        }
     }
 
     private func contactButton(systemName: String, action: @escaping () -> Void) -> some View {
@@ -1342,15 +1316,7 @@ private struct GuestRow: View {
                 .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 30, height: 30)
-                .background {
-                    Circle()
-                        .fill(AppTheme.iconChipFill)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .overlay {
-                    Circle()
-                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
-                }
+                .background(AppTheme.iconChipFill, in: Circle())
         }
         .buttonStyle(.borderless)
     }
@@ -1366,13 +1332,13 @@ private struct DonutChart: View {
         ZStack {
             // Visible empty track so the ring never disappears on cream or dark glass.
             Circle()
-                .stroke(AppTheme.donutTrack, lineWidth: 14)
+                .stroke(AppTheme.donutTrack, lineWidth: 10)
 
             if hasData {
                 ForEach(Array(cumulative.enumerated()), id: \.offset) { _, seg in
                     Circle()
                         .trim(from: seg.start, to: seg.end)
-                        .stroke(seg.color, style: StrokeStyle(lineWidth: 14, lineCap: .butt))
+                        .stroke(seg.color, style: StrokeStyle(lineWidth: 10, lineCap: .butt))
                         .rotationEffect(.degrees(-90))
                 }
             }
@@ -1398,13 +1364,14 @@ private struct ProgressBarLine: View {
     let color: Color
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Capsule().fill(AppTheme.progressTrack)
-                Capsule().fill(color)
-                    .frame(width: max(0, min(1, progress)) * proxy.size.width)
+        Capsule()
+            .fill(AppTheme.progressTrack)
+            .overlay(alignment: .leading) {
+                Capsule()
+                    .fill(color)
+                    .scaleEffect(x: max(0.001, min(1, progress)), y: 1, anchor: .leading)
             }
-        }
+            .clipShape(Capsule())
     }
 }
 
@@ -1446,18 +1413,19 @@ private struct AddGuestEntrySheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                    .ignoresSafeArea()
 
                 ScrollViewReader { proxy in
                     ScrollView(showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 18) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(segment.addTitle)
-                                    .font(.system(size: 24, weight: .semibold, design: .serif))
-                                    .foregroundStyle(AppTheme.sageDark)
+                                    .font(AppFont.serifSemibold(24))
+                                    .foregroundStyle(AppTheme.titleOnBackground)
                                 Text(segment.title)
                                     .font(AppFont.regular(13))
-                                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                                    .foregroundStyle(AppTheme.mutedOnBackground)
                             }
 
                             sequenceRow
@@ -1507,11 +1475,11 @@ private struct AddGuestEntrySheet: View {
                                             .font(AppFont.semibold(16))
                                     }
                                 }
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 15)
                                 .background(
-                                    canSave ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.4),
+                                    AppTheme.primaryActionFill(enabled: canSave),
                                     in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 )
                             }
@@ -1535,7 +1503,7 @@ private struct AddGuestEntrySheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.cancel) { dismiss() }
                         .font(AppFont.medium(15))
-                        .foregroundStyle(AppTheme.ink.opacity(0.7))
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -1673,7 +1641,7 @@ private struct AddGuestEntrySheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(AppTheme.mutedOnBackground)
 
             content()
                 .padding(14)

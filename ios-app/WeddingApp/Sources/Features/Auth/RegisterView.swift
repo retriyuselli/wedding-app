@@ -51,8 +51,8 @@ struct RegisterView: View {
                 .scrollDismissesKeyboard(.interactively)
 
                 Text(L10n.Auth.copyright)
-                    .font(.system(size: 11, weight: .regular, design: .rounded))
-                    .foregroundStyle(AppTheme.inkMuted(0.45))
+                    .font(AppFont.regular(11))
+                    .foregroundStyle(AppTheme.ink.opacity(0.55))
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 28)
@@ -245,11 +245,11 @@ private struct RegisterFormSheet: View {
                 Button(action: onLogin) {
                     HStack(spacing: 8) {
                         Text(L10n.Auth.haveAccount)
-                            .font(.system(size: 13, weight: .regular, design: .rounded))
+                            .font(AppFont.regular(13))
                             .foregroundStyle(LoginPalette.textSecondary)
 
                         Text(L10n.Auth.login)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(AppFont.semibold(13))
                             .foregroundStyle(AppTheme.sageMuted(0.95))
 
                         Image(systemName: "chevron.right")
@@ -274,7 +274,7 @@ private struct RegisterFormSheet: View {
                         + Text(L10n.Auth.termsSuffix)
                             .foregroundStyle(LoginPalette.textSecondary)
                     )
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(AppFont.medium(12))
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
                 }

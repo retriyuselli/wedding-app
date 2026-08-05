@@ -37,7 +37,12 @@ struct EventListView: View {
                 if isLoading && events.isEmpty {
                     ProgressView()
                 } else if events.isEmpty {
-                    ContentUnavailableView(L10n.WeddingDetail.noEvents, systemImage: "calendar")
+                    AppEmptyState(
+                        icon: "calendar",
+                        title: L10n.WeddingDetail.noEvents,
+                        message: L10n.WeddingDetail.noEventsSub,
+                        onBackground: false
+                    )
                 }
             }
             .navigationTitle(L10n.Events.title)

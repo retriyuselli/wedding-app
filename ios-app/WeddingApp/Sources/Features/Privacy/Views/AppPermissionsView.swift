@@ -6,7 +6,8 @@ struct AppPermissionsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
@@ -23,7 +24,10 @@ struct AppPermissionsView: View {
                     }
 
                     if viewModel.isLoading && viewModel.permissions.isEmpty {
-                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
+                        ProgressView()
+                            .tint(AppTheme.titleOnBackground)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
                     }
 
                     ForEach(viewModel.permissions) { row in
@@ -40,7 +44,7 @@ struct AppPermissionsView: View {
                                 .foregroundStyle(row.isGranted ? AppTheme.sageDark : Color.orange)
                         }
                         .padding(14)
-                        .premiumGlassCard(cornerRadius: 16)
+                        .premiumListRow(cornerRadius: 16)
                     }
 
                     Button {

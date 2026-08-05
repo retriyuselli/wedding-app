@@ -31,10 +31,11 @@ struct ChangePasswordView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.ChangePassword.title,
                         subtitle: L10n.ChangePassword.subtitle
@@ -106,7 +107,7 @@ struct ChangePasswordView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private var saveButton: some View {
@@ -124,17 +125,20 @@ struct ChangePasswordView: View {
                 Text(L10n.ChangePassword.save)
                     .font(AppFont.medium(16))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(canSave ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(
+                AppTheme.primaryActionFill(enabled: canSave),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
         }
         .buttonStyle(.plain)
         .disabled(!canSave)
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private func secureField(

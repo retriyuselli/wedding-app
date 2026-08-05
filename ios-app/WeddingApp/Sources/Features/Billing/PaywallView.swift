@@ -15,7 +15,8 @@ struct PaywallView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                    .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
@@ -47,6 +48,7 @@ struct PaywallView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.close) { dismiss() }
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
             }
             .task {
@@ -70,12 +72,12 @@ struct PaywallView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.Premium.title)
-                .font(.system(size: 30, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.titleOnGlass)
+                .font(AppFont.serifBold(30))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             Text(L10n.Premium.subtitle)
                 .font(AppFont.regular(14))
-                .foregroundStyle(AppTheme.inkMuted(0.75))
+                .foregroundStyle(AppTheme.mutedOnBackground)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -127,7 +129,7 @@ struct PaywallView: View {
                         .font(AppFont.medium(14))
                 }
             }
-            .foregroundStyle(AppTheme.sageMuted(0.95))
+            .foregroundStyle(AppTheme.titleOnBackground)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
         }
@@ -147,21 +149,26 @@ struct PaywallView: View {
                         .font(AppFont.semibold(15))
                 }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: premium.proProduct != nil))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
-            .background(
-                LinearGradient(
-                    colors: [AppTheme.brandGradientEnd, AppTheme.quoteGradientMid],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
-                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-            )
+            .background {
+                Group {
+                    if premium.proProduct != nil {
+                        LinearGradient(
+                            colors: [AppTheme.brandGradientEnd, AppTheme.quoteGradientMid],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    } else {
+                        AppTheme.primaryActionFill(enabled: false)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
         }
         .buttonStyle(.plain)
         .disabled(premium.purchaseInFlight || premium.isLoading || premium.proProduct == nil)
-        .opacity(premium.proProduct == nil ? 0.55 : 1)
     }
 
     private var restoreButton: some View {
@@ -170,7 +177,7 @@ struct PaywallView: View {
         } label: {
             Text(L10n.Premium.restore)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.sageMuted(0.95))
+                .foregroundStyle(AppTheme.titleOnBackground)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
         }
@@ -181,7 +188,7 @@ struct PaywallView: View {
     private var footnote: some View {
         Text(L10n.Premium.footnote)
             .font(AppFont.regular(11))
-            .foregroundStyle(AppTheme.inkMuted(0.55))
+            .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.85))
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
     }
@@ -304,21 +311,34 @@ struct PremiumLockedOverlay: View {
             .padding(.top, 4)
         }
         .padding(22)
-        .premiumGlassCard(cornerRadius: 24)
+        .background {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(AppTheme.surface)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(AppTheme.hairline, lineWidth: 1)
+        }
+        .shadow(color: AppTheme.sageDark.opacity(0.12), radius: 16, y: 8)
         .padding(.horizontal, 28)
     }
 }
 
 extension View {
-    /// Blurs the page content and shows the Pro lock card when `isPremium` is false.
+    /// Dims the page and shows the Pro lock card when `isPremium` is false.
+    /// Avoids `.blur` on scroll trees (forces full offscreen rasterization every frame).
     @ViewBuilder
     func premiumContentLock(isPremium: Bool, showPaywall: Binding<Bool>) -> some View {
         ZStack {
             self
-                .blur(radius: isPremium ? 0 : 2.5)
-                .opacity(isPremium ? 1 : 0.82)
+                .opacity(isPremium ? 1 : 0.55)
+                .allowsHitTesting(isPremium)
 
             if !isPremium {
+                Color.black.opacity(0.12)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+
                 PremiumLockedOverlay {
                     showPaywall.wrappedValue = true
                 }

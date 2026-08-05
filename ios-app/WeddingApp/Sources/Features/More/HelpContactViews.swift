@@ -1,13 +1,23 @@
 import SwiftUI
 
 private enum EmailSubject: String, CaseIterable, Identifiable {
-    case account = "Bantuan Akun"
-    case budget = "Bantuan Budget"
-    case technical = "Kendala Teknis"
-    case data = "Permintaan Data"
-    case other = "Pertanyaan Umum"
+    case account
+    case budget
+    case technical
+    case data
+    case other
 
     var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .account: return L10n.Help.emailSubjectAccount
+        case .budget: return L10n.Help.emailSubjectBudget
+        case .technical: return L10n.Help.emailSubjectTechnical
+        case .data: return L10n.Help.emailSubjectData
+        case .other: return L10n.Help.emailSubjectOther
+        }
+    }
 }
 
 // MARK: - Customer Support
@@ -30,13 +40,14 @@ struct HelpCustomerSupportView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
-                        title: "Hubungi Customer Support",
-                        subtitle: "Tim kami siap membantu Anda"
+                        title: L10n.Help.contactTitle,
+                        subtitle: L10n.Help.contactSubtitle
                     )
 
                     introCard
@@ -51,11 +62,11 @@ struct HelpCustomerSupportView: View {
                             .foregroundStyle(.red)
                     }
 
-                    MoreFormSection(title: "Topik Pertanyaan") {
+                    MoreFormSection(title: L10n.Help.topicSection) {
                         topicPicker
                     }
 
-                    MoreFormSection(title: "Pesan Anda") {
+                    MoreFormSection(title: L10n.Help.messageSection) {
                         messageField
                     }
 
@@ -78,11 +89,11 @@ struct HelpCustomerSupportView: View {
                 MessageDetailView(thread: supportThread) {}
             }
         }
-        .alert("Pesan Terkirim", isPresented: $showSuccess) {
-            Button("Lihat Percakapan") { navigateToChat = true }
+        .alert(L10n.Help.messageSentTitle, isPresented: $showSuccess) {
+            Button(L10n.Help.viewConversation) { navigateToChat = true }
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
-            Text("Pesan Anda sudah dikirim ke tim support. Kami akan merespons sesegera mungkin pada jam layanan.")
+            Text(L10n.Help.messageSentBody)
         }
     }
 
@@ -95,17 +106,17 @@ struct HelpCustomerSupportView: View {
                 .background(AppTheme.lightSage, in: Circle())
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Chat dengan Tim Support")
+                Text(L10n.Help.contactIntroTitle)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.sageDark)
-                Text("Jelaskan kendala atau pertanyaan Anda. Tim kami akan membalas melalui fitur pesan di aplikasi.")
+                Text(L10n.Help.contactIntroBody)
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private func existingChatCard(_ thread: MessageThread) -> some View {
@@ -123,7 +134,7 @@ struct HelpCustomerSupportView: View {
                     Text(thread.name)
                         .font(AppFont.medium(14))
                         .foregroundStyle(AppTheme.ink)
-                    Text(thread.lastMessage ?? "Lanjutkan percakapan dengan support")
+                    Text(thread.lastMessage ?? L10n.Help.continueSupportChat)
                         .font(AppFont.regular(11))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
                         .lineLimit(1)
@@ -145,7 +156,7 @@ struct HelpCustomerSupportView: View {
                     .foregroundStyle(AppTheme.ink.opacity(0.28))
             }
             .padding(14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -183,7 +194,7 @@ struct HelpCustomerSupportView: View {
         HStack(alignment: .top, spacing: 12) {
             MoreFieldIcon(name: "text.bubble")
 
-            TextField("Tulis pesan atau pertanyaan Anda di sini...", text: $message, axis: .vertical)
+            TextField(L10n.Help.messagePlaceholder, text: $message, axis: .vertical)
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink)
                 .lineLimit(4 ... 8)
@@ -199,13 +210,13 @@ struct HelpCustomerSupportView: View {
                 .font(.system(size: 18))
                 .foregroundStyle(AppTheme.sageDark.opacity(0.75))
 
-            Text("Sertakan detail yang jelas agar tim kami dapat membantu lebih cepat, seperti langkah yang sudah dicoba atau tangkapan layar jika ada.")
+            Text(L10n.Help.messageTips)
                 .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.ink.opacity(0.55))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private var serviceHoursCard: some View {
@@ -224,20 +235,23 @@ struct HelpCustomerSupportView: View {
                     Image(systemName: "paperplane.fill")
                         .font(.system(size: 16, weight: .semibold))
                 }
-                Text("Kirim Pesan")
+                Text(L10n.Help.sendMessage)
                     .font(AppFont.medium(16))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSend))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(canSend ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(
+                AppTheme.primaryActionFill(enabled: canSend),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
         }
         .buttonStyle(.plain)
         .disabled(!canSend || isLoading)
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private func loadSupportThread() async {
@@ -261,7 +275,7 @@ struct HelpCustomerSupportView: View {
         }
 
         guard let supportThread else {
-            errorMessage = "Percakapan support belum tersedia. Silakan kirim email ke \(HelpContent.supportEmail)."
+            errorMessage = L10n.Help.supportUnavailable(HelpContent.supportEmail)
             return
         }
 
@@ -300,7 +314,7 @@ struct HelpSendEmailView: View {
     @State private var showCopiedAlert = false
 
     private var userName: String {
-        session.currentUser?.name ?? "Pengguna Wedding App"
+        session.currentUser?.name ?? L10n.Help.defaultUserName
     }
 
     private var userEmail: String {
@@ -312,7 +326,7 @@ struct HelpSendEmailView: View {
         components.scheme = "mailto"
         components.path = HelpContent.supportEmail
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "[Wedding App] \(selectedSubject.rawValue)"),
+            URLQueryItem(name: "subject", value: "[Wedding App] \(selectedSubject.label)"),
             URLQueryItem(name: "body", value: composedEmailBody),
         ]
         return components.url
@@ -320,40 +334,41 @@ struct HelpSendEmailView: View {
 
     private var composedEmailBody: String {
         var lines = [
-            "Nama: \(userName)",
+            L10n.Help.emailFieldName(userName),
         ]
 
         if !userEmail.isEmpty {
-            lines.append("Email: \(userEmail)")
+            lines.append(L10n.Help.emailFieldEmail(userEmail))
         }
 
         lines.append("")
         lines.append(message.trimmingCharacters(in: .whitespacesAndNewlines))
         lines.append("")
         lines.append("—")
-        lines.append("Dikirim dari Wedding App")
+        lines.append(L10n.Help.emailSentFrom)
 
         return lines.joined(separator: "\n")
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
-                        title: "Kirim Email",
-                        subtitle: "Hubungi kami melalui email"
+                        title: L10n.Help.emailTitle,
+                        subtitle: L10n.Help.emailSubtitle
                     )
 
                     emailCard
 
-                    MoreFormSection(title: "Subjek Email") {
+                    MoreFormSection(title: L10n.Help.emailSubjectSection) {
                         subjectPicker
                     }
 
-                    MoreFormSection(title: "Isi Pesan") {
+                    MoreFormSection(title: L10n.Help.emailBodySection) {
                         emailMessageField
                     }
 
@@ -370,10 +385,10 @@ struct HelpSendEmailView: View {
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
-        .alert("Email Disalin", isPresented: $showCopiedAlert) {
+        .alert(L10n.Help.emailCopiedTitle, isPresented: $showCopiedAlert) {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
-            Text("Alamat \(HelpContent.supportEmail) telah disalin ke clipboard.")
+            Text(L10n.Help.emailCopiedBody(HelpContent.supportEmail))
         }
     }
 
@@ -390,7 +405,7 @@ struct HelpSendEmailView: View {
                     .font(AppFont.medium(15))
                     .foregroundStyle(AppTheme.sageDark)
 
-                Text("Email resmi customer support Wedding App")
+                Text(L10n.Help.emailOfficialBlurb)
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.5))
             }
@@ -410,7 +425,7 @@ struct HelpSendEmailView: View {
             .buttonStyle(.plain)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var subjectPicker: some View {
@@ -424,7 +439,7 @@ struct HelpSendEmailView: View {
                             .font(.system(size: 18))
                             .foregroundStyle(selectedSubject == subject ? AppTheme.sageDark : AppTheme.ink.opacity(0.25))
 
-                        Text(subject.rawValue)
+                        Text(subject.label)
                             .font(AppFont.regular(14))
                             .foregroundStyle(AppTheme.ink)
 
@@ -446,7 +461,7 @@ struct HelpSendEmailView: View {
         HStack(alignment: .top, spacing: 12) {
             MoreFieldIcon(name: "text.alignleft")
 
-            TextField("Tulis pesan Anda di sini...", text: $message, axis: .vertical)
+            TextField(L10n.Help.emailBodyPlaceholder, text: $message, axis: .vertical)
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink)
                 .lineLimit(5 ... 10)
@@ -458,7 +473,7 @@ struct HelpSendEmailView: View {
 
     private var previewCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Pratinjau Email")
+            Text(L10n.Help.emailPreview)
                 .font(AppFont.medium(13))
                 .foregroundStyle(AppTheme.sageDark)
 
@@ -469,7 +484,7 @@ struct HelpSendEmailView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private var serviceHoursCard: some View {
@@ -483,7 +498,7 @@ struct HelpSendEmailView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "envelope.open.fill")
                             .font(.system(size: 16, weight: .semibold))
-                        Text("Buka Aplikasi Email")
+                        Text(L10n.Help.openMailApp)
                             .font(AppFont.medium(16))
                     }
                     .foregroundStyle(.white)
@@ -497,7 +512,7 @@ struct HelpSendEmailView: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 }
 
@@ -513,20 +528,20 @@ struct HelpServiceHoursCard: View {
                 .background(AppTheme.lightSage, in: Circle())
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Jam Layanan Customer Support")
+                Text(L10n.Help.serviceHoursTitle)
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.sageDark)
 
                 HStack(spacing: 16) {
-                    Label(HelpContent.serviceDays, systemImage: "calendar")
+                    Label(L10n.Help.serviceDays, systemImage: "calendar")
                         .font(AppFont.regular(11))
                         .foregroundStyle(AppTheme.ink.opacity(0.55))
-                    Label(HelpContent.serviceHours, systemImage: "clock")
+                    Label(L10n.Help.serviceHours, systemImage: "clock")
                         .font(AppFont.regular(11))
                         .foregroundStyle(AppTheme.ink.opacity(0.55))
                 }
 
-                Text("Kami akan merespons Anda secepat mungkin.")
+                Text(L10n.Help.serviceHoursResponse)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.ink.opacity(0.45))
                     .fixedSize(horizontal: false, vertical: true)
@@ -535,6 +550,6 @@ struct HelpServiceHoursCard: View {
             Spacer(minLength: 0)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 }

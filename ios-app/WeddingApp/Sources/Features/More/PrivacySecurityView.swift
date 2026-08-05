@@ -27,10 +27,11 @@ struct PrivacySecurityView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Privacy.title,
                         subtitle: L10n.Privacy.subtitle
@@ -120,7 +121,7 @@ struct PrivacySecurityView: View {
                 }
             }
             .padding(16)
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         }
         .buttonStyle(.plain)
     }
@@ -274,7 +275,7 @@ struct PrivacySecurityView: View {
             }
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var helpRow: some View {
@@ -287,7 +288,7 @@ struct PrivacySecurityView: View {
                 subtitle: L10n.Privacy.helpCenterSub
             )
             .padding(14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -323,13 +324,13 @@ struct PrivacySecurityView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(15))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(AppTheme.mutedOnBackground)
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {
                 content()
             }
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         }
     }
 

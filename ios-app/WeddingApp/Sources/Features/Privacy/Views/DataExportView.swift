@@ -7,7 +7,8 @@ struct DataExportView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
@@ -35,23 +36,26 @@ struct DataExportView: View {
                     } label: {
                         HStack {
                             if viewModel.isLoading { ProgressView().tint(.white) }
-                            Text(viewModel.isLoading ? "Menyiapkan…" : "Unduh data saya")
+                            Text(viewModel.isLoading ? L10n.Privacy.exportPreparing : L10n.Privacy.exportDownload)
                                 .font(AppFont.medium(15))
                         }
+                        .foregroundStyle(AppTheme.primaryActionForeground(enabled: !viewModel.isLoading))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .foregroundStyle(.white)
+                        .background(
+                            AppTheme.primaryActionFill(enabled: !viewModel.isLoading),
+                            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        )
                     }
                     .disabled(viewModel.isLoading)
 
                     if let url = viewModel.exportFileURL {
                         ShareLink(item: url) {
-                            Label("Bagikan file ekspor", systemImage: "square.and.arrow.up")
+                            Label(L10n.Privacy.exportShare, systemImage: "square.and.arrow.up")
                                 .font(AppFont.medium(14))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .premiumGlassCard(cornerRadius: 16)
+                                .premiumListRow(cornerRadius: 16)
                         }
                     }
                 }
@@ -62,7 +66,7 @@ struct DataExportView: View {
         }
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
-        .alert("Berhasil", isPresented: $showSuccess) {
+        .alert(L10n.Common.success, isPresented: $showSuccess) {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
             Text(viewModel.successMessage ?? "")

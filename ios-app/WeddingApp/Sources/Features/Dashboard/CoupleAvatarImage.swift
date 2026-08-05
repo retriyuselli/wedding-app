@@ -7,6 +7,8 @@ struct CoupleAvatarImage: View {
     var showsFloralBackdrop: Bool = false
     var cornerRadius: CGFloat = 0
 
+    @ObservedObject private var photoStore = CouplePhotoStore.shared
+
     private var portraitShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: portraitCornerRadius, style: .continuous)
     }
@@ -32,7 +34,6 @@ struct CoupleAvatarImage: View {
                     .scaledToFit()
                     .frame(width: width * 1.35, height: width * 1.35)
                     .opacity(0.42)
-                    .blur(radius: 0.5)
                     .offset(x: width * 0.12, y: height * 0.08)
                     .allowsHitTesting(false)
 
@@ -54,7 +55,14 @@ struct CoupleAvatarImage: View {
                     .allowsHitTesting(false)
             }
 
-            if let photoURL {
+            if let local = photoStore.previewImage {
+                framedPortrait {
+                    Image(uiImage: local)
+                        .resizable()
+                        .scaledToFill()
+                }
+                .accessibilityLabel(L10n.More.couple)
+            } else if let photoURL {
                 couplePhoto(url: photoURL)
             } else {
                 framedPortrait { ringsPlaceholderContent }
@@ -66,23 +74,8 @@ struct CoupleAvatarImage: View {
 
     private func couplePhoto(url: URL) -> some View {
         framedPortrait {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                case .failure:
-                    ringsPlaceholderContent
-                case .empty:
-                    ZStack {
-                        portraitShape.fill(AppTheme.iconChipFill)
-                        ProgressView()
-                            .tint(AppTheme.sageDark)
-                    }
-                @unknown default:
-                    ringsPlaceholderContent
-                }
+            DownsampledAsyncImage(url: url, maxPixelSize: max(width, height) * 2) {
+                ringsPlaceholderContent
             }
         }
         .accessibilityLabel(L10n.More.couple)

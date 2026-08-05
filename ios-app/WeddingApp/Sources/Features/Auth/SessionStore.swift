@@ -202,6 +202,7 @@ final class SessionStore: ObservableObject {
         authRevision += 1
         BudgetCategoriesStore.shared.reset()
         PremiumStore.shared.resetAfterAccountDeletion()
+        CouplePhotoStore.shared.clear()
     }
 
     func clearSessionAfterAccountDeletion() {

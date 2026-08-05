@@ -9,7 +9,8 @@ struct SharedUserDetailView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
@@ -33,6 +34,7 @@ struct SharedUserDetailView: View {
 
                     if viewModel.isLoadingProfile && viewModel.profile == nil {
                         ProgressView()
+                            .tint(AppTheme.titleOnBackground)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 40)
                     }
@@ -43,6 +45,7 @@ struct SharedUserDetailView: View {
 
                     if viewModel.isLoadingExtras {
                         ProgressView()
+                            .tint(AppTheme.titleOnBackground)
                             .frame(maxWidth: .infinity)
                     }
 
@@ -115,7 +118,7 @@ struct SharedUserDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     @ViewBuilder
@@ -136,19 +139,19 @@ struct SharedUserDetailView: View {
                     .foregroundStyle(AppTheme.inkMuted(0.6))
                     .padding(14)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .premiumGlassCard(cornerRadius: 16)
+                    .premiumListRow(cornerRadius: 16)
             } else if isEmpty {
                 Text(L10n.Privacy.sharedSectionUnavailable)
                     .font(AppFont.regular(13))
                     .foregroundStyle(AppTheme.inkMuted(0.55))
                     .padding(14)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .premiumGlassCard(cornerRadius: 16)
+                    .premiumListRow(cornerRadius: 16)
             } else {
                 content()
                     .padding(14)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .premiumGlassCard(cornerRadius: 16)
+                    .premiumListRow(cornerRadius: 16)
             }
         }
     }

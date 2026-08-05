@@ -25,10 +25,12 @@ struct VendorDetailView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             if isLoading && vendor == nil {
                 ProgressView()
+                    .tint(AppTheme.titleOnBackground)
             } else if let item, let vendor {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 18) {
@@ -42,6 +44,7 @@ struct VendorDetailView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 24)
                 }
+                .scrollDismissesKeyboard(.interactively)
             } else {
                 errorState
             }
@@ -66,17 +69,12 @@ struct VendorDetailView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(AppTheme.iconOnChip)
+                    .foregroundStyle(AppTheme.iconOnChrome)
                     .frame(width: 42, height: 42)
-                    .background {
-                        Circle()
-                            .fill(AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
+                    .background(AppTheme.chrome, in: Circle())
                     .overlay {
-                        Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                        Circle().stroke(AppTheme.hairline, lineWidth: 1)
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
 
@@ -93,17 +91,12 @@ struct VendorDetailView: View {
                         .fill(item.logoTint)
                         .frame(width: 64, height: 64)
 
-                    if let raw = item.logoUrl ?? item.coverImageUrl,
+                    if let raw = item.logoUrl,
                        let url = URL(string: raw) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image.resizable().scaledToFill()
-                            default:
-                                Image(systemName: item.logoSymbol)
-                                    .font(.system(size: 24, weight: .medium))
-                                    .foregroundStyle(.white)
-                            }
+                        DownsampledAsyncImage(url: url, maxPixelSize: 128) {
+                            Image(systemName: item.logoSymbol)
+                                .font(.system(size: 24, weight: .medium))
+                                .foregroundStyle(.white)
                         }
                         .frame(width: 64, height: 64)
                         .clipShape(Circle())
@@ -117,7 +110,7 @@ struct VendorDetailView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 4) {
                         Text(item.name)
-                            .font(.system(size: 20, weight: .semibold, design: .serif))
+                            .font(AppFont.serifSemibold(20))
                             .foregroundStyle(AppTheme.titleOnGlass)
 
                         if item.isVerified {
@@ -225,8 +218,8 @@ struct VendorDetailView: View {
 
             HStack(alignment: .firstTextBaseline) {
                 Text(L10n.Vendor.packages)
-                    .font(.system(size: 16, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.titleOnGlass)
+                    .font(AppFont.serifSemibold(16))
+                    .foregroundStyle(AppTheme.titleOnBackground)
 
                 Spacer(minLength: 8)
 
@@ -237,7 +230,7 @@ struct VendorDetailView: View {
                         }
                     }
                     .font(AppFont.medium(13))
-                    .foregroundStyle(AppTheme.peachDark)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 }
             }
 
@@ -303,6 +296,7 @@ struct VendorDetailView: View {
                 .submitLabel(.search)
                 .onSubmit {
                     isPackageSearchFocused = false
+                    KeyboardDismiss.resign()
                 }
 
             if !packageSearchText.isEmpty {
@@ -353,18 +347,18 @@ struct VendorDetailView: View {
         VStack(spacing: 12) {
             Image(systemName: "wifi.exclamationmark")
                 .font(.system(size: 28, weight: .light))
-                .foregroundStyle(AppTheme.ink.opacity(0.25))
+                .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.55))
 
             Text(errorMessage ?? L10n.Vendor.notFoundDetail)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .foregroundStyle(AppTheme.titleOnBackground)
                 .multilineTextAlignment(.center)
 
             Button(L10n.Common.tryAgain) {
                 Task { await load() }
             }
             .font(AppFont.medium(13))
-            .foregroundStyle(AppTheme.sageDark)
+            .foregroundStyle(AppTheme.titleOnBackground)
         }
         .padding(24)
     }
@@ -372,8 +366,8 @@ struct VendorDetailView: View {
     private func sectionCard<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 16, weight: .semibold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(AppFont.serifSemibold(16))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             content()
                 .padding(14)
@@ -391,7 +385,7 @@ struct VendorDetailView: View {
             .background {
                 Capsule()
                     .fill(AppTheme.selectedChipFill)
-                    .background(.ultraThinMaterial, in: Capsule())
+                    .background(AppTheme.iconChipFill, in: Capsule())
             }
             .overlay {
                 Capsule().stroke(AppTheme.iconChipStroke, lineWidth: 1)
@@ -516,7 +510,7 @@ private struct VendorPackageGridCard: View {
                         .background {
                             Capsule()
                                 .fill(AppTheme.selectedChipFill)
-                                .background(.ultraThinMaterial, in: Capsule())
+                                .background(AppTheme.iconChipFill, in: Capsule())
                         }
                         .overlay {
                             Capsule().stroke(AppTheme.iconChipStroke, lineWidth: 1)
@@ -564,22 +558,11 @@ private struct VendorPackageGridCard: View {
             .overlay {
                 Group {
                     if let coverImageUrl = package.coverImageUrl, let url = URL(string: coverImageUrl) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                            case .failure:
+                        DownsampledAsyncImage(url: url, maxPixelSize: 720) {
+                            ZStack {
                                 placeholderImage
-                            case .empty:
-                                ZStack {
-                                    placeholderImage
-                                    ProgressView()
-                                        .tint(AppTheme.peachDark)
-                                }
-                            @unknown default:
-                                placeholderImage
+                                ProgressView()
+                                    .tint(AppTheme.peachDark)
                             }
                         }
                     } else {
@@ -617,7 +600,8 @@ private struct VendorPackageDetailView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
@@ -641,21 +625,18 @@ private struct VendorPackageDetailView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(AppTheme.iconOnChip)
+                    .foregroundStyle(AppTheme.iconOnChrome)
                     .frame(width: 36, height: 36)
-                    .background {
-                        Circle()
-                            .fill(AppTheme.iconChipFill)
-                    }
+                    .background(AppTheme.chrome, in: Circle())
                     .overlay {
-                        Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                        Circle().stroke(AppTheme.hairline, lineWidth: 1)
                     }
             }
             .buttonStyle(.plain)
 
             Text(package.name)
                 .font(AppFont.semibold(16))
-                .foregroundStyle(AppTheme.titleOnGlass)
+                .foregroundStyle(AppTheme.titleOnBackground)
                 .lineLimit(1)
 
             Spacer(minLength: 0)

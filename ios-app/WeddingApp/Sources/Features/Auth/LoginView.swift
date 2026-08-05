@@ -14,7 +14,8 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                    .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
@@ -40,8 +41,8 @@ struct LoginView: View {
                 .scrollDismissesKeyboard(.interactively)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     Text(L10n.Auth.copyright)
-                        .font(.system(size: 11, weight: .regular, design: .rounded))
-                        .foregroundStyle(AppTheme.inkMuted(0.45))
+                        .font(AppFont.regular(11))
+                        .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 28)
@@ -95,16 +96,16 @@ struct LoginView: View {
             VStack(spacing: 8) {
                 HStack(spacing: 7) {
                     Text(L10n.Auth.brandWedding)
-                        .foregroundStyle(AppTheme.titleOnGlass)
+                        .foregroundStyle(AppTheme.titleOnBackground)
                     Text(L10n.Auth.brandApp)
-                        .foregroundStyle(AppTheme.gold)
+                        .foregroundStyle(AppTheme.accentOnBackground)
                 }
-                .font(.system(size: 34, weight: .bold, design: .serif))
+                .font(AppFont.serifBold(34))
                 .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 8, y: 2)
 
                 Text(L10n.Dashboard.planTogether)
-                    .font(.system(size: 14, weight: .medium, design: .serif))
-                    .foregroundStyle(AppTheme.inkMuted(0.75))
+                    .font(AppFont.serifMedium(14))
+                    .foregroundStyle(AppTheme.mutedOnBackground)
                     .multilineTextAlignment(.center)
             }
         }
@@ -148,7 +149,7 @@ struct LoginView: View {
                     showForgotPassword = true
                 } label: {
                     Text(L10n.Auth.forgotPassword)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(AppFont.semibold(13))
                         .foregroundStyle(AppTheme.sageMuted(0.95))
                 }
                 .buttonStyle(.plain)
@@ -196,7 +197,7 @@ struct LoginView: View {
                         .foregroundStyle(AppTheme.sageMuted(0.95))
                         .fontWeight(.semibold)
                 }
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(AppFont.medium(13))
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
@@ -211,15 +212,15 @@ struct LoginView: View {
         } label: {
             (
                 Text(L10n.Auth.termsPrefix)
-                    .foregroundStyle(LoginPalette.textSecondary)
+                    .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.9))
                 + Text(L10n.Auth.termsLink)
-                    .foregroundStyle(AppTheme.sageMuted(0.95))
+                    .foregroundStyle(AppTheme.accentOnBackground)
                     .underline()
                     .fontWeight(.semibold)
                 + Text(L10n.Auth.termsSuffix)
-                    .foregroundStyle(LoginPalette.textSecondary)
+                    .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.9))
             )
-            .font(.system(size: 12, weight: .medium, design: .rounded))
+            .font(AppFont.medium(12))
             .multilineTextAlignment(.center)
             .lineSpacing(3)
         }
@@ -231,10 +232,10 @@ struct LoginView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
                 Text(L10n.Auth.twoFactorTitle)
-                    .font(.system(size: 20, weight: .semibold, design: .serif))
+                    .font(AppFont.serifSemibold(20))
                     .foregroundStyle(AppTheme.titleOnGlass)
                 Text(session.pendingTwoFactorMessage ?? L10n.Auth.twoFactorMessage)
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
+                    .font(AppFont.regular(13))
                     .foregroundStyle(AppTheme.inkMuted(0.65))
 
                 TextField(
@@ -244,7 +245,7 @@ struct LoginView: View {
                         .foregroundStyle(AppTheme.inkMuted(0.72))
                 )
                     .keyboardType(.numberPad)
-                    .font(.system(size: 16, weight: .regular, design: .rounded))
+                    .font(AppFont.regular(16))
                     .foregroundStyle(AppTheme.titleOnGlass)
                     .padding(14)
                     .background {
@@ -254,7 +255,7 @@ struct LoginView: View {
 
                 if let errorMessage = session.errorMessage {
                     Text(errorMessage)
-                        .font(.system(size: 13, weight: .regular, design: .rounded))
+                        .font(AppFont.regular(13))
                         .foregroundStyle(.red)
                 }
 
@@ -262,7 +263,7 @@ struct LoginView: View {
                     Task { await session.verifyTwoFactor(code: twoFactorCode) }
                 } label: {
                     Text(session.isLoading ? L10n.Auth.twoFactorVerifying : L10n.Auth.twoFactorVerify)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(AppFont.semibold(15))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
@@ -351,17 +352,17 @@ private struct ForgotPasswordSheet: View {
                     .background {
                         Circle()
                             .fill(AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
+                            .background(AppTheme.iconChipFill, in: Circle())
                     }
 
                 Text(L10n.Auth.forgotTitle)
-                    .font(.system(size: 22, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.titleOnGlass)
+                    .font(AppFont.serifSemibold(22))
+                    .foregroundStyle(AppTheme.titleOnBackground)
                     .multilineTextAlignment(.center)
 
                 Text(L10n.Auth.forgotSubtitle)
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundStyle(AppTheme.inkMuted(0.65))
+                    .font(AppFont.regular(13))
+                    .foregroundStyle(AppTheme.mutedOnBackground)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
                     .padding(.horizontal, 10)
@@ -401,8 +402,8 @@ private struct ForgotPasswordSheet: View {
                 dismiss()
             } label: {
                 Text(L10n.Auth.forgotBackToLogin)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(AppFont.medium(14))
+                    .foregroundStyle(AppTheme.accentOnBackground)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.plain)

@@ -26,10 +26,11 @@ struct AddPaymentMethodView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     if let errorMessage {
                         Text(errorMessage)
                             .font(AppFont.regular(13))
@@ -85,13 +86,13 @@ struct AddPaymentMethodView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             VStack(spacing: 10) {
                 content()
             }
             .padding(14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
     }
 
@@ -120,11 +121,11 @@ struct AddPaymentMethodView: View {
         } label: {
             Text(L10n.Budget.savePaymentMethod)
                 .font(AppFont.medium(15))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(
-                    canSave ? AppTheme.sageDark : AppTheme.sage.opacity(0.45),
+                    AppTheme.primaryActionFill(enabled: canSave),
                     in: RoundedRectangle(cornerRadius: 18, style: .continuous)
                 )
         }
@@ -132,7 +133,7 @@ struct AddPaymentMethodView: View {
         .disabled(!canSave)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private func save() async {

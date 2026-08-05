@@ -27,6 +27,11 @@ struct BudgetView: View {
     @State private var isSearching = false
     @State private var editingScheduleRoute: EditableScheduleRoute?
     @State private var editingIncomingPayment: IncomingPayment?
+    @State private var cachedCategories: [BudgetCategory] = []
+    @State private var cachedAllCategories: [BudgetCategory] = []
+    @State private var cachedMetrics = BudgetSummaryMetrics(totalBudget: 0, spent: 0, commitment: 0)
+    @State private var cachedIncomingMetrics = IncomingPaymentMetrics(totalAll: 0, totalConfirmed: 0, pendingCount: 0)
+    @State private var lastLoadAt: Date?
 
     @FocusState private var isSearchFocused: Bool
 
@@ -57,34 +62,33 @@ struct BudgetView: View {
         !filteredSchedules.isEmpty || !filteredCategories.isEmpty || !filteredIncomingPayments.isEmpty
     }
 
-    private var categories: [BudgetCategory] {
-        BudgetCategory.build(
+    private var categories: [BudgetCategory] { cachedCategories }
+
+    private var allCategories: [BudgetCategory] { cachedAllCategories }
+
+    private var metrics: BudgetSummaryMetrics { cachedMetrics }
+
+    private var incomingMetrics: IncomingPaymentMetrics { cachedIncomingMetrics }
+
+    private func recomputeBudgetCaches() {
+        cachedCategories = BudgetCategory.build(
             from: schedules,
             options: categoriesStore.categories,
             allocations: categoryAllocations,
             defaults: categoriesStore.defaults
         )
-    }
-
-    private var allCategories: [BudgetCategory] {
-        BudgetCategory.buildAll(
+        cachedAllCategories = BudgetCategory.buildAll(
             from: schedules,
             options: categoriesStore.categories,
             allocations: categoryAllocations,
             defaults: categoriesStore.defaults
         )
-    }
-
-    private var metrics: BudgetSummaryMetrics {
-        BudgetSummaryMetrics.resolve(
+        cachedMetrics = BudgetSummaryMetrics.resolve(
             budget: budget,
             summary: summary,
-            categories: categories
+            categories: cachedCategories
         )
-    }
-
-    private var incomingMetrics: IncomingPaymentMetrics {
-        IncomingPaymentMetrics.resolve(
+        cachedIncomingMetrics = IncomingPaymentMetrics.resolve(
             payments: incomingPayments,
             summary: summary,
             pendingStatus: categoriesStore.defaultIncomingPaymentStatus
@@ -120,10 +124,8 @@ struct BudgetView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
-
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
+                    LazyVStack(alignment: .leading, spacing: 16) {
                         header
                         if isSearching {
                             searchBar
@@ -149,11 +151,12 @@ struct BudgetView: View {
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding(.top, 12)
                     .padding(.bottom, 20)
                 }
-                .blur(radius: isPremium ? 0 : 2.5)
-                .opacity(isPremium ? 1 : 0.82)
+                .scrollDismissesKeyboard(.interactively)
+                .opacity(isPremium ? 1 : 0.55)
+                .allowsHitTesting(isPremium)
                 .overlay {
                     if isLoading && schedules.isEmpty && budget.totalBudget == 0 && isPremium {
                         ProgressView()
@@ -190,7 +193,7 @@ struct BudgetView: View {
                                         .foregroundStyle(AppTheme.inkMuted(0.45))
                                 }
                                 .padding(14)
-                                .premiumGlassCard(cornerRadius: 18)
+                                .premiumListRow(cornerRadius: 18)
                             }
                             .buttonStyle(.plain)
                         }
@@ -201,6 +204,9 @@ struct BudgetView: View {
                     }
                     .padding(.horizontal, 24)
                 }
+            }
+            .background {
+                AppTheme.background.ignoresSafeArea()
             }
             .statusBarBlur()
             .toolbar(.hidden, for: .navigationBar)
@@ -221,6 +227,7 @@ struct BudgetView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
                 guard isPremium else { return }
+                if let lastLoadAt, Date().timeIntervalSince(lastLoadAt) < 60 { return }
                 Task { await load() }
             }
             .onChange(of: isPremium) { _, premium in
@@ -330,13 +337,13 @@ struct BudgetView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.Budget.title)
-                    .font(.system(size: 32, weight: .bold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(AppFont.serifBold(32))
+                    .foregroundStyle(AppTheme.titleOnBackground)
 
                 Text(L10n.Budget.subtitle)
                     .lineSpacing(2)
-                    .font(.system(size: 13, weight: .regular, design: .serif))
-                    .foregroundStyle(AppTheme.gold)
+                    .font(AppFont.serifRegular(13))
+                    .foregroundStyle(AppTheme.mutedOnBackground)
             }
 
             Spacer(minLength: 8)
@@ -344,22 +351,23 @@ struct BudgetView: View {
             HStack(spacing: 10) {
                 Button {
                     runPremiumOrPaywall {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            isSearching = true
-                            isSearchFocused = true
-                        }
+                        isSearching = true
+                        isSearchFocused = true
                     }
                 } label: {
                     circleButton("magnifyingglass", isActive: isSearching)
                 }
                 .buttonStyle(.plain)
 
-                circleButton("slider.horizontal.3", isActive: expenseStatusFilter != nil) {
+                Button {
                     runPremiumOrPaywall {
                         draftExpenseStatusFilter = expenseStatusFilter
                         showExpenseFilter = true
                     }
+                } label: {
+                    circleButton("slider.horizontal.3", isActive: expenseStatusFilter != nil)
                 }
+                .buttonStyle(.plain)
             }
             .padding(.top, 4)
         }
@@ -367,30 +375,16 @@ struct BudgetView: View {
         .padding(.top, 8)
     }
 
-    private func circleButton(_ icon: String, isActive: Bool = false, action: (() -> Void)? = nil) -> some View {
-        Button {
-            action?()
-        } label: {
-            Image(systemName: icon)
-                .font(.system(size: 17, weight: .medium))
-                .foregroundStyle(isActive ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
-                .frame(width: 44, height: 44)
-                .background {
-                    Circle()
-                        .fill(isActive ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .overlay {
-                    Circle()
-                        .stroke(
-                            isActive ? AppTheme.sage.opacity(0.35) : AppTheme.iconChipStroke,
-                            lineWidth: 1
-                        )
-                }
-                .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
-        }
-        .buttonStyle(.plain)
-        .disabled(action == nil)
+    private func circleButton(_ icon: String, isActive: Bool = false) -> some View {
+        Image(systemName: icon)
+            .font(.system(size: 17, weight: .medium))
+            .foregroundStyle(isActive ? AppTheme.labelOnLightSurface : AppTheme.iconOnChrome)
+            .frame(width: 44, height: 44)
+            .background((isActive ? AppTheme.selectedChipFill : AppTheme.chrome), in: Circle())
+            .overlay {
+                Circle()
+                    .stroke(isActive ? AppTheme.sage.opacity(0.35) : AppTheme.hairline, lineWidth: 1)
+            }
     }
 
     private var searchBar: some View {
@@ -406,6 +400,10 @@ struct BudgetView: View {
                     .autocorrectionDisabled()
                     .focused($isSearchFocused)
                     .submitLabel(.search)
+                    .onSubmit {
+                        isSearchFocused = false
+                        KeyboardDismiss.resign()
+                    }
 
                 if !searchText.isEmpty {
                     Button {
@@ -419,18 +417,17 @@ struct BudgetView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .premiumGlassCard(cornerRadius: 16)
+            .premiumListRow(cornerRadius: 16)
 
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isSearching = false
-                    searchText = ""
-                    isSearchFocused = false
-                }
+                isSearching = false
+                searchText = ""
+                isSearchFocused = false
+                KeyboardDismiss.resign()
             } label: {
                 Text(L10n.Common.cancel)
                     .font(AppFont.medium(14))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnBackground)
             }
             .buttonStyle(.plain)
         }
@@ -448,79 +445,75 @@ struct BudgetView: View {
                     .foregroundStyle(AppTheme.sageDark)
                 Text(L10n.Budget.searchEmptySub)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
             .padding(.horizontal, 16)
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         } else if !hasSearchResults {
-            ContentUnavailableView(
-                L10n.Budget.searchNotFound,
-                systemImage: "magnifyingglass",
-                description: Text(L10n.Budget.searchNoResults(trimmedSearchQuery))
+            AppEmptyState(
+                icon: "magnifyingglass",
+                title: L10n.Budget.searchNotFound,
+                message: L10n.Budget.searchNoResults(trimmedSearchQuery),
+                onBackground: false
             )
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
+            .padding(.vertical, 8)
+            .premiumListRow(cornerRadius: 20)
         } else {
-            VStack(alignment: .leading, spacing: 16) {
-                if !filteredSchedules.isEmpty {
-                    searchSectionHeader(
-                        title: L10n.Budget.expenses,
-                        count: filteredSchedules.count
-                    )
+            // Flatten into the parent LazyVStack so search rows stay lazy.
+            if !filteredSchedules.isEmpty {
+                searchSectionHeader(
+                    title: L10n.Budget.expenses,
+                    count: filteredSchedules.count
+                )
 
-                    VStack(spacing: 10) {
-                        ForEach(filteredSchedules) { schedule in
-                            Button {
-                                runPremiumOrPaywall {
-                                    editingScheduleRoute = EditableScheduleRoute(id: schedule.id)
-                                }
-                            } label: {
-                                searchExpenseCard(schedule)
-                            }
-                            .buttonStyle(.plain)
+                ForEach(filteredSchedules) { schedule in
+                    Button {
+                        runPremiumOrPaywall {
+                            editingScheduleRoute = EditableScheduleRoute(id: schedule.id)
                         }
+                    } label: {
+                        searchExpenseCard(schedule)
                     }
+                    .buttonStyle(.plain)
                 }
+            }
 
-                if !filteredCategories.isEmpty {
-                    searchSectionHeader(
-                        title: L10n.Budget.categories,
-                        count: filteredCategories.count
-                    )
+            if !filteredCategories.isEmpty {
+                searchSectionHeader(
+                    title: L10n.Budget.categories,
+                    count: filteredCategories.count
+                )
 
-                    VStack(spacing: 10) {
-                        ForEach(filteredCategories) { category in
-                            Button {
-                                runPremiumOrPaywall {
-                                    selectedCategory = category
-                                }
-                            } label: {
-                                BudgetCategoryRow(category: category, total: metrics.totalBudget)
-                            }
-                            .buttonStyle(.plain)
+                ForEach(filteredCategories) { category in
+                    Button {
+                        runPremiumOrPaywall {
+                            selectedCategory = category
                         }
+                    } label: {
+                        BudgetCategoryRow(category: category, total: metrics.totalBudget)
+                            .equatable()
                     }
+                    .buttonStyle(.plain)
                 }
+            }
 
-                if !filteredIncomingPayments.isEmpty {
-                    searchSectionHeader(
-                        title: L10n.Budget.incoming,
-                        count: filteredIncomingPayments.count
-                    )
+            if !filteredIncomingPayments.isEmpty {
+                searchSectionHeader(
+                    title: L10n.Budget.incoming,
+                    count: filteredIncomingPayments.count
+                )
 
-                    VStack(spacing: 10) {
-                        ForEach(filteredIncomingPayments) { payment in
-                            Button {
-                                editingIncomingPayment = payment
-                            } label: {
-                                IncomingPaymentRow(payment: payment)
-                            }
-                            .buttonStyle(.plain)
-                        }
+                ForEach(filteredIncomingPayments) { payment in
+                    Button {
+                        editingIncomingPayment = payment
+                    } label: {
+                        IncomingPaymentRow(payment: payment)
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -530,11 +523,11 @@ struct BudgetView: View {
         HStack {
             Text(title)
                 .font(AppFont.medium(16))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
             Spacer()
             Text("\(count)")
                 .font(AppFont.regular(12))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppTheme.mutedOnBackground)
         }
     }
 
@@ -542,7 +535,11 @@ struct BudgetView: View {
         PaymentScheduleRow(schedule: schedule)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .premiumGlassCard(cornerRadius: 18)
+            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppTheme.hairline.opacity(0.7), lineWidth: 1)
+            }
     }
 
     private var adaptiveTotalBudgetFontSize: CGFloat {
@@ -567,7 +564,7 @@ struct BudgetView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(L10n.Budget.totalBudget)
                             .font(AppFont.regular(13))
-                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                         Text(CurrencyFormatter.rupiah(metrics.totalBudget))
                             .font(AppFont.medium(adaptiveTotalBudgetFontSize))
                             .foregroundStyle(AppTheme.sageDark)
@@ -575,14 +572,14 @@ struct BudgetView: View {
                             .minimumScaleFactor(0.5)
                         Text(totalBudgetCaption)
                             .font(AppFont.regular(11))
-                            .foregroundStyle(AppTheme.ink.opacity(0.4))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     VStack(alignment: .leading, spacing: 5) {
                         Text(L10n.Budget.spent)
                             .font(AppFont.regular(11))
-                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                         Text("\(metrics.percent(metrics.spent))%")
                             .font(AppFont.medium(26))
                             .foregroundStyle(AppTheme.sageDark)
@@ -602,16 +599,16 @@ struct BudgetView: View {
                     BudgetDonut(
                         segments: [
                             (metrics.spent, AppTheme.sageDark),
-                            (metrics.remaining, AppTheme.gold),
-                            (metrics.commitment, AppTheme.mist),
+                            (metrics.remaining, AppTheme.sage.opacity(0.45)),
+                            (metrics.commitment, AppTheme.goldOnLightSurface),
                         ]
                     )
                     .frame(width: 96, height: 96)
 
                     VStack(alignment: .leading, spacing: 10) {
                         donutLegend(color: AppTheme.sageDark, title: L10n.Budget.spent, amount: metrics.spent, percent: metrics.percent(metrics.spent))
-                        donutLegend(color: AppTheme.gold, title: L10n.Budget.remaining, amount: metrics.remaining, percent: metrics.percent(metrics.remaining))
-                        donutLegend(color: AppTheme.mist, title: L10n.Budget.commitment, amount: metrics.commitment, percent: metrics.percent(metrics.commitment))
+                        donutLegend(color: AppTheme.sage.opacity(0.45), title: L10n.Budget.remaining, amount: metrics.remaining, percent: metrics.percent(metrics.remaining))
+                        donutLegend(color: AppTheme.goldOnLightSurface, title: L10n.Budget.commitment, amount: metrics.commitment, percent: metrics.percent(metrics.commitment))
                     }
 
                     Spacer(minLength: 0)
@@ -622,7 +619,7 @@ struct BudgetView: View {
                             .foregroundStyle(AppTheme.sageDark)
                         Text(L10n.Budget.remaining)
                             .font(AppFont.regular(10))
-                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                         Text(CurrencyFormatter.rupiah(metrics.remaining))
                             .font(AppFont.medium(13))
                             .foregroundStyle(AppTheme.sageDark)
@@ -635,7 +632,7 @@ struct BudgetView: View {
                 }
             }
             .padding(18)
-            .premiumGlassCard(cornerRadius: 32)
+            .premiumListRow(cornerRadius: 32)
         }
         .buttonStyle(.plain)
     }
@@ -646,10 +643,10 @@ struct BudgetView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.ink.opacity(0.65))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                 Text("\(CurrencyFormatter.rupiah(amount)) (\(percent)%)")
                     .font(AppFont.regular(10))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
         }
     }
@@ -658,8 +655,8 @@ struct BudgetView: View {
         HStack(spacing: 10) {
             statCard(icon: "list.bullet.rectangle", tint: AppTheme.sageDark, label: L10n.Budget.totalBudget, amount: metrics.totalBudget, sub: nil)
             statCard(icon: "checkmark.circle.fill", tint: AppTheme.sageDark, label: L10n.Budget.spent, amount: metrics.spent, sub: "\(metrics.percent(metrics.spent))%")
-            statCard(icon: "hourglass", tint: AppTheme.gold, label: L10n.Budget.commitment, amount: metrics.commitment, sub: "\(metrics.percent(metrics.commitment))%")
-            statCard(icon: "wallet.pass", tint: AppTheme.ink.opacity(0.45), label: L10n.Budget.remaining, amount: metrics.remaining, sub: "\(metrics.percent(metrics.remaining))%")
+            statCard(icon: "hourglass", tint: AppTheme.goldOnLightSurface, label: L10n.Budget.commitment, amount: metrics.commitment, sub: "\(metrics.percent(metrics.commitment))%")
+            statCard(icon: "wallet.pass", tint: AppTheme.ink.opacity(0.55), label: L10n.Budget.remaining, amount: metrics.remaining, sub: "\(metrics.percent(metrics.remaining))%")
         }
     }
 
@@ -673,7 +670,7 @@ struct BudgetView: View {
 
             Text(label)
                 .font(AppFont.regular(10))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
 
@@ -685,12 +682,12 @@ struct BudgetView: View {
 
             Text(sub ?? "")
                 .font(AppFont.regular(10))
-                .foregroundStyle(AppTheme.ink.opacity(sub != nil ? 0.4 : 0))
+                .foregroundStyle(sub != nil ? AppTheme.captionOnLightSurface : .clear)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 6)
         .padding(.vertical, 14)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var activeExpenseFilterChip: some View {
@@ -723,7 +720,7 @@ struct BudgetView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private var expenseStatusFilterLabel: String {
@@ -762,12 +759,12 @@ struct BudgetView: View {
             HStack {
                 Text(L10n.Budget.summary)
                     .font(AppFont.medium(16))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Spacer()
                 Label(L10n.Common.seeDetail, systemImage: "chevron.right")
                     .font(AppFont.regular(12))
                     .labelStyle(.titleAndIcon)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.titleOnBackground)
             }
             .padding(.top, 2)
         }
@@ -786,25 +783,24 @@ struct BudgetView: View {
                     .foregroundStyle(AppTheme.sageDark)
                 Text(L10n.Budget.noExpensesSub)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
             .padding(.horizontal, 16)
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         } else {
-            LazyVStack(spacing: 10) {
-                ForEach(categories) { category in
-                    Button {
-                        runPremiumOrPaywall {
-                            selectedCategory = category
-                        }
-                    } label: {
-                        BudgetCategoryRow(category: category, total: metrics.totalBudget)
+            ForEach(categories) { category in
+                Button {
+                    runPremiumOrPaywall {
+                        selectedCategory = category
                     }
-                    .buttonStyle(.plain)
+                } label: {
+                    BudgetCategoryRow(category: category, total: metrics.totalBudget)
+                        .equatable()
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -844,7 +840,7 @@ struct BudgetView: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
-        .premiumGlassCard(cornerRadius: 22)
+        .premiumListRow(cornerRadius: 22)
         .padding(.top, 4)
     }
 
@@ -860,7 +856,7 @@ struct BudgetView: View {
                 .minimumScaleFactor(0.7)
             Text(sub)
                 .font(AppFont.regular(9))
-                .foregroundStyle(AppTheme.ink.opacity(0.4))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
@@ -870,7 +866,11 @@ struct BudgetView: View {
     private func load() async {
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
+        defer {
+            recomputeBudgetCaches()
+            isLoading = false
+        }
+        lastLoadAt = Date()
 
         do {
             await categoriesStore.loadIfNeeded()
@@ -948,6 +948,7 @@ struct BudgetView: View {
         ]
         """) ?? []
         summary = nil
+        recomputeBudgetCaches()
     }
 
     private func decodePreview<T: Decodable>(_ json: String) -> T? {
@@ -972,12 +973,13 @@ private struct BudgetExpenseFilterSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                .ignoresSafeArea()
 
                 VStack(alignment: .leading, spacing: 16) {
                     Text(L10n.Budget.filterExpenses)
                         .font(AppFont.regular(13))
-                        .foregroundStyle(AppTheme.ink.opacity(0.55))
+                        .foregroundStyle(AppTheme.mutedOnBackground)
                         .padding(.horizontal, 4)
 
                     VStack(spacing: 0) {
@@ -1005,7 +1007,7 @@ private struct BudgetExpenseFilterSheet: View {
                             }
                         }
                     }
-                    .premiumGlassCard(cornerRadius: 18)
+                    .premiumListRow(cornerRadius: 18)
 
                     Spacer()
 

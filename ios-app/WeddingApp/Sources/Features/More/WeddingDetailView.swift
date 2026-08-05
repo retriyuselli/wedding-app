@@ -97,10 +97,11 @@ struct WeddingDetailView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
+                LazyVStack(alignment: .leading, spacing: 20) {
                     header
                     summaryCard
                     informasiSection
@@ -124,6 +125,9 @@ struct WeddingDetailView: View {
         .task { await load() }
         .refreshable { await load() }
         .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
+            Task { await load() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .weddingInfoDidChange)) { _ in
             Task { await load() }
         }
         .sheet(isPresented: $showPaywall) {
@@ -156,15 +160,11 @@ struct WeddingDetailView: View {
                 Button { dismiss() } label: {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(AppTheme.iconOnChip)
+                        .foregroundStyle(AppTheme.iconOnChrome)
                         .frame(width: 42, height: 42)
-                        .background {
-                            Circle()
-                                .fill(AppTheme.iconChipFill)
-                                .background(.ultraThinMaterial, in: Circle())
-                        }
+                        .background(AppTheme.chrome, in: Circle())
                         .overlay {
-                            Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                            Circle().stroke(AppTheme.hairline, lineWidth: 1)
                         }
                 }
                 .buttonStyle(.plain)
@@ -188,7 +188,7 @@ struct WeddingDetailView: View {
                     .background {
                         Capsule()
                             .fill(AppTheme.selectedChipFill)
-                            .background(.ultraThinMaterial, in: Capsule())
+                            .background(AppTheme.iconChipFill, in: Capsule())
                     }
                     .overlay {
                         Capsule()
@@ -200,12 +200,12 @@ struct WeddingDetailView: View {
             }
 
             Text(L10n.WeddingDetail.title)
-                .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.titleOnGlass)
+                .font(AppFont.serifBold(32))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             Text(L10n.WeddingDetail.subtitle)
-                .font(.system(size: 12, weight: .regular, design: .serif))
-                .foregroundStyle(AppTheme.gold)
+                .font(AppFont.serifRegular(12))
+                .foregroundStyle(AppTheme.accentOnBackground)
                 .lineSpacing(2)
 
             if let loadErrorMessage {
@@ -219,14 +219,16 @@ struct WeddingDetailView: View {
 
     // MARK: - Summary Card
 
+    private var couplePhotoURL: URL? {
+        guard let raw = info.couplePhotoUrl?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !raw.isEmpty,
+              let url = URL(string: raw) else { return nil }
+        return url
+    }
+
     private var summaryCard: some View {
         HStack(spacing: 14) {
-            Image("CouplePortrait")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 72, height: 72)
-                .clipShape(Circle())
-                .overlay { Circle().stroke(AppTheme.gold.opacity(0.45), lineWidth: 1.2) }
+            WeddingDetailCoupleAvatar(photoURL: couplePhotoURL, size: 72)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(coupleName)
@@ -252,7 +254,7 @@ struct WeddingDetailView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .premiumGlassCard(cornerRadius: 28)
+        .premiumListRow(cornerRadius: 28)
     }
 
     // MARK: - Informasi Acara
@@ -261,7 +263,7 @@ struct WeddingDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(L10n.WeddingDetail.eventInfo)
                 .font(AppFont.semibold(18))
-                .foregroundStyle(AppTheme.titleOnGlass)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             tabSelector
 
@@ -295,7 +297,7 @@ struct WeddingDetailView: View {
                             } else {
                                 Capsule()
                                     .fill(AppTheme.chipIdleFill)
-                                    .background(.ultraThinMaterial, in: Capsule())
+                                    .background(AppTheme.iconChipFill, in: Capsule())
                             }
                         }
                         .overlay {
@@ -332,7 +334,7 @@ struct WeddingDetailView: View {
                         }
                     }
                     .padding(.vertical, 4)
-                    .premiumGlassCard(cornerRadius: 20)
+                    .premiumListRow(cornerRadius: 20)
                 }
             }
 
@@ -361,7 +363,7 @@ struct WeddingDetailView: View {
             )
         }
         .padding(.vertical, 16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private func summaryCell(icon: String, label: String, value: String) -> some View {
@@ -417,7 +419,7 @@ struct WeddingDetailView: View {
                     .foregroundStyle(AppTheme.inkMuted(0.4))
             }
             .padding(16)
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         }
         .buttonStyle(.plain)
     }
@@ -484,7 +486,7 @@ struct WeddingDetailView: View {
                 .foregroundStyle(AppTheme.inkMuted(0.4))
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     // MARK: - Jadwal Tab
@@ -516,7 +518,7 @@ struct WeddingDetailView: View {
                         infoLine(icon: "person.3", text: item.guestEstimateText)
                     }
                     .padding(16)
-                    .premiumGlassCard(cornerRadius: 20)
+                    .premiumListRow(cornerRadius: 20)
                 }
             }
         }
@@ -555,7 +557,7 @@ struct WeddingDetailView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .padding(.horizontal, 16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     // MARK: - Tamu Tab
@@ -568,7 +570,7 @@ struct WeddingDetailView: View {
                 guestStat(value: "\(max(guests.count - confirmedGuests, 0))", label: L10n.Common.pending)
             }
             .padding(.vertical, 16)
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
 
             if guests.isEmpty {
                 VStack(spacing: 8) {
@@ -584,7 +586,7 @@ struct WeddingDetailView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 28)
-                .premiumGlassCard(cornerRadius: 20)
+                .premiumListRow(cornerRadius: 20)
             } else {
                 VStack(spacing: 0) {
                     ForEach(guests.prefix(8)) { guest in
@@ -611,7 +613,7 @@ struct WeddingDetailView: View {
                         }
                     }
                 }
-                .premiumGlassCard(cornerRadius: 20)
+                .premiumListRow(cornerRadius: 20)
             }
         }
     }
@@ -634,7 +636,7 @@ struct WeddingDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.semibold(16))
-                .foregroundStyle(AppTheme.titleOnGlass)
+                .foregroundStyle(AppTheme.titleOnBackground)
             content()
         }
     }
@@ -685,6 +687,38 @@ struct WeddingDetailView: View {
         } catch {
             guests = []
         }
+    }
+}
+
+private struct WeddingDetailCoupleAvatar: View {
+    var photoURL: URL?
+    var size: CGFloat = 72
+
+    @ObservedObject private var photoStore = CouplePhotoStore.shared
+
+    var body: some View {
+        Group {
+            if let local = photoStore.previewImage {
+                Image(uiImage: local)
+                    .resizable()
+                    .scaledToFill()
+            } else if let photoURL {
+                DownsampledAsyncImage(url: photoURL, maxPixelSize: size * 2) {
+                    placeholder
+                }
+            } else {
+                placeholder
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .overlay { Circle().stroke(AppTheme.gold.opacity(0.45), lineWidth: 1.2) }
+    }
+
+    private var placeholder: some View {
+        Image("CouplePortrait")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
     }
 }
 

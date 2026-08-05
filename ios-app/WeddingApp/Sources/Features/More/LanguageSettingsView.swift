@@ -5,10 +5,11 @@ struct LanguageSettingsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Language.title,
                         subtitle: L10n.Language.subtitle
@@ -78,7 +79,7 @@ struct LanguageSettingsView: View {
                         .fill(AppTheme.nestedGlassFill)
                 }
             }
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
         .disabled(!language.isAvailable)
@@ -97,6 +98,6 @@ struct LanguageSettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 }

@@ -1,4 +1,7 @@
+import PhotosUI
 import SwiftUI
+import UIKit
+import UniformTypeIdentifiers
 
 private enum OnboardingEventKind: String, CaseIterable, Identifiable {
     case lamaran
@@ -50,7 +53,7 @@ struct OnboardingView: View {
     @State private var step = 0
     @State private var brideName = ""
     @State private var groomName = ""
-    @State private var selectedEvents: Set<OnboardingEventKind> = [.akad, .resepsi]
+    @State private var selectedEvents: Set<OnboardingEventKind> = []
     @State private var eventDates: [OnboardingEventKind: Date] = [:]
     @State private var eventLocations: [OnboardingEventKind: String] = [:]
     @State private var eventGuests: [OnboardingEventKind: String] = [:]
@@ -60,6 +63,11 @@ struct OnboardingView: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var appear = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var photoPreview: UIImage?
+    @State private var photoFileData: Data?
+    @State private var existingCouplePhotoURL: URL?
+    @State private var isUploadingPhoto = false
     @FocusState private var focusedField: Field?
 
     private let totalSteps = 5
@@ -162,7 +170,8 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
                 .onTapGesture { dismissKeyboard() }
 
             VStack(spacing: 0) {
@@ -221,6 +230,9 @@ struct OnboardingView: View {
             ensureEventLocations()
             ensureEventGuests()
         }
+        .onChange(of: selectedPhotoItem) { _, item in
+            Task { await loadSelectedPhoto(item) }
+        }
     }
 
     private var progressHeader: some View {
@@ -228,7 +240,7 @@ struct OnboardingView: View {
             HStack {
                 Text(L10n.Onboarding.stepLabel(step + 1, totalSteps))
                     .font(AppFont.semibold(12))
-                    .foregroundStyle(AppTheme.gold)
+                    .foregroundStyle(AppTheme.accentOnBackground)
 
                 Spacer()
 
@@ -238,7 +250,7 @@ struct OnboardingView: View {
                         withAnimation { step -= 1 }
                     }
                     .font(AppFont.semibold(13))
-                    .foregroundStyle(AppTheme.sageMuted(0.85))
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 }
             }
 
@@ -264,14 +276,16 @@ struct OnboardingView: View {
     }
 
     private var bottomBar: some View {
-        VStack(spacing: 10) {
+        let isEnabled = canContinue && !isSaving
+
+        return VStack(spacing: 10) {
             Button {
                 Task { await handlePrimary() }
             } label: {
                 HStack(spacing: 8) {
                     if isSaving {
                         ProgressView()
-                            .tint(.white)
+                            .tint(AppTheme.primaryActionForeground(enabled: isEnabled))
                     } else {
                         Text(primaryTitle)
                         if step < totalSteps - 1 {
@@ -281,20 +295,25 @@ struct OnboardingView: View {
                     }
                 }
                 .font(AppFont.semibold(16))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(AppTheme.primaryActionForeground(enabled: isEnabled))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(
-                    LinearGradient(
-                        colors: canContinue && !isSaving
-                            ? [AppTheme.sage, AppTheme.brandGradientEnd]
-                            : [AppTheme.sage.opacity(0.45), AppTheme.brandGradientEnd.opacity(0.45)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-                )
-                .shadow(color: AppTheme.sageDark.opacity(canContinue ? 0.18 : 0.06), radius: 14, y: 6)
+                .background {
+                    if isEnabled {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [AppTheme.sage, AppTheme.brandGradientEnd],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    } else {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(AppTheme.primaryActionFill(enabled: false))
+                    }
+                }
+                .shadow(color: AppTheme.sageDark.opacity(isEnabled ? 0.18 : 0.06), radius: 14, y: 6)
             }
             .disabled(!canContinue || isSaving)
             .buttonStyle(.plain)
@@ -333,7 +352,83 @@ struct OnboardingView: View {
                     text: $groomName,
                     field: .groom
                 )
+
+                couplePhotoField
             }
+        }
+    }
+
+    private var couplePhotoField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.Onboarding.couplePhotoLabel)
+                .font(AppFont.semibold(13))
+                .foregroundStyle(AppTheme.titleOnBackground)
+
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images, photoLibrary: .shared()) {
+                HStack(spacing: 14) {
+                    couplePhotoThumb
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(hasCouplePhotoPreview
+                              ? L10n.Onboarding.couplePhotoChange
+                              : L10n.Onboarding.couplePhotoUpload)
+                            .font(AppFont.semibold(14))
+                            .foregroundStyle(AppTheme.titleOnGlass)
+
+                        Text(isUploadingPhoto
+                              ? "Mengunggah foto…"
+                              : L10n.Onboarding.couplePhotoHint)
+                            .font(AppFont.regular(12))
+                            .foregroundStyle(AppTheme.inkMuted(0.55))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppTheme.gold)
+                }
+                .padding(14)
+                .premiumGlassCard(cornerRadius: 18)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var hasCouplePhotoPreview: Bool {
+        photoPreview != nil || existingCouplePhotoURL != nil
+    }
+
+    private var couplePhotoThumb: some View {
+        Group {
+            if let photoPreview {
+                Image(uiImage: photoPreview)
+                    .resizable()
+                    .scaledToFill()
+            } else if let existingCouplePhotoURL {
+                DownsampledAsyncImage(url: existingCouplePhotoURL, maxPixelSize: 160) {
+                    ZStack {
+                        AppTheme.iconChipFill
+                        Image(systemName: "person.2.fill")
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(AppTheme.iconOnChip)
+                    }
+                }
+            } else {
+                ZStack {
+                    AppTheme.iconChipFill
+                    Image(systemName: "person.2.fill")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundStyle(AppTheme.iconOnChip)
+                }
+            }
+        }
+        .frame(width: 72, height: 92)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(AppTheme.iconChipStroke, lineWidth: 1)
         }
     }
 
@@ -353,7 +448,7 @@ struct OnboardingView: View {
 
                 Text(L10n.Onboarding.eventsHint)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.inkMuted(0.55))
+                    .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.9))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -405,7 +500,7 @@ struct OnboardingView: View {
                 } else {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(AppTheme.nestedGlassFill)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .background(AppTheme.nestedGlassFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }
             }
             .overlay {
@@ -563,7 +658,7 @@ struct OnboardingView: View {
 
                 Text(L10n.Onboarding.extrasHint)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.inkMuted(0.55))
+                    .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.9))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -633,19 +728,19 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(eyebrow)
                         .font(AppFont.semibold(12))
-                        .foregroundStyle(AppTheme.gold)
+                        .foregroundStyle(AppTheme.accentOnBackground)
                         .tracking(0.4)
 
                     Text(title)
                         .font(titleUsesSerif
-                              ? .system(size: 28, weight: .bold, design: .serif)
+                              ? AppFont.serifBold(28)
                               : AppFont.bold(28))
-                        .foregroundStyle(AppTheme.titleOnGlass)
+                        .foregroundStyle(AppTheme.titleOnBackground)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(subtitle)
                         .font(AppFont.regular(14))
-                        .foregroundStyle(AppTheme.inkMuted(0.6))
+                        .foregroundStyle(AppTheme.mutedOnBackground)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -670,7 +765,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AppFont.semibold(13))
-                .foregroundStyle(AppTheme.sageMuted(0.9))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             HStack(spacing: 12) {
                 Image(systemName: icon)
@@ -699,12 +794,7 @@ struct OnboardingView: View {
 
     private func dismissKeyboard() {
         focusedField = nil
-        UIApplication.shared.sendAction(
-            #selector(UIResponder.resignFirstResponder),
-            to: nil,
-            from: nil,
-            for: nil
-        )
+        KeyboardDismiss.resign()
     }
 
     @MainActor
@@ -725,6 +815,11 @@ struct OnboardingView: View {
             if let budaya = info.budaya?.trimmingCharacters(in: .whitespacesAndNewlines), !budaya.isEmpty {
                 CultureSelection.applyLoaded(budaya, selected: &culture, custom: &customCulture)
             }
+            if let raw = info.couplePhotoUrl?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !raw.isEmpty,
+               let url = URL(string: raw) {
+                existingCouplePhotoURL = url
+            }
 
             var loadedKinds: Set<OnboardingEventKind> = []
             for event in loadedEvents {
@@ -743,7 +838,15 @@ struct OnboardingView: View {
             }
 
             if !loadedKinds.isEmpty {
-                selectedEvents = loadedKinds
+                // Restore only events that already have schedule/location data.
+                // Bare stubs should stay unselected so the user chooses explicitly.
+                let restore = loadedKinds.filter { kind in
+                    eventDates[kind] != nil
+                        || !(eventLocations[kind] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }
+                if !restore.isEmpty {
+                    selectedEvents = restore
+                }
             }
         } catch {
             // New user — keep local defaults.
@@ -773,15 +876,34 @@ struct OnboardingView: View {
         let kinds = orderedSelectedEvents
 
         do {
-            let _: Envelope<WeddingInfo> = try await APIClient.shared.request(
-                "wedding-info",
-                method: "PUT",
-                json: [
-                    "bride_name": bride,
-                    "groom_name": groom,
-                    "budaya": resolvedCulture,
-                ]
-            )
+            if let photoFileData {
+                let _: Envelope<WeddingInfo> = try await APIClient.shared.uploadMultipart(
+                    "wedding-info",
+                    method: "POST",
+                    fields: [
+                        "bride_name": bride,
+                        "groom_name": groom,
+                        "budaya": resolvedCulture,
+                    ],
+                    fileFieldName: "couple_photo",
+                    fileName: "couple.jpg",
+                    mimeType: "image/jpeg",
+                    fileData: photoFileData
+                )
+                if let photoPreview {
+                    CouplePhotoStore.shared.setPreview(photoPreview)
+                }
+            } else {
+                let _: Envelope<WeddingInfo> = try await APIClient.shared.request(
+                    "wedding-info",
+                    method: "PUT",
+                    json: [
+                        "bride_name": bride,
+                        "groom_name": groom,
+                        "budaya": resolvedCulture,
+                    ]
+                )
+            }
 
             let existing: Envelope<[WeddingEvent]> = try await APIClient.shared.request("wedding-events")
             let events = existing.data
@@ -838,9 +960,107 @@ struct OnboardingView: View {
                 )
             }
 
+            NotificationCenter.default.post(name: .weddingInfoDidChange, object: nil)
             onFinished()
         } catch {
             errorMessage = error.userFacingMessage
+        }
+    }
+
+    @MainActor
+    private func loadSelectedPhoto(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+
+        do {
+            guard let picked = try await item.loadTransferable(type: OnboardingPickedImage.self),
+                  let image = UIImage(data: picked.data) else {
+                errorMessage = L10n.Couple.photoReadError
+                selectedPhotoItem = nil
+                return
+            }
+
+            // Always compress under ~2 MB — no size warning for large originals.
+            guard let compressed = CouplePhotoCompressor.jpegData(from: image) else {
+                errorMessage = L10n.Couple.photoReadError
+                selectedPhotoItem = nil
+                photoPreview = nil
+                photoFileData = nil
+                CouplePhotoStore.shared.clear()
+                return
+            }
+
+            let preview = UIImage(data: compressed) ?? image
+            photoPreview = preview
+            photoFileData = compressed
+            CouplePhotoStore.shared.setPreview(preview)
+            errorMessage = nil
+
+            // Persist immediately so Beranda can load the photo even if the user
+            // finishes onboarding later or the final save only updates text fields.
+            await uploadCouplePhotoEarly(compressed)
+        } catch {
+            errorMessage = L10n.Couple.photoReadError
+            selectedPhotoItem = nil
+        }
+    }
+
+    /// Uploads the couple photo as soon as it is picked (not only on the last step).
+    @MainActor
+    private func uploadCouplePhotoEarly(_ data: Data) async {
+        isUploadingPhoto = true
+        defer { isUploadingPhoto = false }
+
+        let bride = brideName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let groom = groomName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        do {
+            let envelope: Envelope<WeddingInfo> = try await APIClient.shared.uploadMultipart(
+                "wedding-info",
+                method: "POST",
+                fields: [
+                    "bride_name": bride,
+                    "groom_name": groom,
+                    "budaya": resolvedCulture,
+                ],
+                fileFieldName: "couple_photo",
+                fileName: "couple.jpg",
+                mimeType: "image/jpeg",
+                fileData: data
+            )
+
+            if let raw = envelope.data.couplePhotoUrl?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !raw.isEmpty,
+               let url = URL(string: raw) {
+                existingCouplePhotoURL = url
+            }
+
+            // Already on the server — final step only needs to update names/events.
+            photoFileData = nil
+            NotificationCenter.default.post(name: .weddingInfoDidChange, object: nil)
+        } catch {
+            #if DEBUG
+            print("[Onboarding] early couple photo upload failed: \(error.userFacingMessage)")
+            #endif
+            // Keep photoFileData so saveAndFinish can retry.
+        }
+    }
+}
+
+private struct OnboardingPickedImage: Transferable {
+    let data: Data
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(importedContentType: .image) { data in
+            OnboardingPickedImage(data: data)
+        }
+        DataRepresentation(importedContentType: .jpeg) { data in
+            OnboardingPickedImage(data: data)
+        }
+        DataRepresentation(importedContentType: .heic) { data in
+            OnboardingPickedImage(data: data)
+        }
+        DataRepresentation(importedContentType: .png) { data in
+            OnboardingPickedImage(data: data)
         }
     }
 }

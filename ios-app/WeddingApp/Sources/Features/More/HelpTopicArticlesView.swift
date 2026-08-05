@@ -19,10 +19,11 @@ struct HelpTopicArticlesView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: topic.title,
                         subtitle: topic.subtitle
@@ -35,8 +36,8 @@ struct HelpTopicArticlesView: View {
                     if filteredArticles.isEmpty {
                         MoreEmptyState(
                             icon: "doc.text.magnifyingglass",
-                            title: "Tidak ada artikel",
-                            message: "Coba kata kunci lain atau kembali ke daftar topik bantuan."
+                            title: L10n.Help.articlesEmptyTitle,
+                            message: L10n.Help.articlesEmptyMessage
                         )
                     } else {
                         VStack(spacing: 10) {
@@ -64,10 +65,10 @@ struct HelpTopicArticlesView: View {
                 .background(AppTheme.lightSage, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(articles.count) artikel tersedia")
+                Text(L10n.Help.articlesAvailable(articles.count))
                     .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.sageDark)
-                Text("Panduan lengkap seputar \(topic.title.lowercased())")
+                Text(L10n.Help.articlesGuide(topic.title.lowercased()))
                     .font(AppFont.regular(12))
                     .foregroundStyle(AppTheme.ink.opacity(0.5))
                     .fixedSize(horizontal: false, vertical: true)
@@ -76,7 +77,7 @@ struct HelpTopicArticlesView: View {
             Spacer(minLength: 0)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var searchBar: some View {
@@ -85,14 +86,14 @@ struct HelpTopicArticlesView: View {
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(AppTheme.ink.opacity(0.4))
 
-            TextField("Cari artikel...", text: $searchText)
+            TextField(L10n.Help.articlesSearchPlaceholder, text: $searchText)
                 .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink)
                 .autocorrectionDisabled()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private func articleRow(_ article: HelpArticle) -> some View {
@@ -119,7 +120,7 @@ struct HelpTopicArticlesView: View {
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
 
-                    Text("\(article.readMinutes) menit baca")
+                    Text(L10n.Help.readMinutes(article.readMinutes))
                         .font(AppFont.regular(10))
                         .foregroundStyle(AppTheme.sageDark.opacity(0.75))
                 }
@@ -131,7 +132,7 @@ struct HelpTopicArticlesView: View {
                     .foregroundStyle(AppTheme.ink.opacity(0.28))
             }
             .padding(14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -142,13 +143,14 @@ struct HelpArticleDetailView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: article.title,
-                        subtitle: "\(article.readMinutes) menit baca · \(article.topic.title)"
+                        subtitle: L10n.Help.readMinutesTopic(article.readMinutes, article.topic.title)
                     )
 
                     articleBodyCard
@@ -181,7 +183,7 @@ struct HelpArticleDetailView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var relatedTopicCard: some View {
@@ -190,12 +192,12 @@ struct HelpArticleDetailView: View {
                 .font(.system(size: 18))
                 .foregroundStyle(AppTheme.gold)
 
-            Text("Masih butuh bantuan? Hubungi customer support melalui halaman Bantuan & FAQ atau kirim email ke \(HelpContent.supportEmail)")
+            Text(L10n.Help.stillNeedHelp(HelpContent.supportEmail))
                 .font(AppFont.regular(12))
                 .foregroundStyle(AppTheme.ink.opacity(0.55))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 }

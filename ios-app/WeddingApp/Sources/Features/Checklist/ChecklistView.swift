@@ -16,9 +16,18 @@ struct ChecklistView: View {
     @State private var selectedTask: PreparationTask?
     @State private var searchText = ""
     @State private var isSearching = false
+    @FocusState private var isSearchFocused: Bool
     @State private var showAddTaskSheet = false
     @State private var addTaskPreferredEventId: Int?
     @State private var showPaywall = false
+    @State private var cachedAllGroups: [ChecklistGroup] = []
+    @State private var cachedGroups: [ChecklistGroup] = []
+    @State private var scrollItems: [ChecklistScrollItem] = []
+    @State private var totalTasks = 0
+    @State private var doneTasks = 0
+    @State private var inProgressTasks = 0
+    @State private var pendingTasks = 0
+    @State private var lastLoadAt: Date?
 
     private var isPremium: Bool {
         premium.isPremium(user: session.currentUser)
@@ -28,27 +37,9 @@ struct ChecklistView: View {
         Dictionary(sections.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first })
     }
 
-    private var groups: [ChecklistGroup] {
-        var source = buildGroups()
+    private var groups: [ChecklistGroup] { cachedGroups }
 
-        if selectedFilter != L10n.Common.all {
-            source = source.filter { $0.title == selectedFilter }
-        }
-
-        if !searchText.isEmpty {
-            source = source.compactMap { group in
-                let matched = group.tasks.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
-                guard !matched.isEmpty else { return nil }
-                return ChecklistGroup(id: group.id, title: group.title, iconName: group.iconName, tasks: matched)
-            }
-        }
-
-        return source
-    }
-
-    private var allGroups: [ChecklistGroup] {
-        buildGroups()
-    }
+    private var allGroups: [ChecklistGroup] { cachedAllGroups }
 
     private var filterOptions: [String] {
         var options = [L10n.Common.all]
@@ -56,19 +47,70 @@ struct ChecklistView: View {
         return options
     }
 
-    private var totalTasks: Int { allGroups.reduce(0) { $0 + $1.tasks.count } }
-    private var doneTasks: Int { allGroups.reduce(0) { $0 + $1.tasks.filter { $0.statusValue == .done }.count } }
-    private var inProgressTasks: Int { allGroups.reduce(0) { $0 + $1.tasks.filter { $0.statusValue == .inProgress }.count } }
-    private var pendingTasks: Int { allGroups.reduce(0) { $0 + $1.tasks.filter { $0.statusValue == .pending }.count } }
     private var overallProgress: Double { totalTasks == 0 ? 0 : Double(doneTasks) / Double(totalTasks) }
+
+    private func recomputeChecklistCaches() {
+        let built = buildGroups()
+        cachedAllGroups = built
+
+        var source = built
+        if selectedFilter != L10n.Common.all {
+            source = source.filter { $0.title == selectedFilter }
+        }
+        if !searchText.isEmpty {
+            source = source.compactMap { group in
+                let matched = group.tasks.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+                guard !matched.isEmpty else { return nil }
+                return ChecklistGroup(
+                    id: group.id,
+                    title: group.title,
+                    iconName: group.iconName,
+                    dateText: group.dateText,
+                    locationText: group.locationText,
+                    tasks: matched
+                )
+            }
+        }
+        cachedGroups = source
+        rebuildScrollItems(from: source)
+
+        totalTasks = built.reduce(0) { $0 + $1.tasks.count }
+        doneTasks = built.reduce(0) { $0 + $1.tasks.filter { $0.statusValue == .done }.count }
+        inProgressTasks = built.reduce(0) { $0 + $1.tasks.filter { $0.statusValue == .inProgress }.count }
+        pendingTasks = built.reduce(0) { $0 + $1.tasks.filter { $0.statusValue == .pending }.count }
+    }
+
+    private func rebuildScrollItems(from groups: [ChecklistGroup]) {
+        var items: [ChecklistScrollItem] = []
+        items.reserveCapacity(groups.count * 6)
+
+        for group in groups {
+            let isExpanded = expandedSections.contains(group.id) || isSearching
+            let showAll = showAllSections.contains(group.id)
+            items.append(.header(group, isExpanded: isExpanded))
+
+            guard isExpanded else { continue }
+
+            let visibleTasks = showAll ? group.tasks : Array(group.tasks.prefix(5))
+            for task in visibleTasks {
+                items.append(.task(groupId: group.id, task: task))
+            }
+            if group.tasks.count > 5 {
+                items.append(.showMore(group, showingAll: showAll))
+            }
+            if group.id > 0 {
+                items.append(.addTask(groupId: group.id))
+            }
+        }
+
+        scrollItems = items
+    }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
-
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
+                    LazyVStack(alignment: .leading, spacing: 16) {
                         header
                         if isSearching { searchBar }
                         summaryCard
@@ -76,11 +118,12 @@ struct ChecklistView: View {
                         checklistContent
                     }
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding(.top, 12)
                     .padding(.bottom, 24)
                 }
-                .blur(radius: isPremium ? 0 : 2.5)
-                .opacity(isPremium ? 1 : 0.82)
+                .scrollDismissesKeyboard(.interactively)
+                .opacity(isPremium ? 1 : 0.55)
+                .allowsHitTesting(isPremium)
 
                 if !isPremium {
                     PremiumLockedOverlay {
@@ -88,6 +131,9 @@ struct ChecklistView: View {
                     }
                     .padding(.horizontal, 24)
                 }
+            }
+            .background {
+                AppTheme.background.ignoresSafeArea()
             }
             .statusBarBlur()
             .toolbar(.hidden, for: .navigationBar)
@@ -107,6 +153,7 @@ struct ChecklistView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
                 guard isPremium else { return }
+                if let lastLoadAt, Date().timeIntervalSince(lastLoadAt) < 60 { return }
                 Task { await load() }
             }
             .onChange(of: isPremium) { _, premium in
@@ -118,6 +165,11 @@ struct ChecklistView: View {
                     }
                 }
             }
+            .onChange(of: selectedFilter) { _, _ in recomputeChecklistCaches() }
+            .onChange(of: searchText) { _, _ in recomputeChecklistCaches() }
+            .onChange(of: expandedSections) { _, _ in rebuildScrollItems(from: groups) }
+            .onChange(of: showAllSections) { _, _ in rebuildScrollItems(from: groups) }
+            .onChange(of: isSearching) { _, _ in rebuildScrollItems(from: groups) }
             .sheet(isPresented: $showPaywall) {
                 PaywallView(onUnlocked: {
                     Task { await load() }
@@ -149,6 +201,7 @@ struct ChecklistView: View {
                         showAllSections.insert(eventId)
                     }
                     selectedFilter = L10n.Common.all
+                    recomputeChecklistCaches()
                 }
             }
         }
@@ -198,6 +251,7 @@ struct ChecklistView: View {
                 selectedTask?.subTasks = subTasks
             }
         }
+        recomputeChecklistCaches()
     }
 
     private func applyTaskEdit(taskId: Int, result: TaskEditResult) {
@@ -215,6 +269,7 @@ struct ChecklistView: View {
             selectedTask?.priority = result.priority.rawValue
             selectedTask?.dueDate = result.dueDate
         }
+        recomputeChecklistCaches()
     }
 
     private func persistTaskStatus(_ task: PreparationTask, status: PreparationTask.Status) {
@@ -233,13 +288,13 @@ struct ChecklistView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.Checklist.title)
-                    .font(.system(size: 32, weight: .bold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(AppFont.serifBold(32))
+                    .foregroundStyle(AppTheme.titleOnBackground)
 
                 Text(L10n.Checklist.subtitle)
                     .lineSpacing(2)
                     .font(AppFont.regular(13))
-                    .foregroundStyle(AppTheme.gold)
+                    .foregroundStyle(AppTheme.mutedOnBackground)
             }
 
             Spacer(minLength: 8)
@@ -247,7 +302,8 @@ struct ChecklistView: View {
             HStack(spacing: 10) {
                 Button {
                     runPremiumOrPaywall {
-                        withAnimation(.easeInOut(duration: 0.2)) { isSearching = true }
+                        isSearching = true
+                        isSearchFocused = true
                     }
                 } label: {
                     circleButton("magnifyingglass")
@@ -282,6 +338,12 @@ struct ChecklistView: View {
                     .font(AppFont.regular(15))
                     .foregroundStyle(AppTheme.ink)
                     .autocorrectionDisabled()
+                    .focused($isSearchFocused)
+                    .submitLabel(.search)
+                    .onSubmit {
+                        isSearchFocused = false
+                        KeyboardDismiss.resign()
+                    }
 
                 if !searchText.isEmpty {
                     Button {
@@ -295,17 +357,17 @@ struct ChecklistView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .premiumGlassCard(cornerRadius: 16)
+            .premiumListRow(cornerRadius: 16)
 
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isSearching = false
-                    searchText = ""
-                }
+                isSearching = false
+                searchText = ""
+                isSearchFocused = false
+                KeyboardDismiss.resign()
             } label: {
                 Text(L10n.Common.cancel)
                     .font(AppFont.semibold(14))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnBackground)
             }
             .buttonStyle(.plain)
         }
@@ -316,16 +378,11 @@ struct ChecklistView: View {
             .font(.system(size: 17, weight: .medium))
             .foregroundStyle(AppTheme.iconOnChrome)
             .frame(width: 44, height: 44)
-            .background {
-                Circle()
-                    .fill(AppTheme.chrome)
-                    .background(.ultraThinMaterial, in: Circle())
-            }
+            .background(AppTheme.chrome, in: Circle())
             .overlay {
                 Circle()
                     .stroke(AppTheme.hairline, lineWidth: 1)
             }
-            .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
     }
 
     private var summaryCard: some View {
@@ -335,13 +392,13 @@ struct ChecklistView: View {
 
             HStack(spacing: 0) {
                 summaryStat(icon: "checkmark.circle.fill", tint: AppTheme.sageDark, label: L10n.Checklist.done, value: doneTasks)
-                summaryStat(icon: "clock.fill", tint: AppTheme.gold, label: L10n.Checklist.running, value: inProgressTasks)
+                summaryStat(icon: "clock.fill", tint: AppTheme.goldOnLightSurface, label: L10n.Checklist.running, value: inProgressTasks)
                 summaryStat(icon: "circle", tint: AppTheme.statusMuted, label: L10n.Checklist.notStarted, value: pendingTasks)
             }
             .frame(maxWidth: .infinity)
         }
         .padding(18)
-        .premiumGlassCard(cornerRadius: 32)
+        .premiumListRow(cornerRadius: 28)
     }
 
     private func summaryStat(icon: String, tint: Color, label: String, value: Int) -> some View {
@@ -349,7 +406,6 @@ struct ChecklistView: View {
             Image(systemName: icon)
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(tint)
-                .shadow(color: tint.opacity(0.25), radius: 4, y: 1)
 
             Text(label)
                 .font(AppFont.medium(11))
@@ -375,7 +431,7 @@ struct ChecklistView: View {
                 ForEach(filterOptions, id: \.self) { option in
                     let isSelected = option == selectedFilter
                     Button {
-                        withAnimation(.easeInOut(duration: 0.2)) { selectedFilter = option }
+                        selectedFilter = option
                     } label: {
                         Text(option)
                             .font(AppFont.semibold(13))
@@ -383,29 +439,16 @@ struct ChecklistView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
                             .background {
-                                if isSelected {
-                                    Capsule()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [AppTheme.sage, AppTheme.sageDark],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                } else {
-                                    Capsule()
-                                        .fill(AppTheme.chipIdleFill)
-                                        .background(.ultraThinMaterial, in: Capsule())
-                                }
+                                Capsule()
+                                    .fill(isSelected ? AppTheme.sageDark : AppTheme.chipIdleFill)
                             }
                             .overlay {
                                 Capsule()
                                     .stroke(
-                                        isSelected ? Color.white.opacity(0.2) : Color.white.opacity(0.55),
+                                        isSelected ? Color.clear : AppTheme.hairline,
                                         lineWidth: 1
                                     )
                             }
-                            .shadow(color: AppTheme.sageDark.opacity(isSelected ? 0.14 : 0.05), radius: isSelected ? 10 : 6, y: 3)
                     }
                     .buttonStyle(.plain)
                 }
@@ -434,49 +477,58 @@ struct ChecklistView: View {
                 message: L10n.Checklist.emptySub
             )
         } else {
-            ForEach(groups) { group in
-                sectionCard(group)
+            // One LazyVStack child per header/task so offscreen rows stay unbuilt.
+            ForEach(scrollItems) { item in
+                scrollItemView(item)
             }
         }
     }
 
-    private func sectionCard(_ group: ChecklistGroup) -> some View {
-        let isExpanded = expandedSections.contains(group.id) || isSearching
-        let showAll = showAllSections.contains(group.id)
-        let doneCount = group.tasks.filter { $0.statusValue == .done }.count
-        let progress = group.tasks.isEmpty ? 0 : Double(doneCount) / Double(group.tasks.count)
-        let visibleTasks = showAll ? group.tasks : Array(group.tasks.prefix(5))
-
-        return VStack(spacing: 0) {
+    @ViewBuilder
+    private func scrollItemView(_ item: ChecklistScrollItem) -> some View {
+        switch item {
+        case .header(let group, let isExpanded):
             Button {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    if isExpanded { expandedSections.remove(group.id) } else { expandedSections.insert(group.id) }
+                guard !isSearching else { return }
+                if isExpanded {
+                    expandedSections.remove(group.id)
+                } else {
+                    expandedSections.insert(group.id)
                 }
             } label: {
-                VStack(spacing: 14) {
-                    HStack(spacing: 12) {
+                VStack(spacing: 12) {
+                    HStack(alignment: .top, spacing: 12) {
                         Image(systemName: group.iconName)
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(AppTheme.iconOnChip)
-                            .frame(width: 44, height: 44)
-                            .background {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(AppTheme.iconChipFill)
-                                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .frame(width: 40, height: 40)
+                            .background(AppTheme.iconChipFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(group.title)
+                                .font(AppFont.serifSemibold(17))
+                                .foregroundStyle(AppTheme.titleOnGlass)
+
+                            if let dateText = group.dateText {
+                                Label(dateText, systemImage: "calendar")
+                                    .font(AppFont.regular(11))
+                                    .foregroundStyle(AppTheme.captionOnGlass)
+                                    .labelStyle(.titleAndIcon)
+                                    .lineLimit(1)
                             }
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+
+                            if let locationText = group.locationText {
+                                Label(locationText, systemImage: "mappin.and.ellipse")
+                                    .font(AppFont.regular(11))
+                                    .foregroundStyle(AppTheme.captionOnGlass)
+                                    .labelStyle(.titleAndIcon)
+                                    .lineLimit(2)
                             }
-                            .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 8, y: 3)
+                        }
 
-                        Text(group.title)
-                            .font(.system(size: 17, weight: .semibold, design: .serif))
-                            .foregroundStyle(AppTheme.titleOnGlass)
+                        Spacer(minLength: 8)
 
-                        Spacer()
-
-                        Text("\(Int(progress * 100))%")
+                        Text("\(Int(group.progress * 100))%")
                             .font(AppFont.semibold(15))
                             .monospacedDigit()
                             .foregroundStyle(AppTheme.titleOnGlass)
@@ -484,86 +536,82 @@ struct ChecklistView: View {
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppTheme.inkMuted(0.35))
+                            .padding(.top, 4)
                     }
 
-                    ProgressBar(progress: progress)
-                        .frame(height: 7)
+                    ProgressBar(progress: group.progress)
+                        .frame(height: 6)
 
                     HStack {
-                        Text(L10n.Checklist.tasksCompleted(doneCount, group.tasks.count))
+                        Text(L10n.Checklist.tasksCompleted(group.doneCount, group.tasks.count))
                             .font(AppFont.medium(12))
                             .foregroundStyle(AppTheme.captionOnGlass)
                         Spacer()
                     }
                 }
+                .padding(14)
+                .premiumListRow(cornerRadius: 20)
             }
             .buttonStyle(.plain)
 
-            if isExpanded {
-                LazyVStack(spacing: 10) {
-                    ForEach(visibleTasks) { task in
-                        Button {
-                            runPremiumOrPaywall {
-                                selectedTask = task
-                            }
-                        } label: {
-                            TaskRow(task: task)
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    if group.tasks.count > 5 {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                if showAll { showAllSections.remove(group.id) } else { showAllSections.insert(group.id) }
-                            }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Text(showAll ? L10n.Checklist.showLess : L10n.Checklist.showAll(group.tasks.count))
-                                Image(systemName: showAll ? "chevron.up" : "chevron.down")
-                            }
-                            .font(AppFont.semibold(13))
-                            .foregroundStyle(AppTheme.sageMuted(0.6))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    if group.id > 0 {
-                        Button {
-                            runPremiumOrPaywall {
-                                addTaskPreferredEventId = group.id
-                                showAddTaskSheet = true
-                            }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.system(size: 16, weight: .semibold))
-                                Text(L10n.Checklist.addTask)
-                                    .font(AppFont.semibold(13))
-                                Spacer()
-                            }
-                            .foregroundStyle(AppTheme.sageMuted(0.72))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 12)
-                            .background {
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(AppTheme.sage.opacity(0.28), style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                            .fill(AppTheme.nestedGlassFill)
-                                    )
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
+        case .task(_, let task):
+            Button {
+                runPremiumOrPaywall {
+                    selectedTask = task
                 }
-                .padding(.top, 16)
+            } label: {
+                TaskRow(task: task)
+                    .equatable()
             }
+            .buttonStyle(.plain)
+
+        case .showMore(let group, let showingAll):
+            Button {
+                if showingAll {
+                    showAllSections.remove(group.id)
+                } else {
+                    showAllSections.insert(group.id)
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(showingAll ? L10n.Checklist.showLess : L10n.Checklist.showAll(group.tasks.count))
+                    Image(systemName: showingAll ? "chevron.up" : "chevron.down")
+                }
+                .font(AppFont.semibold(13))
+                .foregroundStyle(AppTheme.mutedOnBackground)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(.plain)
+
+        case .addTask(let groupId):
+            Button {
+                runPremiumOrPaywall {
+                    addTaskPreferredEventId = groupId
+                    showAddTaskSheet = true
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text(L10n.Checklist.addTask)
+                        .font(AppFont.semibold(13))
+                    Spacer()
+                }
+                .foregroundStyle(AppTheme.titleOnBackground)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(AppTheme.surface.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            AppTheme.mutedOnBackground.opacity(0.85),
+                            style: StrokeStyle(lineWidth: 1.2, dash: [5, 4])
+                        )
+                }
+            }
+            .buttonStyle(.plain)
         }
-        .padding(18)
-        .premiumGlassCard(cornerRadius: 28)
     }
 
     private func buildGroups() -> [ChecklistGroup] {
@@ -575,6 +623,14 @@ struct ChecklistView: View {
                 id: event.id,
                 title: event.jenisLabel ?? event.jenisAcara.capitalized,
                 iconName: ChecklistGroup.icon(for: event.jenisAcara),
+                dateText: event.tglAcara
+                    .flatMap { DateFormatter.calendarDate(from: $0) }
+                    .map { DateFormatter.displayLocaleDate($0) }
+                    ?? L10n.More.dateNotSet,
+                locationText: {
+                    let loc = event.lokasiAcara?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    return loc.isEmpty ? L10n.More.locationNotSet : loc
+                }(),
                 tasks: eventTasks
             )
         }
@@ -593,6 +649,7 @@ struct ChecklistView: View {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
+        lastLoadAt = Date()
 
         do {
             async let eventEnvelope: Envelope<[WeddingEvent]> = APIClient.shared.request("wedding-events")
@@ -608,6 +665,7 @@ struct ChecklistView: View {
             events = loadedEvents
             tasks = loadedTasks
             sections = loadedSections
+            recomputeChecklistCaches()
 
             if let first = groups.first {
                 expandedSections.insert(first.id)
@@ -623,7 +681,7 @@ struct ChecklistView: View {
         }
     }
 
-    /// Preview content behind the Pro lock (blurred), so the page still feels scrollable.
+    /// Preview content behind the Pro lock, so the page still feels scrollable.
     private func loadPreview() async {
         errorMessage = nil
         if let envelope: Envelope<[WeddingEvent]> = try? await APIClient.shared.request("wedding-events"),
@@ -636,6 +694,7 @@ struct ChecklistView: View {
         sections = []
         expandedSections = Set(events.prefix(2).map(\.id))
         showAllSections = Set(events.map(\.id))
+        recomputeChecklistCaches()
     }
 
     private static var previewEvents: [WeddingEvent] {
@@ -673,11 +732,35 @@ struct ChecklistView: View {
     }
 }
 
-private struct ChecklistGroup: Identifiable {
+private struct ChecklistGroup: Identifiable, Hashable {
     let id: Int
     let title: String
     let iconName: String
+    let dateText: String?
+    let locationText: String?
     let tasks: [PreparationTask]
+    let doneCount: Int
+
+    var progress: Double {
+        tasks.isEmpty ? 0 : Double(doneCount) / Double(tasks.count)
+    }
+
+    init(
+        id: Int,
+        title: String,
+        iconName: String,
+        dateText: String? = nil,
+        locationText: String? = nil,
+        tasks: [PreparationTask]
+    ) {
+        self.id = id
+        self.title = title
+        self.iconName = iconName
+        self.dateText = dateText
+        self.locationText = locationText
+        self.tasks = tasks
+        self.doneCount = tasks.reduce(0) { $0 + ($1.statusValue == .done ? 1 : 0) }
+    }
 
     static func icon(for jenis: String) -> String {
         switch jenis.lowercased() {
@@ -690,8 +773,35 @@ private struct ChecklistGroup: Identifiable {
     }
 }
 
-private struct TaskRow: View {
+private enum ChecklistScrollItem: Identifiable, Hashable {
+    case header(ChecklistGroup, isExpanded: Bool)
+    case task(groupId: Int, task: PreparationTask)
+    case showMore(ChecklistGroup, showingAll: Bool)
+    case addTask(groupId: Int)
+
+    var id: String {
+        switch self {
+        case .header(let group, _):
+            return "header-\(group.id)"
+        case .task(let groupId, let task):
+            return "task-\(groupId)-\(task.id)"
+        case .showMore(let group, _):
+            return "more-\(group.id)"
+        case .addTask(let groupId):
+            return "add-\(groupId)"
+        }
+    }
+}
+
+private struct TaskRow: View, Equatable {
     let task: PreparationTask
+
+    static func == (lhs: TaskRow, rhs: TaskRow) -> Bool {
+        lhs.task.id == rhs.task.id
+            && lhs.task.title == rhs.task.title
+            && lhs.task.status == rhs.task.status
+            && lhs.task.dueDate == rhs.task.dueDate
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -701,13 +811,15 @@ private struct TaskRow: View {
                 Text(task.title)
                     .font(AppFont.semibold(14))
                     .foregroundStyle(AppTheme.titleOnGlass)
+                    .lineLimit(2)
 
                 Text(subtitle)
                     .font(AppFont.regular(11))
                     .foregroundStyle(AppTheme.inkMuted(0.45))
+                    .lineLimit(1)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 11, weight: .semibold))
@@ -715,16 +827,11 @@ private struct TaskRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(AppTheme.nestedGlassFill)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        }
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                .stroke(AppTheme.hairline.opacity(0.7), lineWidth: 1)
         }
-        .shadow(color: AppTheme.sageDark.opacity(0.04), radius: 8, y: 3)
     }
 
     private var subtitle: String {
@@ -769,18 +876,13 @@ struct StatusIcon: View {
         case .done:
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 26))
-                .foregroundStyle(.white, AppTheme.statusDoneFill)
-                .shadow(color: AppTheme.sage.opacity(0.25), radius: 4, y: 1)
+                .foregroundStyle(AppTheme.statusDoneFill)
         case .inProgress:
             Image(systemName: "clock.fill")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 26, height: 26)
-                .background(
-                    LinearGradient(colors: [AppTheme.gold, AppTheme.goldDark], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: Circle()
-                )
-                .shadow(color: AppTheme.gold.opacity(0.3), radius: 4, y: 1)
+                .background(AppTheme.gold, in: Circle())
         case .pending:
             Circle()
                 .stroke(AppTheme.inkMuted(0.28), lineWidth: 2)
@@ -795,19 +897,15 @@ private struct ChecklistRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(AppTheme.sage.opacity(0.14), lineWidth: 11)
+                .stroke(AppTheme.sage.opacity(0.14), lineWidth: 10)
 
             Circle()
-                .trim(from: 0, to: progress)
+                .trim(from: 0, to: max(0, min(1, progress)))
                 .stroke(
-                    AngularGradient(
-                        colors: [AppTheme.sage, AppTheme.gold, AppTheme.sageDark],
-                        center: .center
-                    ),
-                    style: StrokeStyle(lineWidth: 11, lineCap: .round)
+                    AppTheme.sageDark,
+                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .shadow(color: AppTheme.sage.opacity(0.25), radius: 6, y: 2)
 
             VStack(spacing: 1) {
                 Text(L10n.Checklist.totalProgress)
@@ -831,23 +929,14 @@ private struct ProgressBar: View {
     let progress: Double
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
+        Capsule()
+            .fill(AppTheme.progressTrack)
+            .overlay(alignment: .leading) {
                 Capsule()
-                    .fill(AppTheme.progressTrack)
-
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [AppTheme.sage, AppTheme.gold],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: max(0, min(1, progress)) * proxy.size.width)
-                    .shadow(color: AppTheme.sage.opacity(0.2), radius: 3, y: 1)
+                    .fill(AppTheme.sageDark)
+                    .scaleEffect(x: max(0.001, min(1, progress)), y: 1, anchor: .leading)
             }
-        }
+            .clipShape(Capsule())
     }
 }
 
@@ -857,6 +946,7 @@ private struct AddChecklistTaskSheet: View {
     let onCreated: (PreparationTask) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var appearance = AppearanceStore.shared
 
     @State private var title = ""
     @State private var description = ""
@@ -870,6 +960,35 @@ private struct AddChecklistTaskSheet: View {
 
     private let priorityOptions: [PreparationTask.Priority] = [.high, .medium, .low]
 
+    /// Midnight-only contrast tweaks — other palettes keep the original look.
+    private var isMidnight: Bool {
+        appearance.colorPalette.prefersLightContentChrome
+    }
+
+    private var sheetTitleColor: Color {
+        isMidnight ? AppTheme.titleOnBackground : AppTheme.sageDark
+    }
+
+    private var sheetMutedColor: Color {
+        isMidnight ? AppTheme.mutedOnBackground : AppTheme.ink.opacity(0.55)
+    }
+
+    private var sheetLabelColor: Color {
+        isMidnight ? AppTheme.mutedOnBackground : AppTheme.ink.opacity(0.6)
+    }
+
+    private var sheetHintColor: Color {
+        isMidnight ? AppTheme.mutedOnBackground.opacity(0.9) : AppTheme.ink.opacity(0.4)
+    }
+
+    private var fieldTextColor: Color {
+        isMidnight ? AppTheme.ink : AppTheme.ink
+    }
+
+    private var placeholderColor: Color {
+        isMidnight ? AppTheme.ink.opacity(0.45) : AppTheme.ink.opacity(0.35)
+    }
+
     private var canSave: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && selectedEventId != nil
@@ -879,17 +998,22 @@ private struct AddChecklistTaskSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                if isMidnight {
+                    AppTheme.background
+                        .ignoresSafeArea()
+                } else {
+                    LuxuryWeddingBackground()
+                }
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 18) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(L10n.Checklist.addTaskTitle)
-                                .font(.system(size: 24, weight: .semibold, design: .serif))
-                                .foregroundStyle(AppTheme.sageDark)
+                                .font(AppFont.serifSemibold(24))
+                                .foregroundStyle(sheetTitleColor)
                             Text(L10n.Checklist.addTaskSubtitle)
                                 .font(AppFont.regular(13))
-                                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                                .foregroundStyle(sheetMutedColor)
                         }
 
                         if events.isEmpty {
@@ -898,12 +1022,18 @@ private struct AddChecklistTaskSheet: View {
                                 .foregroundStyle(AppTheme.peachDark)
                                 .padding(16)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .premiumGlassCard(cornerRadius: 16)
+                                .premiumListRow(cornerRadius: 16)
                         } else {
                             fieldGroup(L10n.Checklist.taskTitle) {
-                                TextField(L10n.Checklist.taskTitlePlaceholder, text: $title, axis: .vertical)
+                                TextField(
+                                    "",
+                                    text: $title,
+                                    prompt: Text(L10n.Checklist.taskTitlePlaceholder)
+                                        .foregroundStyle(placeholderColor),
+                                    axis: .vertical
+                                )
                                     .font(AppFont.medium(15))
-                                    .foregroundStyle(AppTheme.ink)
+                                    .foregroundStyle(fieldTextColor)
                                     .tint(AppTheme.sageDark)
                                     .textFieldStyle(.plain)
                             }
@@ -925,9 +1055,15 @@ private struct AddChecklistTaskSheet: View {
                             dueDateSection
 
                             fieldGroup(L10n.Checklist.taskDescription) {
-                                TextField(L10n.Checklist.taskDescriptionPlaceholder, text: $description, axis: .vertical)
+                                TextField(
+                                    "",
+                                    text: $description,
+                                    prompt: Text(L10n.Checklist.taskDescriptionPlaceholder)
+                                        .foregroundStyle(placeholderColor),
+                                    axis: .vertical
+                                )
                                     .font(AppFont.regular(14))
-                                    .foregroundStyle(AppTheme.ink)
+                                    .foregroundStyle(fieldTextColor)
                                     .tint(AppTheme.sageDark)
                                     .lineLimit(3 ... 8)
                             }
@@ -953,11 +1089,11 @@ private struct AddChecklistTaskSheet: View {
                                         .font(AppFont.semibold(16))
                                 }
                             }
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 15)
                             .background(
-                                canSave ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.4),
+                                AppTheme.primaryActionFill(enabled: canSave),
                                 in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                             )
                         }
@@ -971,7 +1107,7 @@ private struct AddChecklistTaskSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.cancel) { dismiss() }
-                        .foregroundStyle(AppTheme.ink.opacity(0.7))
+                        .foregroundStyle(isMidnight ? AppTheme.mutedOnBackground : AppTheme.ink.opacity(0.7))
                 }
             }
             .onAppear {
@@ -988,7 +1124,7 @@ private struct AddChecklistTaskSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.Checklist.taskPriority)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(sheetLabelColor)
 
             HStack(spacing: 10) {
                 ForEach(priorityOptions, id: \.self) { option in
@@ -1003,9 +1139,17 @@ private struct AddChecklistTaskSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(
-                                isSelected ? AnyShapeStyle(style.color) : AnyShapeStyle(style.color.opacity(0.12)),
+                                isSelected
+                                    ? AnyShapeStyle(style.color)
+                                    : AnyShapeStyle(style.color.opacity(isMidnight ? 0.22 : 0.12)),
                                 in: Capsule()
                             )
+                            .overlay {
+                                if isMidnight && !isSelected {
+                                    Capsule()
+                                        .stroke(style.color.opacity(0.65), lineWidth: 1)
+                                }
+                            }
                     }
                     .buttonStyle(.plain)
                 }
@@ -1018,7 +1162,7 @@ private struct AddChecklistTaskSheet: View {
             Toggle(isOn: $hasDueDate.animation()) {
                 Text(L10n.Checklist.taskDueDate)
                     .font(AppFont.medium(13))
-                    .foregroundStyle(AppTheme.ink.opacity(0.6))
+                    .foregroundStyle(isMidnight ? AppTheme.ink.opacity(0.78) : AppTheme.ink.opacity(0.6))
             }
             .tint(AppTheme.sageDark)
 
@@ -1039,10 +1183,10 @@ private struct AddChecklistTaskSheet: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.Checklist.taskSubTasks)
                     .font(AppFont.medium(13))
-                    .foregroundStyle(AppTheme.ink.opacity(0.6))
+                    .foregroundStyle(sheetLabelColor)
                 Text(L10n.Checklist.taskSubTasksHint)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(sheetHintColor)
             }
 
             VStack(spacing: 10) {
@@ -1052,9 +1196,14 @@ private struct AddChecklistTaskSheet: View {
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(AppTheme.sage.opacity(0.55))
 
-                        TextField(L10n.Checklist.taskSubTaskPlaceholder, text: $item.title)
+                        TextField(
+                            "",
+                            text: $item.title,
+                            prompt: Text(L10n.Checklist.taskSubTaskPlaceholder)
+                                .foregroundStyle(placeholderColor)
+                        )
                             .font(AppFont.medium(14))
-                            .foregroundStyle(AppTheme.ink)
+                            .foregroundStyle(fieldTextColor)
                             .tint(AppTheme.sageDark)
                             .textFieldStyle(.plain)
 
@@ -1065,7 +1214,7 @@ private struct AddChecklistTaskSheet: View {
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 18))
-                                .foregroundStyle(AppTheme.ink.opacity(0.28))
+                                .foregroundStyle(AppTheme.ink.opacity(isMidnight ? 0.4 : 0.28))
                         }
                         .buttonStyle(.plain)
                     }
@@ -1086,15 +1235,18 @@ private struct AddChecklistTaskSheet: View {
                             .font(AppFont.semibold(13))
                         Spacer()
                     }
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.78))
+                    .foregroundStyle(isMidnight ? AppTheme.titleOnBackground : AppTheme.sageDark.opacity(0.78))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .background {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(AppTheme.sage.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
+                            .stroke(
+                                isMidnight ? AppTheme.mutedOnBackground.opacity(0.85) : AppTheme.sage.opacity(0.3),
+                                style: StrokeStyle(lineWidth: 1, dash: [5, 4])
+                            )
                             .background(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(AppTheme.surface.opacity(0.55))
+                                    .fill(isMidnight ? AppTheme.surface.opacity(0.14) : AppTheme.surface.opacity(0.55))
                             )
                     }
                 }
@@ -1107,7 +1259,7 @@ private struct AddChecklistTaskSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(sheetLabelColor)
 
             content()
                 .padding(14)
@@ -1118,12 +1270,15 @@ private struct AddChecklistTaskSheet: View {
 
     private func inputFieldBackground(cornerRadius: CGFloat) -> some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(AppTheme.surface.opacity(0.96))
+            .fill(AppTheme.surface.opacity(isMidnight ? 1 : 0.96))
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                    .stroke(
+                        isMidnight ? AppTheme.hairline : Color.white.opacity(0.65),
+                        lineWidth: 1
+                    )
             }
-            .shadow(color: AppTheme.sageDark.opacity(0.05), radius: 8, y: 3)
+            .shadow(color: AppTheme.sageDark.opacity(isMidnight ? 0 : 0.05), radius: 8, y: 3)
     }
 
     private func save() {

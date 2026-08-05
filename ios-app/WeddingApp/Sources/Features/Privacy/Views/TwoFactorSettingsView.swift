@@ -11,7 +11,8 @@ struct TwoFactorSettingsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
@@ -20,12 +21,15 @@ struct TwoFactorSettingsView: View {
                     )
 
                     if viewModel.isLoading && viewModel.status == nil {
-                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
+                        ProgressView()
+                            .tint(AppTheme.titleOnBackground)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
                     }
 
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage).font(AppFont.regular(13)).foregroundStyle(.red)
-                        Button("Coba lagi") { Task { await viewModel.retry() } }
+                        Button(L10n.Common.tryAgain) { Task { await viewModel.retry() } }
                     }
 
                     statusCard
@@ -39,7 +43,7 @@ struct TwoFactorSettingsView: View {
                                 if viewModel.successMessage != nil { showSuccess = true }
                             }
                         } label: {
-                            Text(viewModel.isBusy ? "Mengirim kode…" : "Nonaktifkan 2FA")
+                            Text(viewModel.isBusy ? L10n.Privacy.twoFactorSendingCode : L10n.Privacy.twoFactorDisable)
                                 .font(AppFont.medium(15))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
@@ -54,12 +58,15 @@ struct TwoFactorSettingsView: View {
                                 if viewModel.successMessage != nil { showSuccess = true }
                             }
                         } label: {
-                            Text(viewModel.isBusy ? "Mengirim kode…" : "Aktifkan 2FA via Email")
+                            Text(viewModel.isBusy ? L10n.Privacy.twoFactorSendingCode : L10n.Privacy.twoFactorEnable)
                                 .font(AppFont.medium(15))
+                                .foregroundStyle(AppTheme.primaryActionForeground(enabled: !viewModel.isBusy))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                                .foregroundStyle(.white)
+                                .background(
+                                    AppTheme.primaryActionFill(enabled: !viewModel.isBusy),
+                                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                )
                         }
                         .disabled(viewModel.isBusy)
                     }
@@ -72,7 +79,7 @@ struct TwoFactorSettingsView: View {
         .statusBarBlur()
         .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
-        .alert("Berhasil", isPresented: $showSuccess) {
+        .alert(L10n.Common.success, isPresented: $showSuccess) {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
             Text(viewModel.successMessage ?? "")
@@ -94,22 +101,22 @@ struct TwoFactorSettingsView: View {
                 .foregroundStyle(AppTheme.sageDark)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var codeForm: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextField("Kode 6 digit", text: $viewModel.code)
+            TextField(L10n.Privacy.twoFactorCodePlaceholder, text: $viewModel.code)
                 .keyboardType(.numberPad)
                 .font(AppFont.regular(16))
                 .padding(14)
-                .premiumGlassCard(cornerRadius: 16)
+                .premiumListRow(cornerRadius: 16)
 
             if viewModel.disableMode && !usesSocialLogin {
                 SecureField(L10n.DeleteAccount.passwordPlaceholder, text: $viewModel.password)
                     .font(AppFont.regular(14))
                     .padding(14)
-                    .premiumGlassCard(cornerRadius: 16)
+                    .premiumListRow(cornerRadius: 16)
             }
 
             Button {
@@ -122,12 +129,16 @@ struct TwoFactorSettingsView: View {
                     if viewModel.successMessage != nil { showSuccess = true }
                 }
             } label: {
-                Text(viewModel.isBusy ? "Memverifikasi…" : "Konfirmasi kode")
+                let canConfirm = viewModel.code.count == 6 && !viewModel.isBusy
+                Text(viewModel.isBusy ? L10n.Privacy.twoFactorVerifying : L10n.Privacy.twoFactorConfirmCode)
                     .font(AppFont.medium(15))
+                    .foregroundStyle(AppTheme.primaryActionForeground(enabled: canConfirm))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .foregroundStyle(.white)
+                    .background(
+                        AppTheme.primaryActionFill(enabled: canConfirm),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    )
             }
             .disabled(viewModel.code.count != 6 || viewModel.isBusy)
         }

@@ -9,10 +9,11 @@ struct PrivacyPolicyView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
                     MoreSubpageNavigationHeader(
                         title: content.pageTitle,
                         subtitle: content.lastUpdated
@@ -56,14 +57,13 @@ struct PrivacyPolicyView: View {
                                 Capsule().fill(AppTheme.sageDark)
                             } else {
                                 Capsule()
-                                    .fill(Color.white.opacity(0.72))
-                                    .background(.ultraThinMaterial, in: Capsule())
+                                    .fill(AppTheme.chipIdleFill)
                             }
                         }
                         .overlay {
                             if selectedLanguage != language {
                                 Capsule()
-                                    .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                                    .stroke(AppTheme.hairline, lineWidth: 1)
                             }
                         }
                 }
@@ -96,7 +96,7 @@ struct PrivacyPolicyView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private func sectionCard(_ section: PrivacyPolicySection) -> some View {
@@ -134,7 +134,7 @@ struct PrivacyPolicyView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var contactCard: some View {
@@ -172,7 +172,7 @@ struct PrivacyPolicyView: View {
             }
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var webVersionCard: some View {
@@ -188,7 +188,7 @@ struct PrivacyPolicyView: View {
             }
             .foregroundStyle(AppTheme.sageDark)
             .padding(14)
-            .premiumGlassCard(cornerRadius: 16)
+            .premiumListRow(cornerRadius: 16)
         }
         .buttonStyle(.plain)
     }

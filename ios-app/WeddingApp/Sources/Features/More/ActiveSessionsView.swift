@@ -17,10 +17,11 @@ struct ActiveSessionsView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Sessions.title,
                         subtitle: L10n.Sessions.subtitle
@@ -104,7 +105,7 @@ struct ActiveSessionsView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private func sessionRow(_ item: ActiveSession) -> some View {
@@ -158,7 +159,7 @@ struct ActiveSessionsView: View {
             }
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var revokeOthersButton: some View {
@@ -186,7 +187,7 @@ struct ActiveSessionsView: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private func load() async {

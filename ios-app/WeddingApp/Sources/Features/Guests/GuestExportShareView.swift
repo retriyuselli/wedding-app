@@ -42,7 +42,8 @@ struct GuestExportShareView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                    .ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     ScrollView(showsIndicators: false) {
@@ -64,12 +65,14 @@ struct GuestExportShareView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.close) { dismiss() }
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     if let exportFileURL {
                         ShareLink(item: exportFileURL) {
                             Image(systemName: "square.and.arrow.up")
                         }
+                        .foregroundStyle(AppTheme.accentOnBackground)
                     }
                 }
             }
@@ -83,16 +86,16 @@ struct GuestExportShareView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L10n.Guest.exportOverview)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             LazyVGrid(
                 columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
                 spacing: 10
             ) {
-                metricCard(L10n.Guest.totalGuests, "\(totalCount)", AppTheme.sageDark)
+                metricCard(L10n.Guest.totalGuests, "\(totalCount)", AppTheme.labelOnLightSurface)
                 metricCard(L10n.Common.confirmed, "\(confirmedCount)", AppTheme.sage)
-                metricCard(L10n.Common.pending, "\(pendingCount)", AppTheme.gold)
-                metricCard(L10n.Common.notAttending, "\(absentCount)", AppTheme.ink.opacity(0.55))
+                metricCard(L10n.Common.pending, "\(pendingCount)", AppTheme.goldOnLightSurface)
+                metricCard(L10n.Common.notAttending, "\(absentCount)", AppTheme.captionOnLightSurface)
             }
         }
     }
@@ -101,7 +104,7 @@ struct GuestExportShareView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L10n.Guest.exportIncluded)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.ink.opacity(0.5))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
 
             sectionRow(icon: "person.2.fill", title: L10n.Guest.tabGuests, count: guests.count)
             sectionRow(icon: "star.fill", title: L10n.Guest.tabVip, count: vipGuests.count)
@@ -140,7 +143,7 @@ struct GuestExportShareView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(value)
@@ -149,7 +152,7 @@ struct GuestExportShareView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(AppTheme.lightSage.opacity(0.35), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .premiumListRow(cornerRadius: 14)
     }
 
     private func sectionRow(icon: String, title: String, count: Int) -> some View {
@@ -162,13 +165,13 @@ struct GuestExportShareView: View {
 
             Text(title)
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnGlass)
 
             Spacer()
 
             Text("\(count)")
                 .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
         }
     }
 
@@ -186,7 +189,7 @@ struct GuestExportShareView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
                 .padding(.bottom, 16)
-                .background(.ultraThinMaterial)
+                .background(AppTheme.surface)
             } else if totalCount == 0 {
                 Text(L10n.Guest.exportEmpty)
                     .font(AppFont.regular(13))
@@ -194,7 +197,7 @@ struct GuestExportShareView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)
                     .padding(.horizontal, 20)
-                    .background(.ultraThinMaterial)
+                    .background(AppTheme.surface)
             }
         }
     }

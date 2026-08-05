@@ -32,7 +32,8 @@ struct MessagesView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
@@ -51,6 +52,7 @@ struct MessagesView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 24)
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .onChange(of: isSearchFocused) { _, focused in
                     guard focused else { return }
                     withAnimation(.easeInOut(duration: 0.25)) {
@@ -128,12 +130,12 @@ struct MessagesView: View {
             }
 
             Text(L10n.Messages.title)
-                .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(AppFont.serifBold(32))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             Text(L10n.Messages.subtitle)
-                .font(.system(size: 12, weight: .regular, design: .serif))
-                .foregroundStyle(AppTheme.gold)
+                .font(AppFont.serifRegular(12))
+                .foregroundStyle(AppTheme.accentOnBackground)
                 .lineSpacing(2)
         }
         .padding(.top, 4)
@@ -143,21 +145,16 @@ struct MessagesView: View {
         ZStack(alignment: .topTrailing) {
             Image(systemName: icon)
                 .font(.system(size: 17, weight: .medium))
-                .foregroundStyle(isActive ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.82))
+                .foregroundStyle(isActive ? AppTheme.labelOnLightSurface : AppTheme.iconOnChrome)
                 .frame(width: 42, height: 42)
-                .background {
-                    Circle()
-                        .fill((isActive ? AppTheme.lightSage : Color.white).opacity(0.78))
-                        .background(.ultraThinMaterial, in: Circle())
-                }
+                .background((isActive ? AppTheme.selectedChipFill : AppTheme.chrome), in: Circle())
                 .overlay {
                     Circle()
                         .stroke(
-                            isActive ? AppTheme.sage.opacity(0.35) : Color.white.opacity(0.65),
+                            isActive ? AppTheme.sage.opacity(0.35) : AppTheme.hairline,
                             lineWidth: 1
                         )
                 }
-                .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
 
             if badge > 0 && icon == "bell" {
                 Text(badge > 9 ? "9+" : "\(badge)")
@@ -176,7 +173,7 @@ struct MessagesView: View {
     private var statsRow: some View {
         HStack(spacing: 0) {
             statItem(label: L10n.Messages.totalChat, value: "\(threads.count)")
-            statItem(label: L10n.Messages.unread, value: "\(totalUnread)", tint: AppTheme.gold)
+            statItem(label: L10n.Messages.unread, value: "\(totalUnread)", tint: AppTheme.goldOnLightSurface)
             statItem(label: L10n.Dashboard.vendors, value: "\(threads.filter { $0.category == .vendor }.count)")
         }
         .padding(.vertical, 14)
@@ -191,7 +188,7 @@ struct MessagesView: View {
                 .foregroundStyle(tint)
             Text(label)
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -227,7 +224,10 @@ struct MessagesView: View {
                 .foregroundStyle(AppTheme.ink)
                 .focused($isSearchFocused)
                 .submitLabel(.search)
-                .onSubmit { isSearchFocused = false }
+                .onSubmit {
+                    isSearchFocused = false
+                    KeyboardDismiss.resign()
+                }
 
             if !searchText.isEmpty {
                 Button { searchText = "" } label: {
@@ -276,18 +276,24 @@ struct MessagesView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(isSearching || filter.isActive ? L10n.Messages.searchResults : L10n.Messages.conversations)
-                    .font(.system(size: 18, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(AppFont.serifSemibold(18))
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Spacer()
                 if isSearching {
                     Text(L10n.Messages.chatCount(filteredThreads.count))
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.85))
                 }
             }
 
             if filteredThreads.isEmpty {
-                emptyState
+                AppEmptyState(
+                    icon: "bubble.left.and.bubble.right",
+                    title: L10n.Messages.notFound,
+                    message: L10n.Messages.notFoundSub,
+                    onBackground: false
+                )
+                .premiumGlassCard(cornerRadius: 22)
             } else {
                 LazyVStack(spacing: 10) {
                     ForEach(filteredThreads) { thread in
@@ -301,23 +307,6 @@ struct MessagesView: View {
                 }
             }
         }
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 28, weight: .light))
-                .foregroundStyle(AppTheme.ink.opacity(0.25))
-            Text(L10n.Messages.notFound)
-                .font(AppFont.medium(14))
-                .foregroundStyle(AppTheme.ink.opacity(0.55))
-            Text(L10n.Messages.notFoundSub)
-                .font(AppFont.regular(12))
-                .foregroundStyle(AppTheme.ink.opacity(0.4))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
-        .premiumGlassCard(cornerRadius: 22)
     }
 }
 
@@ -336,21 +325,15 @@ private struct MessageCategoryChip: View {
                 Text(category.label)
                     .font(AppFont.medium(12))
             }
-            .foregroundStyle(isSelected ? .white : AppTheme.sageDark)
+            .foregroundStyle(isSelected ? .white : AppTheme.labelOnLightSurface)
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
             .background {
-                if isSelected {
-                    Capsule().fill(AppTheme.sageDark)
-                } else {
-                    Capsule()
-                        .fill(AppTheme.lightSage.opacity(0.85))
-                        .background(.ultraThinMaterial, in: Capsule())
-                }
+                Capsule().fill(isSelected ? AppTheme.sageDark : AppTheme.chipIdleFill)
             }
             .overlay {
                 if !isSelected {
-                    Capsule().stroke(Color.white.opacity(0.55), lineWidth: 1)
+                    Capsule().stroke(AppTheme.hairline, lineWidth: 1)
                 }
             }
         }
@@ -424,7 +407,7 @@ private struct MessageThreadRow: View {
             }
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 22)
+        .premiumListRow(cornerRadius: 22)
         .overlay {
             if thread.hasUnread {
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -454,7 +437,8 @@ struct MessageDetailView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 detailHeader
@@ -510,7 +494,12 @@ struct MessageDetailView: View {
             Button { dismiss() } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.8))
+                    .foregroundStyle(AppTheme.iconOnChrome)
+                    .frame(width: 36, height: 36)
+                    .background(AppTheme.chrome, in: Circle())
+                    .overlay {
+                        Circle().stroke(AppTheme.hairline, lineWidth: 1)
+                    }
             }
             .buttonStyle(.plain)
 
@@ -523,30 +512,29 @@ struct MessageDetailView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(thread.name)
                     .font(AppFont.semibold(14))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnGlass)
                 Text(thread.isOnline ? L10n.Messages.online : L10n.Messages.offline)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(thread.isOnline ? AppTheme.sage : AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(thread.isOnline ? AppTheme.goldOnLightSurface : AppTheme.captionOnLightSurface)
             }
 
             Spacer()
 
             Image(systemName: "ellipsis")
                 .font(.system(size: 16))
-                .foregroundStyle(AppTheme.sageDark.opacity(0.72))
+                .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 36, height: 36)
                 .background {
                     Circle()
-                        .fill(Color.white.opacity(0.78))
-                        .background(.ultraThinMaterial, in: Circle())
+                        .fill(AppTheme.iconChipFill)
                 }
                 .overlay {
-                    Circle().stroke(Color.white.opacity(0.65), lineWidth: 1)
+                    Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
                 }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private var composerBar: some View {
@@ -565,14 +553,13 @@ struct MessageDetailView: View {
                 }
 
             Button(action: sendMessage) {
+                let canSend = !draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 Image(systemName: "paperplane.fill")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSend))
                     .frame(width: 42, height: 42)
                     .background(
-                        draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            ? AppTheme.mist
-                            : AppTheme.sageDark,
+                        AppTheme.primaryActionFill(enabled: canSend),
                         in: Circle()
                     )
             }
@@ -582,7 +569,7 @@ struct MessageDetailView: View {
         .padding(.horizontal, 16)
         .padding(.top, 10)
         .padding(.bottom, 8)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private func sendMessage() {

@@ -31,10 +31,11 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Settings.title,
                         subtitle: L10n.Settings.subtitle
@@ -245,7 +246,7 @@ struct SettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     // MARK: - Building Blocks
@@ -254,13 +255,13 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(15))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(AppTheme.mutedOnBackground)
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {
                 content()
             }
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         }
     }
 

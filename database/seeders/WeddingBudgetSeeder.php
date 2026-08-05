@@ -13,9 +13,15 @@ class WeddingBudgetSeeder extends Seeder
      */
     public function run(): void
     {
-        User::all()->each(function (User $user): void {
+        User::query()->each(function (User $user): void {
+            if (WeddingBudget::query()->where('user_id', $user->id)->exists()) {
+                return;
+            }
+
             WeddingBudget::factory()->create([
                 'user_id' => $user->id,
+                'total_budget' => 250_000_000,
+                'notes' => 'Total anggaran seed untuk pengembangan iOS',
             ]);
         });
     }

@@ -20,6 +20,7 @@ struct VendorView: View {
     @State private var showPartnerNotice = false
     @AppStorage("vendor_partner_notice_seen") private var hasSeenPartnerNotice = false
     @FocusState private var isSearchFocused: Bool
+    @State private var displayedVendors: [VendorItem] = []
 
     private let searchBarID = "vendor-search-bar"
     private let partnerSiteURL = URL(string: "https://apps.apple.com/id/app/paket-pernikahan/id6777688676")
@@ -33,8 +34,8 @@ struct VendorView: View {
         return withVendors.isEmpty ? categoriesStore.categories : withVendors
     }
 
-    private var filteredVendors: [VendorItem] {
-        vendors
+    private func recomputeDisplayedVendors() {
+        displayedVendors = vendors
             .filter { vendor in
                 let matchCategory = filter.categorySlugs.isEmpty || filter.categorySlugs.contains(vendor.categorySlug)
                 let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -69,7 +70,9 @@ struct VendorView: View {
 
     private var vendorContent: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            // Flat wash matches other scroll tabs; Midnight resolves to the solid black stage.
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
@@ -92,6 +95,7 @@ struct VendorView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 24)
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .onChange(of: isSearchFocused) { _, focused in
                     guard focused else { return }
                     withAnimation(.easeInOut(duration: 0.25)) {
@@ -127,6 +131,15 @@ struct VendorView: View {
         .onChange(of: filter) { _, _ in
             filterTask?.cancel()
             filterTask = Task { await loadVendors() }
+        }
+        .onChange(of: searchText) { _, _ in
+            recomputeDisplayedVendors()
+        }
+        .onChange(of: sortOption) { _, _ in
+            recomputeDisplayedVendors()
+        }
+        .onChange(of: savedStore.ids) { _, _ in
+            recomputeDisplayedVendors()
         }
         .sheet(isPresented: $showFilterSheet) {
             VendorFilterSheet(
@@ -192,9 +205,11 @@ struct VendorView: View {
                 queryItems: vendorQueryItems()
             )
             vendors = envelope.data.map { VendorItem(api: $0, isSaved: savedStore.contains($0.id)) }
+            recomputeDisplayedVendors()
         } catch {
             errorMessage = error.userFacingMessage
             vendors = []
+            recomputeDisplayedVendors()
         }
     }
 
@@ -299,12 +314,12 @@ struct VendorView: View {
             }
 
             Text(L10n.Vendor.title)
-                .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.titleOnGlass)
+                .font(AppFont.serifBold(32))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             Text(L10n.Vendor.subtitle)
-                .font(.system(size: 12, weight: .regular, design: .serif))
-                .foregroundStyle(AppTheme.gold)
+                .font(AppFont.serifRegular(12))
+                .foregroundStyle(AppTheme.accentOnBackground)
                 .lineSpacing(2)
         }
         .padding(.top, 4)
@@ -313,28 +328,23 @@ struct VendorView: View {
     private func circleButton(_ icon: String, isActive: Bool = false) -> some View {
         Image(systemName: icon)
             .font(.system(size: 17, weight: .medium))
-            .foregroundStyle(isActive ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
+            .foregroundStyle(isActive ? AppTheme.labelOnLightSurface : AppTheme.iconOnChrome)
             .frame(width: 42, height: 42)
-            .background {
-                Circle()
-                    .fill(isActive ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
-                    .background(.ultraThinMaterial, in: Circle())
-            }
+            .background((isActive ? AppTheme.selectedChipFill : AppTheme.chrome), in: Circle())
             .overlay {
                 Circle()
                     .stroke(
-                        isActive ? AppTheme.sage.opacity(0.35) : AppTheme.iconChipStroke,
+                        isActive ? AppTheme.sage.opacity(0.35) : AppTheme.hairline,
                         lineWidth: 1
                     )
             }
-            .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
     }
 
     private var searchResultsHeader: some View {
         HStack {
-            Text(L10n.Vendor.found(filteredVendors.count))
+            Text(L10n.Vendor.found(displayedVendors.count))
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             Spacer()
 
@@ -343,7 +353,7 @@ struct VendorView: View {
                 isSearchFocused = false
             }
             .font(AppFont.medium(12))
-            .foregroundStyle(AppTheme.ink.opacity(0.55))
+            .foregroundStyle(AppTheme.titleOnBackground)
         }
     }
 
@@ -366,6 +376,7 @@ struct VendorView: View {
                     .submitLabel(.search)
                     .onSubmit {
                         isSearchFocused = false
+                        KeyboardDismiss.resign()
                     }
 
                 if !searchText.isEmpty {
@@ -403,7 +414,7 @@ struct VendorView: View {
                 .background {
                     Capsule()
                         .fill(filter.isActive ? AppTheme.selectedChipFill : AppTheme.chipIdleFill)
-                        .background(.ultraThinMaterial, in: Capsule())
+                        .background(AppTheme.iconChipFill, in: Capsule())
                 }
                 .overlay {
                     Capsule()
@@ -424,9 +435,10 @@ struct VendorView: View {
             if categoriesStore.isLoading && categoriesStore.categories.isEmpty {
                 HStack(spacing: 8) {
                     ProgressView()
+                        .tint(AppTheme.titleOnBackground)
                     Text(L10n.Vendor.loadingCategories)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.mutedOnBackground)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 8)
@@ -434,17 +446,17 @@ struct VendorView: View {
                 HStack(spacing: 10) {
                     Text(error)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.5))
+                        .foregroundStyle(AppTheme.mutedOnBackground)
                     Button(L10n.Common.tryAgain) {
                         Task { await categoriesStore.reload() }
                     }
                     .font(AppFont.medium(12))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 14) {
+                    HStack(alignment: .top, spacing: 14) {
                         VendorCategoryChip(
                             iconName: "square.grid.2x2",
                             label: L10n.Common.all,
@@ -483,15 +495,15 @@ struct VendorView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(isSearching || filter.isActive ? L10n.Vendor.resultsFiltered : L10n.Vendor.allVendors)
-                    .font(.system(size: 18, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(AppFont.serifSemibold(18))
+                    .foregroundStyle(AppTheme.titleOnBackground)
 
                 Spacer()
 
                 HStack(spacing: 6) {
                     Text(L10n.Common.sort)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.mutedOnBackground)
 
                     Menu {
                         ForEach(VendorSortOption.allCases) { option in
@@ -535,7 +547,7 @@ struct VendorView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 28)
                     .premiumGlassCard(cornerRadius: 22)
-                } else if filteredVendors.isEmpty {
+                } else if displayedVendors.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 28, weight: .light))
@@ -552,7 +564,7 @@ struct VendorView: View {
                     .padding(.vertical, 28)
                     .premiumGlassCard(cornerRadius: 22)
                 } else {
-                    ForEach(filteredVendors) { vendor in
+                    ForEach(displayedVendors) { vendor in
                         Button {
                             selectedVendorRoute = VendorRoute(slug: vendor.slug)
                         } label: {
@@ -576,17 +588,12 @@ struct VendorView: View {
         HStack(spacing: 12) {
             Image(systemName: "heart")
                 .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.iconOnChrome)
                 .frame(width: 44, height: 44)
-                .background {
-                    Circle()
-                        .fill(Color.white.opacity(0.78))
-                        .background(.ultraThinMaterial, in: Circle())
-                }
+                .background(AppTheme.chrome, in: Circle())
                 .overlay {
-                    Circle().stroke(Color.white.opacity(0.65), lineWidth: 1)
+                    Circle().stroke(AppTheme.hairline, lineWidth: 1)
                 }
-                .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 8, y: 4)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.Vendor.requestCtaTitle)
@@ -635,7 +642,7 @@ struct VendorView: View {
     private var partnerFootnoteLabel: some View {
         Text(L10n.Vendor.partnerFootnote)
             .font(AppFont.regular(11))
-            .foregroundStyle(AppTheme.ink.opacity(0.42))
+            .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.75))
             .multilineTextAlignment(.center)
     }
 }
@@ -647,16 +654,17 @@ private struct VendorPartnerNoticeSheet: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 18) {
                 Text(L10n.Vendor.partnerNoticeTitle)
-                    .font(.system(size: 22, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(AppFont.serifSemibold(22))
+                    .foregroundStyle(AppTheme.titleOnBackground)
 
                 Text(L10n.Vendor.partnerNoticeBody)
                     .font(AppFont.regular(14))
-                    .foregroundStyle(AppTheme.ink.opacity(0.62))
+                    .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.85))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -701,13 +709,14 @@ private struct VendorRequestSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                    .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 16) {
                         Text(L10n.Vendor.requestFormHint)
                             .font(AppFont.regular(13))
-                            .foregroundStyle(AppTheme.ink.opacity(0.6))
+                            .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.85))
                             .fixedSize(horizontal: false, vertical: true)
 
                         if let errorMessage {
@@ -718,7 +727,7 @@ private struct VendorRequestSheet: View {
 
                         fieldCard(title: L10n.Vendor.requestCategoryTitle, placeholder: L10n.Vendor.requestCategoryPlaceholder, text: $category)
                         fieldCard(title: L10n.Vendor.requestCityTitle, placeholder: L10n.Vendor.requestCityPlaceholder, text: $city)
-                        fieldCard(title: L10n.Vendor.requestBudgetTitle, placeholder: L10n.Vendor.requestBudgetPlaceholder, text: $budget)
+                        budgetField
                         notesCard
                     }
                     .padding(20)
@@ -730,7 +739,7 @@ private struct VendorRequestSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.cancel) { dismiss() }
-                        .foregroundStyle(AppTheme.ink.opacity(0.7))
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -748,11 +757,11 @@ private struct VendorRequestSheet: View {
                         Text(L10n.Vendor.sendRequestShort)
                             .font(AppFont.medium(15))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSend))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(
-                        canSend ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45),
+                        AppTheme.primaryActionFill(enabled: canSend),
                         in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                     )
                 }
@@ -761,7 +770,7 @@ private struct VendorRequestSheet: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
                 .padding(.bottom, 12)
-                .background(.ultraThinMaterial)
+                .background(AppTheme.surface)
             }
             .alert(L10n.Vendor.requestSentTitle, isPresented: $showSuccess) {
                 Button(L10n.Common.done) { dismiss() }
@@ -775,7 +784,7 @@ private struct VendorRequestSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             TextField(placeholder, text: text)
                 .font(AppFont.regular(14))
@@ -786,11 +795,33 @@ private struct VendorRequestSheet: View {
         }
     }
 
+    private var budgetField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.Vendor.requestBudgetTitle)
+                .font(AppFont.medium(13))
+                .foregroundStyle(AppTheme.titleOnBackground)
+
+            TextField(L10n.Vendor.requestBudgetPlaceholder, text: $budget)
+                .font(AppFont.regular(14))
+                .foregroundStyle(AppTheme.ink)
+                .keyboardType(.numberPad)
+                .onChange(of: budget) { _, newValue in
+                    let formatted = CurrencyFormatter.formatAmountInput(newValue)
+                    if formatted != budget {
+                        budget = formatted
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .premiumGlassCard(cornerRadius: 14)
+        }
+    }
+
     private var notesCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.Vendor.requestNotesTitle)
                 .font(AppFont.medium(13))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             TextField(L10n.Vendor.requestNotesPlaceholder, text: $notes, axis: .vertical)
                 .font(AppFont.regular(14))
@@ -875,7 +906,8 @@ private struct VendorFilterSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                    .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 22) {
@@ -894,7 +926,7 @@ private struct VendorFilterSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.cancel) { dismiss() }
-                        .foregroundStyle(AppTheme.ink.opacity(0.7))
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -924,7 +956,7 @@ private struct VendorFilterSheet: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
                 .padding(.bottom, 8)
-                .background(.ultraThinMaterial)
+                .background(AppTheme.surface)
             }
         }
         .presentationDetents([.medium, .large])
@@ -1108,7 +1140,7 @@ private struct VendorFilterSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.semibold(15))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             content()
                 .padding(14)
@@ -1136,7 +1168,7 @@ private struct VendorCategoryChip: View {
                     .background {
                         Circle()
                             .fill(isSelected ? AppTheme.brandGradientEnd : AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
+                            .background(AppTheme.iconChipFill, in: Circle())
                     }
                     .overlay {
                         Circle()
@@ -1151,9 +1183,10 @@ private struct VendorCategoryChip: View {
                     .font(AppFont.regular(11))
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(isSelected ? AppTheme.titleOnGlass : AppTheme.inkMuted(0.55))
+                    .foregroundStyle(isSelected ? AppTheme.titleOnBackground : AppTheme.mutedOnBackground.opacity(0.85))
+                    .frame(width: 72, height: 30, alignment: .top)
             }
-            .frame(width: 72)
+            .frame(width: 72, alignment: .top)
         }
         .buttonStyle(.plain)
     }
@@ -1236,7 +1269,6 @@ private struct VendorCard: View {
                         .background {
                             Circle()
                                 .fill(isSaved ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
-                                .background(.ultraThinMaterial, in: Circle())
                         }
                         .overlay {
                             Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
@@ -1247,7 +1279,7 @@ private struct VendorCard: View {
             }
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 22)
+        .premiumListRow(cornerRadius: 22)
     }
 
     private var vendorLogo: some View {
@@ -1255,16 +1287,9 @@ private struct VendorCard: View {
             Circle()
                 .fill(vendor.logoTint)
 
-            if let url = remoteImageURL(vendor.logoUrl ?? vendor.coverImageUrl) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    default:
-                        logoPlaceholderIcon
-                    }
+            if let url = remoteImageURL(vendor.logoUrl) {
+                DownsampledAsyncImage(url: url, maxPixelSize: 96) {
+                    logoPlaceholderIcon
                 }
                 .frame(width: 48, height: 48)
                 .clipShape(Circle())
@@ -1294,21 +1319,10 @@ private struct VendorCard: View {
                     )
                 )
 
-            if let url = remoteImageURL(vendor.coverImageUrl ?? vendor.logoUrl) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    case .failure:
-                        thumbnailPlaceholderIcon
-                    case .empty:
-                        thumbnailPlaceholderIcon
-                            .overlay { ProgressView().tint(vendor.thumbnailTint) }
-                    @unknown default:
-                        thumbnailPlaceholderIcon
-                    }
+            if let url = remoteImageURL(vendor.coverImageUrl) {
+                DownsampledAsyncImage(url: url, maxPixelSize: 176) {
+                    thumbnailPlaceholderIcon
+                        .overlay { ProgressView().tint(vendor.thumbnailTint) }
                 }
                 .frame(width: 88, height: 88)
                 .clipped()

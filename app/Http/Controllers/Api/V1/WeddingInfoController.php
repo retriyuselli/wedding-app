@@ -80,6 +80,27 @@ class WeddingInfoController extends Controller
         return new WeddingInfoResource($info->fresh());
     }
 
+    public function photo(Request $request)
+    {
+        $info = $request->user()->weddingInfo;
+
+        if (! $info?->couple_photo) {
+            abort(404);
+        }
+
+        if (str_starts_with((string) $info->couple_photo, 'http://')
+            || str_starts_with((string) $info->couple_photo, 'https://')) {
+            return redirect()->away($info->couple_photo);
+        }
+
+        $disk = Storage::disk('public');
+        if (! $disk->exists($info->couple_photo)) {
+            abort(404);
+        }
+
+        return $disk->response($info->couple_photo);
+    }
+
     private function storeCouplePhoto($info, $file): void
     {
         $this->clearCouplePhoto($info);

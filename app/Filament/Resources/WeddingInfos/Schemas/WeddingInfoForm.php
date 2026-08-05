@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\WeddingInfos\Schemas;
 
+use App\Models\WeddingInfo;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class WeddingInfoForm
@@ -25,6 +28,7 @@ class WeddingInfoForm
                             ->preload()
                             ->required()
                             ->native(false)
+                            ->live()
                             ->columnSpanFull(),
                     ]),
 
@@ -74,6 +78,25 @@ class WeddingInfoForm
                         TextInput::make('groom_mother_name')
                             ->label('Nama Ortu Perempuan')
                             ->maxLength(255),
+                    ]),
+
+                Section::make('Foto Berdua')
+                    ->description('Foto pasangan yang ditampilkan di Beranda / Home aplikasi mobile.')
+                    ->schema([
+                        FileUpload::make('couple_photo')
+                            ->label('Foto Berdua')
+                            ->image()
+                            ->disk('public')
+                            ->directory(function (Get $get, ?WeddingInfo $record): string {
+                                $userId = $get('user_id') ?: $record?->user_id;
+
+                                return 'couple-photos/'.($userId ?: 'pending');
+                            })
+                            ->visibility('public')
+                            ->imageEditor()
+                            ->maxSize(2048)
+                            ->helperText('Format JPG/PNG. Maksimal 2 MB. Digunakan di kartu pasangan pada Beranda.')
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Konsep & Musik')

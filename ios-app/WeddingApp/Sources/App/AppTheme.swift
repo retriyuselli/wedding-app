@@ -31,6 +31,10 @@ enum AppTheme {
     static var hairline: Color {
         Color(
             uiColor: UIColor { traits in
+                // Midnight cards are solid white — need a dark edge, not a white wash.
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    return UIColor(white: 0, alpha: 0.10)
+                }
                 if prefersDark(traits: traits) {
                     return UIColor(white: 1, alpha: 0.22)
                 }
@@ -78,6 +82,51 @@ enum AppTheme {
         )
     }
 
+    /// Page titles drawn on `background` (e.g. Home/tab headers), not on white cards.
+    /// Midnight uses pure white so text stays readable on the black stage.
+    static var titleOnBackground: Color {
+        Color(
+            uiColor: UIColor { traits in
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    return UIColor.white
+                }
+                let token = AppearanceStore.currentPalette.definition.sageDark
+                let rgb = prefersDark(traits: traits) ? token.dark : token.light
+                return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+            }
+        )
+    }
+
+    /// Accent word/mark on page background (e.g. "App", taglines).
+    static var accentOnBackground: Color {
+        Color(
+            uiColor: UIColor { traits in
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    // Bright lemon-gold for contrast on black.
+                    return UIColor(red: 1.0, green: 0.86, blue: 0.32, alpha: 1)
+                }
+                let token = AppearanceStore.currentPalette.definition.gold
+                let rgb = prefersDark(traits: traits) ? token.dark : token.light
+                return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+            }
+        )
+    }
+
+    /// Softer supporting copy on page background.
+    static var mutedOnBackground: Color {
+        Color(
+            uiColor: UIColor { traits in
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    // Pure white for welcome/tagline contrast on the black stage.
+                    return UIColor.white
+                }
+                let token = AppearanceStore.currentPalette.definition.gold
+                let rgb = prefersDark(traits: traits) ? token.dark : token.light
+                return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 0.85)
+            }
+        )
+    }
+
     /// Soft ink for captions on glass. Light keeps the given opacity; dark uses an opaque brighter grey.
     static func inkMuted(_ opacity: CGFloat) -> Color {
         Color(
@@ -112,6 +161,9 @@ enum AppTheme {
     static var chipIdleFill: Color {
         Color(
             uiColor: UIColor { traits in
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    return UIColor(red: 0.90, green: 0.94, blue: 0.99, alpha: 1)
+                }
                 if prefersDark(traits: traits) {
                     return UIColor(white: 1, alpha: 0.16)
                 }
@@ -124,6 +176,11 @@ enum AppTheme {
     static var nestedGlassFill: Color {
         Color(
             uiColor: UIColor { traits in
+                // Midnight: solid white cards on the black stage (translucent white becomes muddy grey).
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    let rgb = AppearanceStore.currentPalette.definition.surface.light
+                    return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+                }
                 if prefersDark(traits: traits) {
                     return UIColor(white: 1, alpha: 0.10)
                 }
@@ -136,6 +193,9 @@ enum AppTheme {
     static var iconChipFill: Color {
         Color(
             uiColor: UIColor { traits in
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    return UIColor(red: 0.88, green: 0.93, blue: 0.99, alpha: 1)
+                }
                 if prefersDark(traits: traits) {
                     return UIColor(red: 0.20, green: 0.28, blue: 0.23, alpha: 1)
                 }
@@ -147,6 +207,9 @@ enum AppTheme {
     static var iconChipStroke: Color {
         Color(
             uiColor: UIColor { traits in
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    return UIColor(white: 0, alpha: 0.08)
+                }
                 if prefersDark(traits: traits) {
                     return UIColor(white: 1, alpha: 0.20)
                 }
@@ -191,7 +254,20 @@ enum AppTheme {
                     return UIColor(red: 0.86, green: 0.78, blue: 0.58, alpha: 1)
                 }
                 let ink = AppearanceStore.currentPalette.definition.ink.light
-                return UIColor(red: ink.0, green: ink.1, blue: ink.2, alpha: 0.45)
+                // Midnight white cards need slightly stronger caption ink for readability.
+                let alpha: CGFloat = AppearanceStore.currentPalette.prefersLightContentChrome ? 0.62 : 0.45
+                return UIColor(red: ink.0, green: ink.1, blue: ink.2, alpha: alpha)
+            }
+        )
+    }
+
+    /// Secondary labels on solid white / lightSage cards (Budget metrics, chips, empty-state captions).
+    static var captionOnLightSurface: Color {
+        Color(
+            uiColor: UIColor { _ in
+                let ink = AppearanceStore.currentPalette.definition.ink.light
+                let alpha: CGFloat = AppearanceStore.currentPalette.prefersLightContentChrome ? 0.68 : 0.55
+                return UIColor(red: ink.0, green: ink.1, blue: ink.2, alpha: alpha)
             }
         )
     }
@@ -206,14 +282,33 @@ enum AppTheme {
         )
     }
 
-    /// Gold accent on light pills (selected tab counts).
+    /// Gold accent on light pills (selected tab counts). Always readable on white/lightSage.
     static var accentOnLightSurface: Color {
+        goldOnLightSurface
+    }
+
+    /// Darker gold for amounts/labels sitting on white or lightSage cards (readable vs pale `gold`).
+    static var goldOnLightSurface: Color {
         Color(
             uiColor: UIColor { _ in
-                let rgb = AppearanceStore.currentPalette.definition.gold.light
+                // Midnight gold tokens stay bright for the dark stage; on white cards they wash out.
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    return UIColor(red: 0.52, green: 0.38, blue: 0.06, alpha: 1)
+                }
+                let rgb = AppearanceStore.currentPalette.definition.goldDark.light
                 return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
             }
         )
+    }
+
+    /// Primary CTA label — white when enabled; ink when disabled (avoids white-on-pale fills).
+    static func primaryActionForeground(enabled: Bool) -> Color {
+        enabled ? Color.white : ink.opacity(0.55)
+    }
+
+    /// Primary CTA fill — brand when enabled; soft mist when disabled.
+    static func primaryActionFill(enabled: Bool) -> Color {
+        enabled ? sageDark : mist
     }
 
     /// Darker brand end-stop so white label text stays crisp on gradients in dark mode.
@@ -248,6 +343,11 @@ enum AppTheme {
     static var selectedChipFill: Color {
         Color(
             uiColor: UIColor { traits in
+                // Midnight: opaque soft pad — translucent white turns muddy grey on black.
+                if AppearanceStore.currentPalette.prefersLightContentChrome {
+                    let rgb = AppearanceStore.currentPalette.definition.lightSage.light
+                    return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1)
+                }
                 if prefersDark(traits: traits) {
                     return UIColor(white: 0.92, alpha: 0.92)
                 }
@@ -333,6 +433,11 @@ enum AppTheme {
     }
 
     private static func prefersDark(traits: UITraitCollection) -> Bool {
+        // Midnight keeps white-card / dark-stage chrome regardless of appearance mode.
+        if AppearanceStore.currentPalette.prefersLightContentChrome {
+            return false
+        }
+
         switch AppearanceStore.currentTheme {
         case .light:
             return false
@@ -363,47 +468,60 @@ struct PremiumGlassCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background {
-                ZStack {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    AppTheme.surface.opacity(0.96),
-                                    AppTheme.cream.opacity(0.55),
-                                    AppTheme.lightSage.opacity(0.40),
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                // Solid fill only — avoid .ultraThinMaterial (expensive during scroll).
+                // Midnight: solid white on the black stage (cream/lightSage wash turns muddy).
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        AppearanceStore.currentPalette.prefersLightContentChrome
+                            ? AnyShapeStyle(AppTheme.surface)
+                            : AnyShapeStyle(
+                                LinearGradient(
+                                    colors: [
+                                        AppTheme.surface,
+                                        AppTheme.cream.opacity(0.92),
+                                        AppTheme.lightSage.opacity(0.78),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.40)
-                }
+                    )
             }
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                AppTheme.hairline,
-                                AppTheme.sage.opacity(0.18),
-                                AppTheme.gold.opacity(0.12),
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
+                    .stroke(AppTheme.hairline, lineWidth: 1)
+            }
+            .shadow(color: AppTheme.sageDark.opacity(0.06), radius: 8, y: 4)
+    }
+}
+
+/// Lightweight chrome for dense scrolling rows (no material, no soft shadow).
+struct PremiumListRowModifier: ViewModifier {
+    var cornerRadius: CGFloat = 18
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        AppearanceStore.currentPalette.prefersLightContentChrome
+                            ? AppTheme.surface
+                            : AppTheme.nestedGlassFill
                     )
             }
-            .shadow(color: AppTheme.sageDark.opacity(0.09), radius: 20, y: 10)
-            .shadow(color: AppTheme.gold.opacity(0.05), radius: 6, y: 2)
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppTheme.hairline.opacity(0.7), lineWidth: 1)
+            }
     }
 }
 
 extension View {
     func premiumGlassCard(cornerRadius: CGFloat = 32) -> some View {
         modifier(PremiumGlassCardModifier(cornerRadius: cornerRadius))
+    }
+
+    func premiumListRow(cornerRadius: CGFloat = 18) -> some View {
+        modifier(PremiumListRowModifier(cornerRadius: cornerRadius))
     }
 }

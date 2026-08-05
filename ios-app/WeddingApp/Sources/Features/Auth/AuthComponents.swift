@@ -116,7 +116,7 @@ struct AuthBackButton: View {
                 .background {
                     ZStack {
                         Circle().fill(AppTheme.cream.opacity(0.65))
-                        Circle().fill(.ultraThinMaterial).opacity(0.50)
+                        Circle().fill(AppTheme.surface).opacity(0.50)
                     }
                 }
                 .overlay {
@@ -136,11 +136,11 @@ struct AuthHeroHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.Auth.appName)
-                .font(.system(size: 34, weight: .bold, design: .serif))
+                .font(AppFont.serifBold(34))
                 .foregroundStyle(AppTheme.sageDark)
 
             Text(L10n.Auth.tagline)
-                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.ink.opacity(0.5))
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
@@ -151,7 +151,7 @@ struct AuthHeroHeader: View {
                     .foregroundStyle(AppTheme.gold)
 
                 Text(L10n.Auth.taglineQuote)
-                    .font(.custom("Snell Roundhand", size: 17))
+                    .font(AppFont.serifRegular(17))
                     .foregroundStyle(AppTheme.gold)
             }
             .padding(.top, 2)
@@ -180,7 +180,7 @@ struct AuthLabeledTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(AppFont.semibold(14))
                 .foregroundStyle(AppTheme.titleOnGlass)
 
             HStack(spacing: 10) {
@@ -193,10 +193,10 @@ struct AuthLabeledTextField: View {
                     "",
                     text: $text,
                     prompt: Text(placeholder)
-                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .font(AppFont.regular(14))
                         .foregroundStyle(AppTheme.inkMuted(0.72))
                 )
-                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.titleOnGlass)
                 .keyboardType(keyboardType)
                 .textContentType(textContentType)
@@ -256,7 +256,7 @@ struct AuthLabeledSecureField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(AppFont.semibold(14))
                 .foregroundStyle(AppTheme.titleOnGlass)
 
             HStack(spacing: 10) {
@@ -271,7 +271,7 @@ struct AuthLabeledSecureField: View {
                             "",
                             text: $text,
                             prompt: Text(placeholder)
-                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .font(AppFont.regular(14))
                                 .foregroundStyle(AppTheme.inkMuted(0.72))
                         )
                     } else {
@@ -279,12 +279,12 @@ struct AuthLabeledSecureField: View {
                             "",
                             text: $text,
                             prompt: Text(placeholder)
-                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .font(AppFont.regular(14))
                                 .foregroundStyle(AppTheme.inkMuted(0.72))
                         )
                     }
                 }
-                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.titleOnGlass)
                 .textContentType(.password)
                 .textInputAutocapitalization(.never)
@@ -391,23 +391,17 @@ struct AuthPrimaryButton: View {
             Group {
                 if isLoading {
                     ProgressView()
-                        .tint(.white)
+                        .tint(AppTheme.primaryActionForeground(enabled: !isDisabled))
                 } else {
                     Text(title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(AppFont.semibold(15))
                 }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: !isDisabled))
             .frame(maxWidth: .infinity)
             .frame(height: 52)
             .background(
-                LinearGradient(
-                    colors: isDisabled
-                        ? [AppTheme.sage.opacity(0.55), AppTheme.sageDark.opacity(0.48)]
-                        : [AppTheme.sage, AppTheme.sageDark],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
+                AppTheme.primaryActionFill(enabled: !isDisabled),
                 in: RoundedRectangle(cornerRadius: 16, style: .continuous)
             )
             .shadow(color: AppTheme.sageDark.opacity(isDisabled ? 0.06 : 0.18), radius: isDisabled ? 8 : 16, y: isDisabled ? 3 : 8)
@@ -509,7 +503,7 @@ struct AuthSocialFullButton: View {
                     .frame(width: 22)
 
                 Text(provider.label)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(AppFont.medium(14))
                     .foregroundStyle(AppTheme.ink.opacity(0.75))
 
                 Spacer()
@@ -521,8 +515,7 @@ struct AuthSocialFullButton: View {
                     Capsule(style: .continuous)
                         .fill(AppTheme.cream.opacity(0.50))
                     Capsule(style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.60)
+                        .fill(AppTheme.surface)
                 }
             }
             .overlay {
@@ -583,11 +576,11 @@ struct AuthNativeBrandHeader: View {
                 .padding(.bottom, 4)
 
             Text(L10n.Auth.appName)
-                .font(.system(size: 34, weight: .bold, design: .serif))
+                .font(AppFont.serifBold(34))
                 .foregroundStyle(AppTheme.sageDark)
 
             Text(L10n.Auth.tagline)
-                .font(.system(size: 15, weight: .regular, design: .rounded))
+                .font(AppFont.regular(15))
                 .foregroundStyle(AppTheme.ink.opacity(0.55))
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -604,7 +597,7 @@ struct AuthNativeStatusMessage: View {
     var body: some View {
         Label {
             Text(message)
-                .font(.footnote)
+                .font(AppFont.regular(13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         } icon: {
@@ -628,24 +621,18 @@ struct AuthNativeSubmitButton: View {
             HStack(spacing: 8) {
                 if isLoading {
                     ProgressView()
-                        .tint(.white)
+                        .tint(AppTheme.primaryActionForeground(enabled: !isDisabled))
                 } else {
                     Image(systemName: systemImage)
                     Text(title)
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(AppFont.semibold(16))
                 }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: !isDisabled))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(
-                LinearGradient(
-                    colors: isDisabled
-                        ? [AppTheme.sage.opacity(0.55), AppTheme.sageDark.opacity(0.48)]
-                        : [AppTheme.sage, AppTheme.sageDark],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
+                AppTheme.primaryActionFill(enabled: !isDisabled),
                 in: RoundedRectangle(cornerRadius: 16, style: .continuous)
             )
             .shadow(color: AppTheme.sageDark.opacity(isDisabled ? 0.06 : 0.16), radius: isDisabled ? 8 : 14, y: isDisabled ? 3 : 6)
@@ -682,7 +669,7 @@ struct AuthNativeProviderButton: View {
     var body: some View {
         Button(action: action) {
             Label(provider.title, systemImage: provider.systemImage)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(AppFont.medium(15))
                 .foregroundStyle(AppTheme.ink.opacity(0.82))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
@@ -692,8 +679,7 @@ struct AuthNativeProviderButton: View {
                         Capsule(style: .continuous)
                             .fill(AppTheme.cream.opacity(0.50))
                         Capsule(style: .continuous)
-                            .fill(.ultraThinMaterial)
-                            .opacity(0.60)
+                            .fill(AppTheme.surface)
                     }
                 }
                 .overlay {
@@ -737,7 +723,7 @@ struct AuthNativeFieldLabel: View {
 
     var body: some View {
         Text(title)
-            .font(.subheadline.weight(.medium))
+            .font(AppFont.medium(14))
             .foregroundStyle(AppTheme.ink)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -758,8 +744,7 @@ struct AuthNativeFieldContainer<Content: View>: View {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .fill(AppTheme.cream.opacity(0.55))
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.55)
+                        .fill(AppTheme.surface)
                 }
             }
             .overlay {

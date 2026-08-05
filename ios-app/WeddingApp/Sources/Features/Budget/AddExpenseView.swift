@@ -107,10 +107,11 @@ struct AddExpenseView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 12) {
+                LazyVStack(spacing: 12) {
                     header
 
                     if let errorMessage {
@@ -142,7 +143,10 @@ struct AddExpenseView: View {
                             .foregroundStyle(AppTheme.ink)
                             .keyboardType(.numberPad)
                             .onChange(of: amountText) { _, newValue in
-                                amountText = Self.formatAmountInput(newValue)
+                                let formatted = CurrencyFormatter.formatAmountInput(newValue)
+                                if formatted != amountText {
+                                    amountText = formatted
+                                }
                             }
                     } trailing: {
                         Text(amountPreview)
@@ -173,13 +177,15 @@ struct AddExpenseView: View {
                     proofSection
 
                     if isEditing {
-                        Button(role: .destructive) {
+                        Button {
                             Task { await deleteExpense() }
                         } label: {
                             Label(L10n.Budget.deleteExpense, systemImage: "trash")
                                 .font(AppFont.medium(14))
+                                .foregroundStyle(Color.red.opacity(0.95))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
+                                .background(Color.red.opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                         .buttonStyle(.plain)
                     }
@@ -266,18 +272,13 @@ struct AddExpenseView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.iconOnChip)
+                    .foregroundStyle(AppTheme.iconOnChrome)
                     .frame(width: 42, height: 42)
-                    .background {
-                        Circle()
-                            .fill(AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
+                    .background(AppTheme.chrome, in: Circle())
                     .overlay {
                         Circle()
-                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                            .stroke(AppTheme.hairline, lineWidth: 1)
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
 
@@ -285,11 +286,11 @@ struct AddExpenseView: View {
 
             VStack(spacing: 4) {
                 Text(isEditing ? L10n.Budget.editExpense : L10n.Budget.addExpense)
-                    .font(AppFont.medium(18))
-                    .foregroundStyle(AppTheme.titleOnGlass)
+                    .font(AppFont.serifSemibold(18))
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Text(isEditing ? L10n.Budget.editExpenseFormSub : L10n.Budget.addExpenseFormSub)
-                    .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.captionOnGlass)
+                    .font(AppFont.serifRegular(12))
+                    .foregroundStyle(AppTheme.mutedOnBackground)
                     .multilineTextAlignment(.center)
             }
 
@@ -321,7 +322,7 @@ struct AddExpenseView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
     }
 
@@ -331,7 +332,7 @@ struct AddExpenseView: View {
                 fieldIcon("checkmark.circle")
 
                 Text(L10n.Budget.paymentStatus)
-                    .font(AppFont.medium(14))
+                    .font(AppFont.serifMedium(14))
                     .foregroundStyle(AppTheme.ink)
 
                 Spacer()
@@ -346,7 +347,7 @@ struct AddExpenseView: View {
             if isMarkedPaid {
                 Text(L10n.Budget.statusHintPaid)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             } else if isOverdueUnpaid {
                 Text(L10n.Budget.statusHintOverdue)
                     .font(AppFont.regular(11))
@@ -354,12 +355,12 @@ struct AddExpenseView: View {
             } else {
                 Text(L10n.Budget.statusHintPending)
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var isOverdueUnpaid: Bool {
@@ -413,10 +414,10 @@ struct AddExpenseView: View {
                 } label: {
                     Label(L10n.Budget.replaceProof, systemImage: "arrow.triangle.2.circlepath")
                         .font(AppFont.medium(12))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.labelOnLightSurface)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(AppTheme.lightSage.opacity(0.6), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(AppTheme.chipIdleFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonStyle(.plain)
             } else {
@@ -435,7 +436,7 @@ struct AddExpenseView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var proofSizeErrorView: some View {
@@ -529,17 +530,20 @@ struct AddExpenseView: View {
                 Text(isEditing ? L10n.Budget.saveChanges : L10n.Budget.saveExpense)
                     .font(AppFont.medium(16))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(canSave ? AppTheme.sageDark : AppTheme.sageDark.opacity(0.45), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(
+                AppTheme.primaryActionFill(enabled: canSave),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
         }
         .buttonStyle(.plain)
         .disabled(!canSave)
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private func pickerRow(icon: String, title: String, isPlaceholder: Bool, action: @escaping () -> Void) -> some View {
@@ -556,7 +560,7 @@ struct AddExpenseView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -573,7 +577,7 @@ struct AddExpenseView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private func fieldIcon(_ name: String) -> some View {
@@ -584,7 +588,7 @@ struct AddExpenseView: View {
             .background {
                 Circle()
                     .fill(AppTheme.iconChipFill)
-                    .background(.ultraThinMaterial, in: Circle())
+                    .background(AppTheme.iconChipFill, in: Circle())
             }
             .overlay {
                 Circle()
@@ -593,19 +597,7 @@ struct AddExpenseView: View {
     }
 
     private var parsedAmount: Double? {
-        let digits = amountText.filter(\.isNumber)
-        guard !digits.isEmpty, let value = Double(digits) else { return nil }
-        return value
-    }
-
-    private static func formatAmountInput(_ value: String) -> String {
-        let digits = value.filter(\.isNumber)
-        guard !digits.isEmpty, let number = Int(digits) else { return "" }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = Locale(identifier: "id_ID")
-        formatter.groupingSeparator = "."
-        return formatter.string(from: NSNumber(value: number)) ?? digits
+        CurrencyFormatter.parseAmountInput(amountText)
     }
 
     private func populateIfNeeded() {
@@ -613,7 +605,7 @@ struct AddExpenseView: View {
         title = schedule.title
         vendorName = schedule.vendorName ?? ""
         category = schedule.category ?? ""
-        amountText = Self.formatAmountInput(String(Int(schedule.amount.rounded())))
+        amountText = CurrencyFormatter.formatAmountInput(String(Int(schedule.amount.rounded())))
         selectedWeddingEventId = schedule.weddingEventId
         selectedPaymentMethodId = schedule.customerPaymentMethodId
         notes = schedule.notes ?? ""
@@ -937,11 +929,11 @@ private struct ExpenseProofViewer: View {
                     VStack(spacing: 16) {
                         Image(systemName: "doc.richtext")
                             .font(.system(size: 48))
-                            .foregroundStyle(AppTheme.sageDark)
+                            .foregroundStyle(AppTheme.accentOnBackground)
 
                         Text(L10n.Budget.pdfProof)
                             .font(AppFont.medium(15))
-                            .foregroundStyle(AppTheme.ink)
+                            .foregroundStyle(AppTheme.titleOnBackground)
 
                         Button(L10n.Budget.openDocument) {
                             openURL(remoteURL)
@@ -955,33 +947,21 @@ private struct ExpenseProofViewer: View {
                     .padding()
                 } else if let remoteURL {
                     ScrollView {
-                        AsyncImage(url: remoteURL) { phase in
-                            switch phase {
-                            case .success(let loadedImage):
-                                loadedImage
-                                    .resizable()
-                                    .scaledToFit()
-                            case .failure:
-                                ContentUnavailableView(
-                                    L10n.Budget.proofLoadError,
-                                    systemImage: "photo",
-                                    description: Text(L10n.Budget.proofLoadErrorSub)
-                                )
-                            case .empty:
-                                ProgressView()
-                                    .frame(maxWidth: .infinity, minHeight: 240)
-                            @unknown default:
-                                EmptyView()
-                            }
+                        DownsampledAsyncImage(url: remoteURL, maxPixelSize: 1200) {
+                            ProgressView()
+                                .tint(AppTheme.titleOnBackground)
+                                .frame(maxWidth: .infinity, minHeight: 240)
                         }
+                        .scaledToFit()
                         .frame(maxWidth: .infinity)
                         .padding()
                     }
                 } else {
-                    ContentUnavailableView(
-                        L10n.Budget.proofUnavailable,
-                        systemImage: "photo",
-                        description: Text(L10n.Budget.proofNoFile)
+                    AppEmptyState(
+                        icon: "photo",
+                        title: L10n.Budget.proofUnavailable,
+                        message: L10n.Budget.proofNoFile,
+                        onBackground: true
                     )
                 }
             }
@@ -990,6 +970,7 @@ private struct ExpenseProofViewer: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.close) { dismiss() }
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
             }
         }
@@ -1003,40 +984,52 @@ struct ExpenseCategoryPickerView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
-            List {
-                ForEach(categoriesStore.categories) { option in
-                    Button {
-                        selection = option.key
-                        dismiss()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: option.icon)
-                                .font(.system(size: 16))
-                                .foregroundStyle(AppTheme.sageDark)
-                                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(L10n.Budget.pickCategoryTitle)
+                    .font(AppFont.serifBold(28))
+                    .foregroundStyle(AppTheme.titleOnBackground)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                    .padding(.bottom, 12)
 
-                            Text(option.label)
-                                .font(AppFont.regular(15))
-                                .foregroundStyle(AppTheme.ink)
-
-                            Spacer()
-
-                            if selection == option.key {
-                                Image(systemName: "checkmark")
+                List {
+                    ForEach(categoriesStore.categories) { option in
+                        Button {
+                            selection = option.key
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: option.icon)
+                                    .font(.system(size: 16))
                                     .foregroundStyle(AppTheme.sageDark)
+                                    .frame(width: 28)
+
+                                Text(option.label)
+                                    .font(AppFont.regular(15))
+                                    .foregroundStyle(AppTheme.ink)
+
+                                Spacer()
+
+                                if selection == option.key {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(AppTheme.sageDark)
+                                }
                             }
                         }
+                        .listRowBackground(AppTheme.surface)
                     }
-                    .listRowBackground(AppTheme.surface)
                 }
+                .scrollContentBackground(.hidden)
             }
-            .scrollContentBackground(.hidden)
         }
         .statusBarBlur()
-        .navigationTitle(L10n.Budget.pickCategoryTitle)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(AppTheme.background, for: .navigationBar)
         .task {
             await categoriesStore.loadIfNeeded()
         }
@@ -1049,28 +1042,42 @@ struct ExpenseDatePickerView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
-            VStack(spacing: 16) {
-                DatePicker("", selection: $selection, displayedComponents: .date)
-                    .datePickerStyle(.graphical)
-                    .labelsHidden()
-                    .padding(.horizontal, 12)
-                    .padding(.top, 8)
-
-                Button(L10n.Common.done) { dismiss() }
-                    .font(AppFont.medium(15))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            VStack(alignment: .leading, spacing: 0) {
+                Text(L10n.Budget.pickDate)
+                    .font(AppFont.serifBold(28))
+                    .foregroundStyle(AppTheme.titleOnBackground)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
+                    .padding(.top, 4)
                     .padding(.bottom, 12)
+
+                VStack(spacing: 16) {
+                    DatePicker("", selection: $selection, displayedComponents: .date)
+                        .datePickerStyle(.graphical)
+                        .labelsHidden()
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 8)
+                        .premiumListRow(cornerRadius: 20)
+                        .padding(.horizontal, 20)
+
+                    Button(L10n.Common.done) { dismiss() }
+                        .font(AppFont.medium(15))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 12)
+                }
             }
         }
         .statusBarBlur()
-        .navigationTitle(L10n.Budget.pickDate)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(AppTheme.background, for: .navigationBar)
     }
 }
 
@@ -1081,60 +1088,72 @@ struct ExpenseWeddingEventPickerView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
-            List {
-                Button {
-                    selection = nil
-                    dismiss()
-                } label: {
-                    HStack {
-                        Text(L10n.Budget.noEvent)
-                            .font(AppFont.regular(15))
-                            .foregroundStyle(AppTheme.ink)
-                        Spacer()
-                        if selection == nil {
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(AppTheme.sageDark)
-                        }
-                    }
-                }
-                .listRowBackground(AppTheme.surface)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(L10n.Budget.pickEvent)
+                    .font(AppFont.serifBold(28))
+                    .foregroundStyle(AppTheme.titleOnBackground)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                    .padding(.bottom, 12)
 
-                ForEach(events) { event in
+                List {
                     Button {
-                        selection = event.id
+                        selection = nil
                         dismiss()
                     } label: {
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(event.jenisLabel ?? event.jenisAcara.capitalized)
-                                    .font(AppFont.regular(15))
-                                    .foregroundStyle(AppTheme.ink)
-
-                                if let date = event.tglAcara, !date.isEmpty {
-                                    Text(date)
-                                        .font(AppFont.regular(12))
-                                        .foregroundStyle(AppTheme.ink.opacity(0.45))
-                                }
-                            }
-
+                            Text(L10n.Budget.noEvent)
+                                .font(AppFont.regular(15))
+                                .foregroundStyle(AppTheme.ink)
                             Spacer()
-
-                            if selection == event.id {
+                            if selection == nil {
                                 Image(systemName: "checkmark")
                                     .foregroundStyle(AppTheme.sageDark)
                             }
                         }
                     }
                     .listRowBackground(AppTheme.surface)
+
+                    ForEach(events) { event in
+                        Button {
+                            selection = event.id
+                            dismiss()
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(event.jenisLabel ?? event.jenisAcara.capitalized)
+                                        .font(AppFont.regular(15))
+                                        .foregroundStyle(AppTheme.ink)
+
+                                    if let date = event.tglAcara, !date.isEmpty {
+                                        Text(date)
+                                            .font(AppFont.regular(12))
+                                            .foregroundStyle(AppTheme.captionOnLightSurface)
+                                    }
+                                }
+
+                                Spacer()
+
+                                if selection == event.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(AppTheme.sageDark)
+                                }
+                            }
+                        }
+                        .listRowBackground(AppTheme.surface)
+                    }
                 }
+                .scrollContentBackground(.hidden)
             }
-            .scrollContentBackground(.hidden)
         }
         .statusBarBlur()
-        .navigationTitle(L10n.Budget.pickEvent)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(AppTheme.background, for: .navigationBar)
     }
 }
 
@@ -1149,73 +1168,87 @@ struct ExpensePaymentMethodPickerView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
-            Group {
-                if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if methods.isEmpty {
-                    VStack(spacing: 20) {
-                        ContentUnavailableView(
-                            L10n.Budget.noPaymentMethods,
-                            systemImage: "wallet.pass",
-                            description: Text(L10n.Budget.noPaymentMethodsSub)
-                        )
+            VStack(alignment: .leading, spacing: 0) {
+                Text(L10n.Budget.paymentMethodTitle)
+                    .font(AppFont.serifBold(28))
+                    .foregroundStyle(AppTheme.titleOnBackground)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                    .padding(.bottom, 12)
 
-                        Button {
-                            showAddPaymentMethod = true
-                        } label: {
-                            Label(L10n.Budget.addPaymentMethod, systemImage: "plus")
-                                .font(AppFont.medium(14))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 12)
-                                .background(AppTheme.sageDark, in: Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                } else {
-                    List {
-                        ForEach(methods) { method in
+                Group {
+                    if isLoading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if methods.isEmpty {
+                        VStack(spacing: 20) {
+                            AppEmptyState(
+                                icon: "wallet.pass",
+                                title: L10n.Budget.noPaymentMethods,
+                                message: L10n.Budget.noPaymentMethodsSub
+                            )
+
                             Button {
-                                selection = method.id
-                                dismiss()
+                                showAddPaymentMethod = true
                             } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(method.name)
-                                            .font(AppFont.medium(15))
-                                            .foregroundStyle(AppTheme.ink)
-                                        if let accountNumber = method.accountNumber, !accountNumber.isEmpty {
-                                            Text(accountNumber)
-                                                .font(AppFont.regular(12))
-                                                .foregroundStyle(.secondary)
+                                Label(L10n.Budget.addPaymentMethod, systemImage: "plus")
+                                    .font(AppFont.medium(14))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+                                    .background(AppTheme.sageDark, in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        List {
+                            ForEach(methods) { method in
+                                Button {
+                                    selection = method.id
+                                    dismiss()
+                                } label: {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(method.name)
+                                                .font(AppFont.regular(15))
+                                                .foregroundStyle(AppTheme.ink)
+                                            if let accountNumber = method.accountNumber, !accountNumber.isEmpty {
+                                                Text(accountNumber)
+                                                    .font(AppFont.regular(12))
+                                                    .foregroundStyle(AppTheme.captionOnLightSurface)
+                                            }
+                                        }
+                                        Spacer()
+                                        if selection == method.id {
+                                            Image(systemName: "checkmark")
+                                                .foregroundStyle(AppTheme.sageDark)
                                         }
                                     }
-                                    Spacer()
-                                    if selection == method.id {
-                                        Image(systemName: "checkmark")
-                                            .foregroundStyle(AppTheme.sageDark)
-                                    }
                                 }
+                                .listRowBackground(AppTheme.surface)
                             }
-                            .listRowBackground(AppTheme.surface)
                         }
+                        .scrollContentBackground(.hidden)
                     }
-                    .scrollContentBackground(.hidden)
                 }
             }
         }
         .statusBarBlur()
-        .navigationTitle(L10n.Budget.paymentMethodTitle)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(AppTheme.background, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     showAddPaymentMethod = true
                 } label: {
                     Image(systemName: "plus")
+                        .foregroundStyle(AppTheme.accentOnBackground)
                 }
             }
         }

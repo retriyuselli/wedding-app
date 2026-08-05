@@ -32,10 +32,11 @@ struct DeleteAccountView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.DeleteAccount.title,
                         subtitle: L10n.DeleteAccount.subtitle
@@ -82,27 +83,37 @@ struct DeleteAccountView: View {
         }
     }
 
+    private var isMidnight: Bool {
+        AppearanceStore.currentPalette.prefersLightContentChrome
+    }
+
     private var warningCard: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 20))
-                .foregroundStyle(Color.red.opacity(0.9))
+                .foregroundStyle(isMidnight ? Color(red: 1.0, green: 0.55, blue: 0.55) : Color.red.opacity(0.9))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.DeleteAccount.warningTitle)
                     .font(AppFont.medium(14))
-                    .foregroundStyle(Color.red.opacity(0.95))
+                    .foregroundStyle(isMidnight ? Color(red: 1.0, green: 0.62, blue: 0.62) : Color.red.opacity(0.95))
                 Text(L10n.DeleteAccount.warningMessage)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.inkMuted(0.6))
+                    .foregroundStyle(isMidnight ? Color.white.opacity(0.92) : AppTheme.inkMuted(0.6))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(14)
-        .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(
+            (isMidnight ? Color(red: 0.42, green: 0.12, blue: 0.14) : Color.red.opacity(0.12)),
+            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+        )
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.red.opacity(0.35), lineWidth: 1)
+                .stroke(
+                    isMidnight ? Color(red: 0.85, green: 0.35, blue: 0.38).opacity(0.7) : Color.red.opacity(0.35),
+                    lineWidth: 1
+                )
         }
     }
 
@@ -167,7 +178,7 @@ struct DeleteAccountView: View {
             }
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private var deleteButton: some View {
@@ -188,18 +199,20 @@ struct DeleteAccountView: View {
             .foregroundStyle(Color.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
+            // Solid reds only — avoid opacity wash that turns the label unreadable on light chrome.
             .background(
-                canDelete ? Color(red: 0.72, green: 0.18, blue: 0.18) : Color(red: 0.45, green: 0.16, blue: 0.16),
+                canDelete
+                    ? Color(red: 0.78, green: 0.18, blue: 0.20)
+                    : Color(red: 0.48, green: 0.20, blue: 0.22),
                 in: RoundedRectangle(cornerRadius: 18, style: .continuous)
             )
-            .opacity(canDelete ? 1 : 0.72)
         }
         .buttonStyle(.plain)
         .disabled(!canDelete)
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.background)
     }
 
     private func deleteAccount() async {

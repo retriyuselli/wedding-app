@@ -13,6 +13,7 @@
 		09EFCEF31CBBEEBFCB4AF794 /* SecuritySummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DACE83ECA36D9B40D47CFB10 /* SecuritySummaryView.swift */; };
 		0C749624F5BAC22F5A862D25 /* PrivacyAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CDE7F54F4143A5BEA9F9FD /* PrivacyAPIService.swift */; };
 		0D71A393A1EC1B1A463747DD /* VendorFilterCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D3783A1E540184C23FFBCB /* VendorFilterCatalog.swift */; };
+		0E3FC626EFAF4AF38280D956 /* CouplePhotoCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A453A6A2214CE5974E8023 /* CouplePhotoCompressor.swift */; };
 		0F63226601D20CD93B451A01 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B75225CF6A99480FD3355B95 /* LocalizationManager.swift */; };
 		0F8295A16A8A1C6802FBE062 /* WeddingDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0AC5ACCFB0AB7C79B8BBEC /* WeddingDocument.swift */; };
 		10305721DC9DA4661AB7985A /* MoreSubpageLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13B8FEC38E36E63D02204BE /* MoreSubpageLayout.swift */; };
@@ -69,7 +70,6 @@
 		59FAA22B04A4EF49FC08B419 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6485577B65E9B38A3ADC0AFC /* Poppins-SemiBold.ttf */; };
 		5A554BD552A1C9E63050AE57 /* AboutWeddingAppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F8C255E3C4744D9A51D5A3F /* AboutWeddingAppView.swift */; };
 		5A94199EAFEADBE76182E6B9 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC0C8F85F08E30963613F0F /* DateFormatters.swift */; };
-		5AA318B8DC038A02B5F473BB /* InfoTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DBA25AF9695A54AF27D61E /* InfoTabView.swift */; };
 		5BF63053EE82881228F825A0 /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D802C9898428DA65375E7E3 /* PrivacyPolicyView.swift */; };
 		5E50C8E32B2CB4CE86A09ABC /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DB220400741C1B1D1B0B7989 /* Poppins-Medium.ttf */; };
 		608A0FAC2042D5C5C88EAC28 /* VipGuest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597F9BE79E3AC0A7BABEB66F /* VipGuest.swift */; };
@@ -170,7 +170,6 @@
 		0A024004DC72691427E1F422 /* PackageFacilitiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackageFacilitiesView.swift; sourceTree = "<group>"; };
 		0B2A0935EC71D05B45C9BE67 /* AppPermissionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPermissionsViewModel.swift; sourceTree = "<group>"; };
 		0D9F6C71F94963025F9C4F9B /* Inspiration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inspiration.swift; sourceTree = "<group>"; };
-		11DBA25AF9695A54AF27D61E /* InfoTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoTabView.swift; sourceTree = "<group>"; };
 		132DC1579D81BF788964DE9E /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		133726E37291C60910E4D29C /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
 		137A9C1C1B40C6827605CF06 /* SharedPrivacyRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPrivacyRepository.swift; sourceTree = "<group>"; };
@@ -191,6 +190,7 @@
 		31E1E6AA1CC2C53DC2E65007 /* SharedPrivacyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPrivacyModels.swift; sourceTree = "<group>"; };
 		32E109E11D237A4E33547F78 /* HelpCenterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpCenterViewModel.swift; sourceTree = "<group>"; };
 		332CE37C58326829BF4FF5AC /* CustomerPaymentMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomerPaymentMethod.swift; sourceTree = "<group>"; };
+		34A453A6A2214CE5974E8023 /* CouplePhotoCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CouplePhotoCompressor.swift; sourceTree = "<group>"; };
 		35B50AA17785DD7CD8CC2512 /* DataVisibilityViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataVisibilityViewModel.swift; sourceTree = "<group>"; };
 		35B8D9CCD9F6C5B7ACEA7B06 /* PrivacyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyModels.swift; sourceTree = "<group>"; };
 		3698140C9D8281AB0DBA129E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -519,7 +519,6 @@
 			children = (
 				593CDE1B148ACE38C2CD2AEB /* CoupleAvatarImage.swift */,
 				132DC1579D81BF788964DE9E /* DashboardView.swift */,
-				11DBA25AF9695A54AF27D61E /* InfoTabView.swift */,
 				2C24DCB0F7989B03AC84D85E /* NotificationsSheet.swift */,
 			);
 			path = Dashboard;
@@ -529,6 +528,7 @@
 			isa = PBXGroup;
 			children = (
 				D77FD1DE5D8B09D3C6412019 /* CultureSelection.swift */,
+				34A453A6A2214CE5974E8023 /* CouplePhotoCompressor.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -732,7 +732,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					41365A33FC09EF6D728C067A = {
 						DevelopmentTeam = LHH9LVRYVY;
@@ -825,6 +825,7 @@
 				212039ED3B73E5FAC3091964 /* CoupleAvatarImage.swift in Sources */,
 				939B8E224FBFB7F8108B09B1 /* CoupleView.swift in Sources */,
 				C9F489942CF04EE37C4CDD5B /* CultureSelection.swift in Sources */,
+				0E3FC626EFAF4AF38280D956 /* CouplePhotoCompressor.swift in Sources */,
 				C2FC5E2C66A805A40D5A77E1 /* CustomerNotification.swift in Sources */,
 				23378BE8B8E41D3AC2AE8434 /* CustomerPaymentMethod.swift in Sources */,
 				7183263BD10CBB6F4DD55E3F /* DashboardView.swift in Sources */,
@@ -856,7 +857,6 @@
 				D40372828EAD8C23C7A28DB0 /* IncomingPayment.swift in Sources */,
 				326E45E67593920FD8F503B7 /* IncomingPaymentFlows.swift in Sources */,
 				9F090550A10C3895927788E7 /* IndonesiaRegionsStore.swift in Sources */,
-				5AA318B8DC038A02B5F473BB /* InfoTabView.swift in Sources */,
 				10AB9FA04246BA92BF82D102 /* Inspiration.swift in Sources */,
 				DD5A63251536426E75551075 /* InspirationView.swift in Sources */,
 				E4A8CE18134DC529D97C428C /* KeychainStore.swift in Sources */,
@@ -951,7 +951,7 @@
 				CODE_SIGN_ENTITLEMENTS = WeddingApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				INFOPLIST_FILE = Generated/Info.plist;
@@ -965,7 +965,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.weddingapp.ios;
 				SDKROOT = iphoneos;
@@ -982,6 +982,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1030,6 +1031,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -1043,7 +1045,7 @@
 				CODE_SIGN_ENTITLEMENTS = WeddingApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				INFOPLIST_FILE = Generated/Info.plist;
@@ -1057,7 +1059,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.weddingapp.ios;
 				SDKROOT = iphoneos;
@@ -1074,6 +1076,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1129,6 +1132,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

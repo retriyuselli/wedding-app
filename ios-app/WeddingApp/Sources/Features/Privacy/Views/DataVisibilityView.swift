@@ -8,7 +8,8 @@ struct DataVisibilityView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
@@ -24,7 +25,10 @@ struct DataVisibilityView: View {
                     }
 
                     if viewModel.isLoading && viewModel.settings == nil {
-                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
+                        ProgressView()
+                            .tint(AppTheme.titleOnBackground)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
                     } else if viewModel.settings != nil {
                         visibilityPicker(L10n.Privacy.visibilityProfile, selection: Binding(
                             get: { viewModel.settings?.profileVisibility ?? "private" },
@@ -68,7 +72,7 @@ struct DataVisibilityView: View {
                         .foregroundStyle(AppTheme.titleOnGlass)
                         .tint(AppTheme.sageMuted(1))
                         .padding(14)
-                        .premiumGlassCard(cornerRadius: 16)
+                        .premiumListRow(cornerRadius: 16)
 
                         Toggle(L10n.Privacy.allowVendorContact, isOn: Binding(
                             get: { viewModel.settings?.allowVendorContact ?? true },
@@ -78,7 +82,7 @@ struct DataVisibilityView: View {
                         .foregroundStyle(AppTheme.titleOnGlass)
                         .tint(AppTheme.sageMuted(1))
                         .padding(14)
-                        .premiumGlassCard(cornerRadius: 16)
+                        .premiumListRow(cornerRadius: 16)
 
                         partnerSection
 
@@ -215,7 +219,7 @@ struct DataVisibilityView: View {
                 .background(AppTheme.nestedGlassFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private func visibilityPicker(
@@ -249,6 +253,6 @@ struct DataVisibilityView: View {
             }
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 }

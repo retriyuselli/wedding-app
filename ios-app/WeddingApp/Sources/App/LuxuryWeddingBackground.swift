@@ -7,12 +7,26 @@ struct LuxuryWeddingBackground: View {
     var showsFloral = false
 
     private var isDark: Bool { colorScheme == .dark }
+    private var isMidnight: Bool { appearance.colorPalette.prefersLightContentChrome }
 
     private var tokens: ColorPaletteTokens {
         appearance.colorPalette.definition
     }
 
     var body: some View {
+        Group {
+            if isMidnight {
+                // Flat black stage — avoid lightSage/surface wash that breaks Midnight contrast.
+                Color(rgb: tokens.background.light)
+            } else {
+                layeredBackground
+            }
+        }
+        .ignoresSafeArea()
+        .id(appearance.colorPalette.rawValue)
+    }
+
+    private var layeredBackground: some View {
         ZStack(alignment: .topTrailing) {
             LinearGradient(
                 colors: isDark
@@ -61,7 +75,5 @@ struct LuxuryWeddingBackground: View {
                 endPoint: .bottom
             )
         }
-        .ignoresSafeArea()
-        .id(appearance.colorPalette.rawValue)
     }
 }

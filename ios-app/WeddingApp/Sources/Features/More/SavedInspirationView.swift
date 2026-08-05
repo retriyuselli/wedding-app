@@ -20,10 +20,11 @@ struct SavedInspirationView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.More.inspiration,
                         subtitle: L10n.More.inspirationSub
@@ -112,16 +113,12 @@ private struct SavedInspirationCard: View {
                 Button(action: onToggleSave) {
                     Image(systemName: "bookmark.fill")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.iconOnChrome)
                         .frame(width: 28, height: 28)
-                        .background {
-                            Circle()
-                                .fill(Color.white.opacity(0.78))
-                                .background(.ultraThinMaterial, in: Circle())
-                        }
+                        .background(AppTheme.chrome, in: Circle())
                         .overlay {
                             Circle()
-                                .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                                .stroke(AppTheme.hairline, lineWidth: 1)
                         }
                 }
                 .buttonStyle(.plain)
@@ -157,21 +154,14 @@ private struct SavedInspirationCard: View {
             }
         }
         .padding(12)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     @ViewBuilder
     private var inspirationThumbnail: some View {
         if let imageUrl = item.imageUrl, let url = URL(string: imageUrl) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case let .success(image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                default:
-                    thumbnailPlaceholder
-                }
+            DownsampledAsyncImage(url: url, maxPixelSize: 360) {
+                thumbnailPlaceholder
             }
         } else {
             thumbnailPlaceholder
@@ -179,16 +169,12 @@ private struct SavedInspirationCard: View {
     }
 
     private var thumbnailPlaceholder: some View {
-        LinearGradient(
-            colors: [item.thumbnailTint.opacity(0.35), item.thumbnailTint.opacity(0.15)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .overlay {
-            Image(systemName: item.thumbnailSymbol)
-                .font(.system(size: 34, weight: .light))
-                .foregroundStyle(item.thumbnailTint.opacity(0.8))
-        }
+        item.thumbnailTint.opacity(0.22)
+            .overlay {
+                Image(systemName: item.thumbnailSymbol)
+                    .font(.system(size: 34, weight: .light))
+                    .foregroundStyle(item.thumbnailTint.opacity(0.8))
+            }
     }
 
     private func formattedLikes(_ value: Int) -> String {

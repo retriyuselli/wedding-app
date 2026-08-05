@@ -13,7 +13,11 @@ class WeddingInfoSeeder extends Seeder
      */
     public function run(): void
     {
-        User::all()->each(function (User $user): void {
+        User::query()->each(function (User $user): void {
+            if (WeddingInfo::query()->where('user_id', $user->id)->exists()) {
+                return;
+            }
+
             WeddingInfo::factory()->create([
                 'user_id' => $user->id,
             ]);

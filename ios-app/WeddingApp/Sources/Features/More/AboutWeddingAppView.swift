@@ -12,10 +12,11 @@ struct AboutWeddingAppView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
+                LazyVStack(alignment: .leading, spacing: 20) {
                     MoreSubpageNavigationHeader(
                         title: L10n.More.about,
                         subtitle: L10n.More.aboutSub
@@ -81,7 +82,7 @@ struct AboutWeddingAppView: View {
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .premiumGlassCard(cornerRadius: 22)
+            .premiumListRow(cornerRadius: 22)
         }
     }
 
@@ -103,7 +104,7 @@ struct AboutWeddingAppView: View {
                 }
             }
             .padding(.vertical, 4)
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         }
     }
 
@@ -176,7 +177,7 @@ struct AboutWeddingAppView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         }
     }
 
@@ -275,7 +276,7 @@ struct AboutWeddingAppView: View {
                         AboutSocialBrandIcon(brand: social.brand)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .premiumGlassCard(cornerRadius: 16)
+                            .premiumListRow(cornerRadius: 16)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(social.name)
@@ -302,7 +303,7 @@ struct AboutWeddingAppView: View {
     private func sectionTitle(_ title: String) -> some View {
         Text(title)
             .font(AppFont.medium(15))
-            .foregroundStyle(AppTheme.ink.opacity(0.72))
+            .foregroundStyle(AppTheme.mutedOnBackground)
             .padding(.leading, 2)
     }
 }

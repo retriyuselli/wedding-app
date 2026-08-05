@@ -12,7 +12,8 @@ struct SplashScreenView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground(showsFloral: false)
+            AppTheme.background
+                .ignoresSafeArea()
 
             // Soft ambient orbs — atmosphere only, not the main gesture.
             ambientOrbs
@@ -33,18 +34,18 @@ struct SplashScreenView: View {
                 VStack(spacing: 8) {
                     HStack(spacing: 7) {
                         Text(L10n.Auth.brandWedding)
-                            .foregroundStyle(AppTheme.sageDark)
+                            .foregroundStyle(AppTheme.titleOnBackground)
                         Text(L10n.Auth.brandApp)
-                            .foregroundStyle(AppTheme.goldDark)
+                            .foregroundStyle(AppTheme.accentOnBackground)
                     }
-                    .font(.system(size: 34, weight: .bold, design: .serif))
+                    .font(AppFont.serifBold(34))
                     .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 8, y: 2)
                     .opacity(titleVisible ? 1 : 0)
                     .offset(y: titleVisible ? 0 : 10)
 
                     Text(L10n.Dashboard.planTogether)
-                        .font(.system(size: 14, weight: .medium, design: .serif))
-                        .foregroundStyle(AppTheme.sageDark.opacity(0.72))
+                        .font(AppFont.serifMedium(14))
+                        .foregroundStyle(AppTheme.mutedOnBackground)
                         .opacity(taglineVisible ? 1 : 0)
                         .offset(y: taglineVisible ? 0 : 6)
                 }

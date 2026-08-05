@@ -24,10 +24,11 @@ struct EditProfileView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     header
 
                     if let errorMessage {
@@ -96,18 +97,13 @@ struct EditProfileView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.iconOnChip)
+                    .foregroundStyle(AppTheme.iconOnChrome)
                     .frame(width: 42, height: 42)
-                    .background {
-                        Circle()
-                            .fill(AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
+                    .background(AppTheme.chrome, in: Circle())
                     .overlay {
                         Circle()
-                            .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                            .stroke(AppTheme.hairline, lineWidth: 1)
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
 
@@ -116,10 +112,10 @@ struct EditProfileView: View {
             VStack(spacing: 4) {
                 Text(L10n.Profile.title)
                     .font(AppFont.medium(18))
-                    .foregroundStyle(AppTheme.titleOnGlass)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Text(L10n.Profile.subtitle)
                     .font(AppFont.regular(12))
-                    .foregroundStyle(AppTheme.captionOnGlass)
+                    .foregroundStyle(AppTheme.mutedOnBackground)
                     .multilineTextAlignment(.center)
             }
 
@@ -134,15 +130,8 @@ struct EditProfileView: View {
         HStack(spacing: 16) {
             Group {
                 if let avatarURL {
-                    AsyncImage(url: avatarURL) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                        default:
-                            placeholderAvatar
-                        }
+                    DownsampledAsyncImage(url: avatarURL, maxPixelSize: 160) {
+                        placeholderAvatar
                     }
                 } else {
                     placeholderAvatar
@@ -169,7 +158,7 @@ struct EditProfileView: View {
             Spacer(minLength: 0)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var placeholderAvatar: some View {
@@ -190,7 +179,7 @@ struct EditProfileView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private func formSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -203,7 +192,7 @@ struct EditProfileView: View {
                 content()
             }
             .padding(14)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
     }
 
@@ -234,7 +223,7 @@ struct EditProfileView: View {
             .background {
                 Circle()
                     .fill(AppTheme.iconChipFill)
-                    .background(.ultraThinMaterial, in: Circle())
+                    .background(AppTheme.iconChipFill, in: Circle())
             }
             .overlay {
                 Circle()
@@ -245,7 +234,7 @@ struct EditProfileView: View {
     private var fieldBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(AppTheme.nestedGlassFill)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(AppTheme.nestedGlassFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(AppTheme.iconChipStroke, lineWidth: 1)
@@ -267,11 +256,11 @@ struct EditProfileView: View {
                 Text(L10n.Profile.save)
                     .font(AppFont.medium(16))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSave))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(
-                canSave ? AppTheme.brandGradientEnd : AppTheme.brandGradientEnd.opacity(0.45),
+                AppTheme.primaryActionFill(enabled: canSave),
                 in: RoundedRectangle(cornerRadius: 18, style: .continuous)
             )
         }
@@ -280,7 +269,7 @@ struct EditProfileView: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private var canSave: Bool {

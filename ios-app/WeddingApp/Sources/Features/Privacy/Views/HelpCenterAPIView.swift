@@ -9,7 +9,8 @@ struct HelpCenterAPIView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
@@ -19,16 +20,16 @@ struct HelpCenterAPIView: View {
 
                     HStack {
                         Image(systemName: "magnifyingglass")
-                        TextField("Cari bantuan", text: $viewModel.searchText)
+                        TextField(L10n.Help.searchHelpPlaceholder, text: $viewModel.searchText)
                             .font(AppFont.regular(14))
                     }
                     .padding(14)
-                    .premiumGlassCard(cornerRadius: 16)
+                    .premiumListRow(cornerRadius: 16)
 
                     if let errorMessage = viewModel.errorMessage, viewModel.payload == nil {
                         VStack(spacing: 10) {
                             Text(errorMessage).font(AppFont.regular(13)).foregroundStyle(.red)
-                            Button("Coba lagi") {
+                            Button(L10n.Common.tryAgain) {
                                 Task { await viewModel.retry(locale: localeCode) }
                             }
                         }
@@ -36,13 +37,16 @@ struct HelpCenterAPIView: View {
                     }
 
                     if viewModel.isLoading && viewModel.payload == nil {
-                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
+                        ProgressView()
+                            .tint(AppTheme.titleOnBackground)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
                     }
 
                     if let payload = viewModel.payload {
-                        Text("FAQ")
+                        Text(L10n.Help.faqSection)
                             .font(AppFont.medium(15))
-                            .foregroundStyle(AppTheme.ink.opacity(0.6))
+                            .foregroundStyle(AppTheme.mutedOnBackground)
 
                         ForEach(viewModel.filteredFAQs) { faq in
                             DisclosureGroup {
@@ -56,12 +60,12 @@ struct HelpCenterAPIView: View {
                                     .foregroundStyle(AppTheme.ink)
                             }
                             .padding(14)
-                            .premiumGlassCard(cornerRadius: 16)
+                            .premiumListRow(cornerRadius: 16)
                         }
 
-                        Text("Topik")
+                        Text(L10n.Help.topicsSection)
                             .font(AppFont.medium(15))
-                            .foregroundStyle(AppTheme.ink.opacity(0.6))
+                            .foregroundStyle(AppTheme.mutedOnBackground)
 
                         ForEach(payload.topics) { topic in
                             VStack(alignment: .leading, spacing: 4) {
@@ -72,13 +76,13 @@ struct HelpCenterAPIView: View {
                             }
                             .padding(14)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .premiumGlassCard(cornerRadius: 16)
+                            .premiumListRow(cornerRadius: 16)
                         }
 
                         if let contacts = payload.contactMethods {
-                            Text("Kontak")
+                            Text(L10n.Help.contactsSection)
                                 .font(AppFont.medium(15))
-                                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                                .foregroundStyle(AppTheme.mutedOnBackground)
 
                             ForEach(contacts) { method in
                                 if let url = URL(string: method.href), method.external {
@@ -113,6 +117,6 @@ struct HelpCenterAPIView: View {
             Text(method.action).font(AppFont.medium(12)).foregroundStyle(AppTheme.sageDark)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 }

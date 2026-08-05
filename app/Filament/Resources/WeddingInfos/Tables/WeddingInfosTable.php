@@ -6,6 +6,7 @@ use App\Models\WeddingInfo;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -21,6 +22,11 @@ class WeddingInfosTable
             ->defaultSort('updated_at', 'desc')
             ->striped()
             ->columns([
+                ImageColumn::make('couple_photo')
+                    ->label('Foto')
+                    ->disk('public')
+                    ->circular()
+                    ->toggleable(),
                 TextColumn::make('couple_names')
                     ->label('Pasangan')
                     ->searchable(['groom_name', 'bride_name'])

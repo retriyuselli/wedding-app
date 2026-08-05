@@ -1,14 +1,14 @@
 import SwiftUI
 
 private struct FAQItem: Identifiable {
-    let id = UUID()
+    let id: String
     let question: String
     let answer: String
 }
 
 struct HelpFAQView: View {
     @State private var searchText = ""
-    @State private var expandedFAQ: UUID?
+    @State private var expandedFAQ: String?
 
     private static let supportEmail = HelpContent.supportEmail
     private var supportEmail: String { Self.supportEmail }
@@ -16,7 +16,9 @@ struct HelpFAQView: View {
     private let topics = HelpTopicKind.allCases
 
     private var faqs: [FAQItem] {
-        L10n.Help.faqItems.map { FAQItem(question: $0.question, answer: $0.answer) }
+        L10n.Help.faqItems.enumerated().map { index, item in
+            FAQItem(id: "faq-\(index)", question: item.question, answer: item.answer)
+        }
     }
 
     private var filteredFAQs: [FAQItem] {
@@ -29,10 +31,11 @@ struct HelpFAQView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
+                LazyVStack(alignment: .leading, spacing: 20) {
                     MoreSubpageNavigationHeader(
                         title: L10n.More.help,
                         subtitle: L10n.More.helpSub
@@ -72,7 +75,7 @@ struct HelpFAQView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 15)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     // MARK: - Topics
@@ -81,7 +84,7 @@ struct HelpFAQView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L10n.Help.topics)
                 .font(AppFont.medium(15))
-                .foregroundStyle(AppTheme.ink)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -118,7 +121,7 @@ struct HelpFAQView: View {
             }
             .frame(width: 92, height: 116)
             .padding(.horizontal, 6)
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -130,7 +133,7 @@ struct HelpFAQView: View {
             HStack {
                 Text(L10n.Help.popularFaq)
                     .font(AppFont.medium(15))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Spacer()
             }
 
@@ -187,7 +190,7 @@ struct HelpFAQView: View {
                     .padding(.bottom, 16)
             }
         }
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     // MARK: - Contact
@@ -223,7 +226,7 @@ struct HelpFAQView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
     }
 

@@ -20,7 +20,7 @@ final class DataExportViewModel: ObservableObject {
 
         do {
             exportFileURL = try await repository.exportAccountData()
-            successMessage = "Ekspor data siap dibuka atau dibagikan."
+            successMessage = L10n.Privacy.exportReady
         } catch {
             guard !error.isRequestCancelled else { return }
             errorMessage = error.userFacingMessage

@@ -6,6 +6,11 @@ use App\Models\CustomerPreparationSection;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
+/**
+ * Orphan / legacy — jangan dipanggil dari DatabaseSeeder.
+ * Checklist resmi memakai WeddingPreparationChecklistSeeder
+ * (DefaultWeddingChecklistProvisioner).
+ */
 class CustomerPreparationSectionSeeder extends Seeder
 {
     /**

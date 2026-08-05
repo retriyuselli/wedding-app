@@ -5,10 +5,11 @@ struct ThemeSettingsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Settings.theme,
                         subtitle: L10n.Settings.themeChooserSub
@@ -72,7 +73,7 @@ struct ThemeSettingsView: View {
                         .fill(AppTheme.nestedGlassFill)
                 }
             }
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -112,7 +113,7 @@ struct ThemeSettingsView: View {
                         .fill(AppTheme.nestedGlassFill)
                 }
             }
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -135,7 +136,7 @@ struct ThemeSettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(15))
-                .foregroundStyle(AppTheme.inkMuted(0.65))
+                .foregroundStyle(AppTheme.mutedOnBackground)
                 .padding(.leading, 4)
 
             content()
@@ -155,7 +156,7 @@ struct ThemeSettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 }
 
@@ -164,10 +165,11 @@ struct TextSizeSettingsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Settings.textSize,
                         subtitle: L10n.Settings.textSizeChooserSub
@@ -205,7 +207,7 @@ struct TextSizeSettingsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private func textSizeRow(_ preference: AppTextSizePreference) -> some View {
@@ -243,7 +245,7 @@ struct TextSizeSettingsView: View {
                         .fill(AppTheme.nestedGlassFill)
                 }
             }
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -261,7 +263,7 @@ struct TextSizeSettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 }
 
@@ -270,10 +272,11 @@ struct CountdownFontSettingsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Settings.countdown,
                         subtitle: L10n.Settings.countdownChooserSub
@@ -308,12 +311,11 @@ struct CountdownFontSettingsView: View {
                 previewTile("128", label: L10n.Dashboard.countdownDays)
                 previewTile("04", label: L10n.Dashboard.countdownHours)
                 previewTile("21", label: L10n.Dashboard.countdownMinutes)
-                previewTile("09", label: L10n.Dashboard.countdownSeconds)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private func previewTile(_ value: String, label: String) -> some View {
@@ -374,7 +376,7 @@ struct CountdownFontSettingsView: View {
                         .fill(AppTheme.nestedGlassFill)
                 }
             }
-            .premiumGlassCard(cornerRadius: 18)
+            .premiumListRow(cornerRadius: 18)
         }
         .buttonStyle(.plain)
     }
@@ -392,6 +394,6 @@ struct CountdownFontSettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 }

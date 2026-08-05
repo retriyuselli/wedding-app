@@ -56,11 +56,11 @@ Resolve packages through Xcode if they are not already available.
 
 API endpoints are configured in `WeddingApp/Sources/Networking/APIConfig.swift` and selected through `APIResolver` during app bootstrap.
 
-Debug builds try local API URLs first, then fall back to production:
+Debug builds prefer the local Laravel API and do **not** fall back to production by default (avoids mixing local session tokens with production data):
 
 - Simulator: `http://127.0.0.1:8000/api/v1`
-- Physical device: `http://192.168.1.3:8000/api/v1`
-- Production fallback: `https://weddingapp.co.id/api/v1`
+- Physical device: `http://<lanHost>:8000/api/v1` (default `192.168.1.13`)
+- Production: `https://weddingapp.co.id/api/v1` (Release, or when forced in Debug)
 
 For local backend development, run the Laravel API so it is reachable by the simulator or device:
 
@@ -68,12 +68,23 @@ For local backend development, run the Laravel API so it is reachable by the sim
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-If the Mac LAN IP changes, update `lanHost` in `APIConfig.swift` before testing on a physical device.
+If the Mac LAN IP changes, either:
+
+1. Update `defaultLanHost` in `APIConfig.swift`, or
+2. Override without rebuilding: `UserDefaults.standard.set("192.168.x.x", forKey: APIConfig.lanHostDefaultsKey)`
+
+Check the current Mac IP with `ipconfig getifaddr en0`.
 
 To force Debug builds to use production, set:
 
 ```swift
 static var usesProductionAPI = true
+```
+
+To restore the old Debug → production fallback when local `/up` is unreachable:
+
+```swift
+static var allowsProductionFallback = true
 ```
 
 ## Authentication Setup
@@ -135,7 +146,7 @@ Recommended checks:
 
 ### Local API is not reached from a physical device
 
-Physical devices cannot use the Mac's `localhost`. Start Laravel with `--host=0.0.0.0`, confirm the Mac and iPhone are on the same network, and update `lanHost` in `APIConfig.swift` to the Mac's current LAN IP.
+Physical devices cannot use the Mac's `localhost`. Start Laravel with `--host=0.0.0.0`, confirm the Mac and iPhone are on the same network, and update `defaultLanHost` (or the `APIConfig.lanHostDefaultsKey` UserDefaults override) to the Mac's current LAN IP.
 
 ### The app keeps using an old API URL in Debug
 

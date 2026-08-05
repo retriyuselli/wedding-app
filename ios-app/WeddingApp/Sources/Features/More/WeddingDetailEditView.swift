@@ -84,10 +84,11 @@ struct WeddingDetailEditView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
                     header
 
                     if let errorMessage {
@@ -183,13 +184,13 @@ struct WeddingDetailEditView: View {
                         HStack {
                             Label(L10n.WeddingEdit.scheduleSection, systemImage: "list.bullet.rectangle")
                                 .font(AppFont.semibold(15))
-                                .foregroundStyle(AppTheme.sageDark)
+                                .foregroundStyle(AppTheme.titleOnBackground)
 
                             Spacer()
 
                             Text(L10n.WeddingEdit.eventCount(scheduleEvents.count))
                                 .font(AppFont.regular(12))
-                                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                                .foregroundStyle(AppTheme.mutedOnBackground)
                         }
 
                         if scheduleEvents.isEmpty {
@@ -198,7 +199,7 @@ struct WeddingDetailEditView: View {
                                 .foregroundStyle(AppTheme.ink.opacity(0.5))
                                 .padding(16)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .premiumGlassCard(cornerRadius: 20)
+                                .premiumListRow(cornerRadius: 20)
                         }
 
                         ForEach($scheduleEvents) { $event in
@@ -221,19 +222,19 @@ struct WeddingDetailEditView: View {
                                 }
                                 .foregroundStyle(AppTheme.sageDark)
                                 .padding(16)
-                                .premiumGlassCard(cornerRadius: 18)
+                                .premiumListRow(cornerRadius: 18)
                             }
                             .buttonStyle(.plain)
                         } else {
                             Text(L10n.WeddingEdit.allTypesAdded)
                                 .font(AppFont.regular(12))
-                                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                                .foregroundStyle(AppTheme.mutedOnBackground)
                                 .padding(.horizontal, 4)
                         }
 
                         Text(L10n.WeddingEdit.defaultDeleteHint)
                             .font(AppFont.regular(11))
-                            .foregroundStyle(AppTheme.ink.opacity(0.42))
+                            .foregroundStyle(AppTheme.mutedOnBackground)
                             .padding(.horizontal, 4)
                     }
 
@@ -302,25 +303,20 @@ struct WeddingDetailEditView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.ink.opacity(0.72))
+                    .foregroundStyle(AppTheme.iconOnChrome)
                     .frame(width: 42, height: 42)
-                    .background {
-                        Circle()
-                            .fill(Color.white.opacity(0.78))
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
+                    .background(AppTheme.chrome, in: Circle())
                     .overlay {
                         Circle()
-                            .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                            .stroke(AppTheme.hairline, lineWidth: 1)
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.WeddingEdit.title)
-                    .font(.system(size: 22, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(AppFont.serifSemibold(22))
+                    .foregroundStyle(AppTheme.titleOnBackground)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
 
@@ -338,19 +334,14 @@ struct WeddingDetailEditView: View {
             } label: {
                 Text(L10n.Common.save)
                     .font(AppFont.semibold(13))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .foregroundStyle(AppTheme.labelOnLightSurface)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
-                    .background {
-                        Capsule()
-                            .fill(Color.white.opacity(0.78))
-                            .background(.ultraThinMaterial, in: Capsule())
-                    }
+                    .background(AppTheme.chrome, in: Capsule())
                     .overlay {
                         Capsule()
-                            .stroke(Color.white.opacity(0.65), lineWidth: 1)
+                            .stroke(AppTheme.hairline, lineWidth: 1)
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 10, y: 5)
             }
             .buttonStyle(.plain)
             .disabled(isSaving || isLoading)
@@ -372,11 +363,11 @@ struct WeddingDetailEditView: View {
                         .font(AppFont.semibold(16))
                 }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: !(isSaving || isLoading)))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(
-                (isSaving || isLoading ? AppTheme.sageDark.opacity(0.45) : AppTheme.sageDark),
+                AppTheme.primaryActionFill(enabled: !(isSaving || isLoading)),
                 in: RoundedRectangle(cornerRadius: 18, style: .continuous)
             )
         }
@@ -385,7 +376,7 @@ struct WeddingDetailEditView: View {
         .padding(.horizontal, 16)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     // MARK: - Sections
@@ -398,11 +389,11 @@ struct WeddingDetailEditView: View {
         VStack(alignment: .leading, spacing: 10) {
             Label(title, systemImage: icon)
                 .font(AppFont.semibold(15))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             content()
                 .padding(14)
-                .premiumGlassCard(cornerRadius: 20)
+                .premiumListRow(cornerRadius: 20)
         }
     }
 
@@ -432,7 +423,7 @@ struct WeddingDetailEditView: View {
     private var fieldBackground: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
             .fill(Color.white.opacity(0.55))
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(AppTheme.nestedGlassFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(Color.white.opacity(0.55), lineWidth: 1)
@@ -447,19 +438,15 @@ struct WeddingDetailEditView: View {
             HStack(spacing: 10) {
                 Image(systemName: event.wrappedValue.iconName)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(AppTheme.gold)
+                    .foregroundStyle(AppTheme.goldOnLightSurface)
                     .frame(width: 36, height: 36)
-                    .background {
-                        Circle()
-                            .fill(Color.white.opacity(0.72))
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
+                    .background(AppTheme.chrome, in: Circle())
                     .overlay {
-                        Circle().stroke(Color.white.opacity(0.55), lineWidth: 1)
+                        Circle().stroke(AppTheme.hairline, lineWidth: 1)
                     }
 
                 Text(event.wrappedValue.title)
-                    .font(.system(size: 17, weight: .semibold, design: .serif))
+                    .font(AppFont.serifSemibold(17))
                     .foregroundStyle(AppTheme.sageDark)
 
                 Spacer(minLength: 0)
@@ -484,7 +471,7 @@ struct WeddingDetailEditView: View {
             .buttonStyle(.plain)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 22)
+        .premiumListRow(cornerRadius: 22)
     }
 
     @ViewBuilder

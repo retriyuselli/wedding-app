@@ -65,8 +65,7 @@ struct LoginSheetGlassBackground: View {
                 )
 
             LoginSheetShape()
-                .fill(.ultraThinMaterial)
-                .opacity(0.40)
+                .fill(AppTheme.surface)
         }
         .overlay {
             LoginSheetShape()
@@ -141,11 +140,11 @@ struct LoginHeroBrand: View {
                     Text(L10n.Auth.brandApp)
                         .foregroundStyle(AppTheme.gold)
                 }
-                .font(.system(size: 34, weight: .bold, design: .serif))
+                .font(AppFont.serifBold(34))
                 .shadow(color: AppTheme.sageDark.opacity(0.10), radius: 8, y: 2)
 
                 Text(L10n.Dashboard.planTogether)
-                    .font(.system(size: 14, weight: .medium, design: .serif))
+                    .font(AppFont.serifMedium(14))
                     .foregroundStyle(AppTheme.inkMuted(0.75))
                     .multilineTextAlignment(.center)
             }
@@ -235,8 +234,7 @@ struct LoginBadge: View {
                 .frame(width: 76, height: 76)
                 .overlay {
                     Circle()
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.35)
+                        .fill(AppTheme.surface)
                 }
                 .overlay {
                     Circle()
@@ -293,10 +291,10 @@ struct LoginInputField: View {
                 "",
                 text: $text,
                 prompt: Text(placeholder)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(AppFont.medium(14))
                     .foregroundStyle(LoginPalette.placeholder)
             )
-            .font(.system(size: 14, weight: .medium, design: .rounded))
+            .font(AppFont.medium(14))
             .foregroundStyle(LoginPalette.textPrimary)
             .keyboardType(keyboardType)
             .textContentType(textContentType)
@@ -350,7 +348,7 @@ struct LoginPasswordField: View {
                         "",
                         text: $text,
                         prompt: Text(placeholder)
-                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                            .font(AppFont.medium(14))
                             .foregroundStyle(LoginPalette.placeholder)
                     )
                 } else {
@@ -358,12 +356,12 @@ struct LoginPasswordField: View {
                         "",
                         text: $text,
                         prompt: Text(placeholder)
-                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                            .font(AppFont.medium(14))
                             .foregroundStyle(LoginPalette.placeholder)
                     )
                 }
             }
-            .font(.system(size: 14, weight: .medium, design: .rounded))
+            .font(AppFont.medium(14))
             .foregroundStyle(LoginPalette.textPrimary)
             .textContentType(textContentType)
             .textInputAutocapitalization(.never)
@@ -414,11 +412,11 @@ struct LoginPrimaryButton: View {
 
                 if isLoading {
                     ProgressView()
-                        .tint(.white)
+                        .tint(AppTheme.primaryActionForeground(enabled: !isDisabled))
                 } else {
                     Text(title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(AppTheme.titleOnGlass)
+                        .font(AppFont.semibold(15))
+                        .foregroundStyle(AppTheme.primaryActionForeground(enabled: !isDisabled))
                         .lineLimit(1)
                         .minimumScaleFactor(0.76)
                 }
@@ -427,19 +425,13 @@ struct LoginPrimaryButton: View {
 
                 Image(systemName: "arrow.right")
                     .font(.system(size: 20, weight: .light))
-                    .foregroundStyle(.white.opacity(0.92))
+                    .foregroundStyle(AppTheme.primaryActionForeground(enabled: !isDisabled).opacity(0.92))
             }
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
             .background(
-                LinearGradient(
-                    colors: isDisabled
-                        ? [AppTheme.brandGradientEnd.opacity(0.72), AppTheme.quoteGradientMid.opacity(0.42)]
-                        : [AppTheme.brandGradientEnd, AppTheme.quoteGradientMid],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
+                AppTheme.primaryActionFill(enabled: !isDisabled),
                 in: RoundedRectangle(cornerRadius: 16, style: .continuous)
             )
             .shadow(color: AppTheme.sageDark.opacity(isDisabled ? 0.06 : 0.18), radius: isDisabled ? 8 : 16, y: isDisabled ? 3 : 8)
@@ -457,7 +449,7 @@ struct LoginDivider: View {
         HStack(spacing: 22) {
             line
             Text(text)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(AppFont.medium(13))
                 .foregroundStyle(LoginPalette.textSecondary)
                 .lineLimit(1)
             line
@@ -496,7 +488,7 @@ struct LoginSocialButton: View {
                     .frame(width: 22, height: 22)
 
                 Text(title ?? provider.title)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(AppFont.semibold(15))
                     .foregroundStyle(LoginPalette.socialLabel)
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
@@ -528,7 +520,7 @@ struct LoginSocialButton: View {
                 .foregroundStyle(LoginPalette.socialLabel)
         case .google:
             Text("G")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(AppFont.bold(20))
                 .foregroundStyle(
                     LinearGradient(
                         colors: [
@@ -566,7 +558,7 @@ struct AuthLoginBackButton: View {
                 .background {
                     ZStack {
                         Circle().fill(AppTheme.cream.opacity(0.65))
-                        Circle().fill(.ultraThinMaterial).opacity(0.55)
+                        Circle().fill(AppTheme.surface).opacity(0.55)
                     }
                 }
                 .overlay {

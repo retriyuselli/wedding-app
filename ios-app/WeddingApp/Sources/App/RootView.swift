@@ -19,7 +19,7 @@ struct RootView: View {
                     ZStack {
                         LuxuryWeddingBackground()
                         ProgressView()
-                            .tint(AppTheme.sageDark)
+                            .tint(AppTheme.titleOnBackground)
                     }
                 case .required:
                     OnboardingView {
@@ -36,6 +36,8 @@ struct RootView: View {
             }
         }
         .font(AppFont.regular(16))
+        .dismissKeyboardOnTap()
+        .keyboardDismissToolbar()
         .task(priority: .utility) {
             await bootstrapIfNeeded()
         }

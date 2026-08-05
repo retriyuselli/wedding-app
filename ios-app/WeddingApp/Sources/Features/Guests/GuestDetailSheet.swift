@@ -127,19 +127,21 @@ struct GuestDetailSheet: View {
                     rsvpCard
                     detailsCard
 
-                    Button(role: .destructive) {
+                    Button {
                         showDeleteConfirm = true
                     } label: {
                         HStack {
                             if isDeleting {
                                 ProgressView()
+                                    .tint(Color.red.opacity(0.9))
                             }
                             Text(L10n.Guest.deleteEntry)
                                 .font(AppFont.medium(14))
+                                .foregroundStyle(Color.red.opacity(0.95))
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Color.red.opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .disabled(isDeleting || isUpdatingRsvp)
@@ -152,9 +154,11 @@ struct GuestDetailSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.close) { dismiss() }
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button(L10n.Common.edit) { showEditSheet = true }
+                        .foregroundStyle(AppTheme.accentOnBackground)
                         .disabled(isDeleting)
                 }
             }
@@ -188,7 +192,7 @@ struct GuestDetailSheet: View {
                 .background {
                     Circle()
                         .fill(AppTheme.iconChipFill)
-                        .background(.ultraThinMaterial, in: Circle())
+                        .background(AppTheme.iconChipFill, in: Circle())
                 }
                 .overlay {
                     Circle()
@@ -238,7 +242,7 @@ struct GuestDetailSheet: View {
                 .background {
                     Circle()
                         .fill(AppTheme.iconChipFill)
-                        .background(.ultraThinMaterial, in: Circle())
+                        .background(AppTheme.iconChipFill, in: Circle())
                 }
                 .overlay {
                     Circle()

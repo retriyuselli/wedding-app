@@ -16,9 +16,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            ShieldRoleSeeder::class,
             WeddingInfoSeeder::class,
             WeddingEventSeeder::class,
             WeddingBudgetSeeder::class,
+            WeddingBudgetCategoryAllocationSeeder::class,
             CustomerPaymentMethodSeeder::class,
             WeddingPaymentScheduleSeeder::class,
             WeddingIncomingPaymentSeeder::class,
@@ -34,6 +36,9 @@ class DatabaseSeeder extends Seeder
             WeddingQuoteSeeder::class,
             InspirationSeeder::class,
             MessageThreadSeeder::class,
+            DocumentFolderSeeder::class,
+            WeddingDocumentSeeder::class,
+            TrustedDeviceSeeder::class,
         ]);
     }
 }

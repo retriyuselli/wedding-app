@@ -130,10 +130,11 @@ struct WeddingDocumentsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Documents.title,
                         subtitle: L10n.Documents.subtitle
@@ -241,6 +242,7 @@ struct WeddingDocumentsView: View {
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button(L10n.Common.close) { showDownloadShare = false }
+                                .foregroundStyle(AppTheme.labelOnLightSurface)
                         }
                     }
                 }
@@ -292,7 +294,7 @@ struct WeddingDocumentsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .premiumGlassCard(cornerRadius: 16)
+            .premiumListRow(cornerRadius: 16)
 
             Button {
                 showFilterSheet = true
@@ -306,7 +308,7 @@ struct WeddingDocumentsView: View {
                 .foregroundStyle(AppTheme.sageDark)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
-                .premiumGlassCard(cornerRadius: 16)
+                .premiumListRow(cornerRadius: 16)
             }
             .buttonStyle(.plain)
         }
@@ -347,7 +349,7 @@ struct WeddingDocumentsView: View {
                 .foregroundStyle(AppTheme.sageDark)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var uploadRow: some View {
@@ -389,7 +391,7 @@ struct WeddingDocumentsView: View {
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .premiumGlassCard(cornerRadius: 18)
+                .premiumListRow(cornerRadius: 18)
                 .overlay {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .strokeBorder(
@@ -418,7 +420,7 @@ struct WeddingDocumentsView: View {
                 .frame(width: 96)
                 .frame(maxHeight: .infinity)
                 .padding(.vertical, 14)
-                .premiumGlassCard(cornerRadius: 18)
+                .premiumListRow(cornerRadius: 18)
             }
             .buttonStyle(.plain)
         }
@@ -430,7 +432,7 @@ struct WeddingDocumentsView: View {
             HStack {
                 Text(L10n.Common.category)
                     .font(AppFont.medium(15))
-                    .foregroundStyle(AppTheme.titleOnGlass)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Spacer()
                 Button {
                     showCategorySheet = true
@@ -441,7 +443,7 @@ struct WeddingDocumentsView: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 10, weight: .semibold))
                     }
-                    .foregroundStyle(AppTheme.sageMuted(0.8))
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 }
                 .buttonStyle(.plain)
             }
@@ -527,7 +529,7 @@ struct WeddingDocumentsView: View {
             HStack {
                 Text(L10n.Documents.recent)
                     .font(AppFont.medium(15))
-                    .foregroundStyle(AppTheme.ink)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Spacer()
                 Menu {
                     ForEach(DocumentSortOption.allCases) { option in
@@ -548,7 +550,7 @@ struct WeddingDocumentsView: View {
                         Image(systemName: "arrow.up.arrow.down")
                             .font(.system(size: 11, weight: .medium))
                     }
-                    .foregroundStyle(AppTheme.sageDark.opacity(0.75))
+                    .foregroundStyle(AppTheme.mutedOnBackground)
                 }
             }
 
@@ -621,7 +623,7 @@ struct WeddingDocumentsView: View {
             }
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private var filterSheet: some View {
@@ -750,7 +752,7 @@ struct WeddingDocumentsView: View {
                 .foregroundStyle(AppTheme.sageDark.opacity(0.6))
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private func fileBadge(for document: WeddingDocumentItem) -> some View {

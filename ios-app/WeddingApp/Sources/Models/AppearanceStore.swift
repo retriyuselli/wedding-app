@@ -49,8 +49,16 @@ enum AppColorPalette: String, CaseIterable, Identifiable {
     case blush
     case champagne
     case ocean
+    /// Dark stage + white cards (Livin-style contrast).
+    case midnight
 
     var id: String { rawValue }
+
+    /// Palettes that keep light-surface chrome (dark text on white cards) even if
+    /// the system/app appearance mode is dark.
+    var prefersLightContentChrome: Bool {
+        self == .midnight
+    }
 
     var title: String {
         switch self {
@@ -58,6 +66,7 @@ enum AppColorPalette: String, CaseIterable, Identifiable {
         case .blush: return L10n.Settings.paletteBlush
         case .champagne: return L10n.Settings.paletteChampagne
         case .ocean: return L10n.Settings.paletteOcean
+        case .midnight: return L10n.Settings.paletteMidnight
         }
     }
 
@@ -67,6 +76,7 @@ enum AppColorPalette: String, CaseIterable, Identifiable {
         case .blush: return L10n.Settings.paletteBlushSub
         case .champagne: return L10n.Settings.paletteChampagneSub
         case .ocean: return L10n.Settings.paletteOceanSub
+        case .midnight: return L10n.Settings.paletteMidnightSub
         }
     }
 
@@ -87,6 +97,7 @@ enum AppColorPalette: String, CaseIterable, Identifiable {
         case .blush: return .blush
         case .champagne: return .champagne
         case .ocean: return .ocean
+        case .midnight: return .midnight
         }
     }
 }
@@ -206,6 +217,29 @@ extension ColorPaletteTokens {
         brown: ThemeRGB(light: (0.48, 0.44, 0.36), dark: (0.78, 0.72, 0.60)),
         cream: ThemeRGB(light: (0.82, 0.84, 0.78), dark: (0.30, 0.32, 0.30))
     )
+
+    /// Dark stage + white cards + blue/gold accents (inspired by banking “floating card” UIs).
+    /// Light/dark token slots stay aligned so the stage/card contrast remains stable.
+    static let midnight = ColorPaletteTokens(
+        navy: ThemeRGB(light: (0.78, 0.86, 0.96), dark: (0.78, 0.86, 0.96)),
+        cardBackground: ThemeRGB(light: (1.00, 1.00, 1.00), dark: (1.00, 1.00, 1.00)),
+        peach: ThemeRGB(light: (0.86, 0.72, 0.58), dark: (0.86, 0.72, 0.58)),
+        peachDark: ThemeRGB(light: (0.72, 0.52, 0.36), dark: (0.72, 0.52, 0.36)),
+        softPeach: ThemeRGB(light: (0.93, 0.95, 0.98), dark: (0.93, 0.95, 0.98)),
+        background: ThemeRGB(light: (0.07, 0.07, 0.08), dark: (0.07, 0.07, 0.08)),
+        surface: ThemeRGB(light: (1.00, 1.00, 1.00), dark: (1.00, 1.00, 1.00)),
+        ink: ThemeRGB(light: (0.12, 0.14, 0.18), dark: (0.12, 0.14, 0.18)),
+        mist: ThemeRGB(light: (0.90, 0.92, 0.95), dark: (0.90, 0.92, 0.95)),
+        plum: ThemeRGB(light: (0.18, 0.42, 0.78), dark: (0.18, 0.42, 0.78)),
+        sage: ThemeRGB(light: (0.10, 0.45, 0.86), dark: (0.10, 0.45, 0.86)),
+        lightSage: ThemeRGB(light: (0.88, 0.93, 0.99), dark: (0.88, 0.93, 0.99)),
+        sageDark: ThemeRGB(light: (0.05, 0.32, 0.68), dark: (0.05, 0.32, 0.68)),
+        gold: ThemeRGB(light: (0.95, 0.78, 0.20), dark: (0.95, 0.78, 0.20)),
+        goldDark: ThemeRGB(light: (0.84, 0.64, 0.10), dark: (0.84, 0.64, 0.10)),
+        green: ThemeRGB(light: (0.10, 0.45, 0.86), dark: (0.10, 0.45, 0.86)),
+        brown: ThemeRGB(light: (0.42, 0.40, 0.36), dark: (0.42, 0.40, 0.36)),
+        cream: ThemeRGB(light: (0.78, 0.84, 0.92), dark: (0.78, 0.84, 0.92))
+    )
 }
 
 enum AppTextSizePreference: String, CaseIterable, Identifiable {
@@ -252,35 +286,41 @@ enum AppCountdownFontPreference: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String {
+    /// Settings list: Poppins + SF Serif only (legacy raw values still decode).
+    static var allCases: [AppCountdownFontPreference] { [.poppins, .serif] }
+
+    /// Maps deprecated stencil/rounded onto the two supported faces.
+    var normalized: AppCountdownFontPreference {
         switch self {
-        case .stencil: return L10n.Settings.countdownFontStencil
+        case .poppins, .rounded: return .poppins
+        case .serif, .stencil: return .serif
+        }
+    }
+
+    var title: String {
+        switch normalized {
         case .poppins: return L10n.Settings.countdownFontPoppins
-        case .rounded: return L10n.Settings.countdownFontRounded
         case .serif: return L10n.Settings.countdownFontSerif
+        default: return L10n.Settings.countdownFontSerif
         }
     }
 
     var subtitle: String {
-        switch self {
-        case .stencil: return L10n.Settings.countdownFontStencilSub
+        switch normalized {
         case .poppins: return L10n.Settings.countdownFontPoppinsSub
-        case .rounded: return L10n.Settings.countdownFontRoundedSub
         case .serif: return L10n.Settings.countdownFontSerifSub
+        default: return L10n.Settings.countdownFontSerifSub
         }
     }
 
     func font(size: CGFloat) -> Font {
-        let scaled = size * AppearanceStore.currentTextScale
-        switch self {
-        case .stencil:
-            return .custom("SairaStencilOne-Regular", size: scaled, relativeTo: .largeTitle)
+        switch normalized {
         case .poppins:
-            return .custom("Poppins-Bold", size: scaled, relativeTo: .largeTitle)
-        case .rounded:
-            return .system(size: scaled, weight: .bold, design: .rounded)
+            return AppFont.bold(size)
         case .serif:
-            return .system(size: scaled, weight: .semibold, design: .serif)
+            return AppFont.serifSemibold(size)
+        default:
+            return AppFont.serifSemibold(size)
         }
     }
 }
@@ -292,12 +332,11 @@ final class AppearanceStore: ObservableObject {
     /// Dibaca dari `AppFont` tanpa hop MainActor.
     nonisolated(unsafe) static var currentTextScale: CGFloat = 1.0
     /// Dibaca dari `AppTheme` / background tanpa hop MainActor.
-    nonisolated(unsafe) static var currentPalette: AppColorPalette = .sage
+    nonisolated(unsafe) static var currentPalette: AppColorPalette = .blush
     /// Dibaca dari `AppTheme` agar warna tidak ikut trait flip dari material.
     nonisolated(unsafe) static var currentTheme: AppAppearanceMode = .system
     /// Dibaca dari `AppFont.countdown` tanpa hop MainActor.
-    nonisolated(unsafe) static var currentCountdownFont: AppCountdownFontPreference = .stencil
-
+    nonisolated(unsafe) static var currentCountdownFont: AppCountdownFontPreference = .rounded
     @Published private(set) var theme: AppAppearanceMode
     @Published private(set) var colorPalette: AppColorPalette
     @Published private(set) var textSize: AppTextSizePreference
@@ -322,7 +361,7 @@ final class AppearanceStore: ObservableObject {
            let value = AppColorPalette(rawValue: raw) {
             colorPalette = value
         } else {
-            colorPalette = .sage
+            colorPalette = .blush
         }
 
         if let raw = UserDefaults.standard.string(forKey: textSizeKey),
@@ -334,15 +373,16 @@ final class AppearanceStore: ObservableObject {
 
         if let raw = UserDefaults.standard.string(forKey: countdownFontKey),
            let value = AppCountdownFontPreference(rawValue: raw) {
-            countdownFont = value
+            countdownFont = value.normalized
         } else {
-            countdownFont = .stencil
+            countdownFont = .poppins
         }
 
         Self.currentTextScale = textSize.scale
         Self.currentPalette = colorPalette
         Self.currentTheme = theme
         Self.currentCountdownFont = countdownFont
+        AppFont.applyNavigationTitleFonts()
     }
 
     func selectTheme(_ preference: AppAppearanceMode) {
@@ -365,6 +405,7 @@ final class AppearanceStore: ObservableObject {
         colorPalette = palette
         Self.currentPalette = palette
         UserDefaults.standard.set(palette.rawValue, forKey: paletteKey)
+        AppFont.applyNavigationTitleFonts()
     }
 
     func selectTextSize(_ preference: AppTextSizePreference) {
@@ -372,13 +413,15 @@ final class AppearanceStore: ObservableObject {
         textSize = preference
         Self.currentTextScale = preference.scale
         UserDefaults.standard.set(preference.rawValue, forKey: textSizeKey)
+        AppFont.applyNavigationTitleFonts()
     }
 
     func selectCountdownFont(_ preference: AppCountdownFontPreference) {
-        guard countdownFont != preference else { return }
-        countdownFont = preference
-        Self.currentCountdownFont = preference
-        UserDefaults.standard.set(preference.rawValue, forKey: countdownFontKey)
+        let next = preference.normalized
+        guard countdownFont != next else { return }
+        countdownFont = next
+        Self.currentCountdownFont = next
+        UserDefaults.standard.set(next.rawValue, forKey: countdownFontKey)
     }
 }
 

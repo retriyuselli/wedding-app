@@ -1,8 +1,18 @@
 import SwiftUI
 
-struct BudgetCategoryRow: View {
+struct BudgetCategoryRow: View, Equatable {
     let category: BudgetCategory
     let total: Double
+
+    static func == (lhs: BudgetCategoryRow, rhs: BudgetCategoryRow) -> Bool {
+        lhs.category.id == rhs.category.id
+            && lhs.category.name == rhs.category.name
+            && lhs.category.spent == rhs.category.spent
+            && lhs.category.commitment == rhs.category.commitment
+            && lhs.category.plannedAllocation == rhs.category.plannedAllocation
+            && lhs.category.totalRecorded == rhs.category.totalRecorded
+            && lhs.total == rhs.total
+    }
 
     private var planPercentOfTotal: Int {
         guard category.hasPlannedAllocation, total > 0 else { return 0 }
@@ -35,15 +45,15 @@ struct BudgetCategoryRow: View {
                     HStack(spacing: 6) {
                         Text(L10n.Budget.allocationAmount(CurrencyFormatter.rupiah(category.plannedAllocation)))
                         Text("|")
-                            .foregroundStyle(AppTheme.ink.opacity(0.25))
+                            .foregroundStyle(AppTheme.ink.opacity(0.35))
                         Text("\(planPercentOfTotal)%")
                     }
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.45))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
                 } else {
                     Text(L10n.Budget.notSetRecorded(CurrencyFormatter.rupiah(category.totalRecorded)))
                         .font(AppFont.regular(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                 }
 
                 BudgetBar(progress: category.usageAgainstPlanRatio, color: AppTheme.sage)
@@ -63,23 +73,27 @@ struct BudgetCategoryRow: View {
                 if category.commitment > 0 {
                     Text(L10n.Budget.commitmentAmount(CurrencyFormatter.rupiah(category.commitment)))
                         .font(AppFont.regular(10))
-                        .foregroundStyle(AppTheme.gold.opacity(0.85))
+                        .foregroundStyle(AppTheme.goldOnLightSurface)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
 
                 Text(category.hasPlannedAllocation ? L10n.Budget.percentUsed(usagePercent) : L10n.Budget.percentPaid(usagePercent))
                     .font(AppFont.regular(10))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(AppTheme.captionOnLightSurface)
             }
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(AppTheme.ink.opacity(0.28))
+                .foregroundStyle(AppTheme.ink.opacity(0.4))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .premiumGlassCard(cornerRadius: 18)
+        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppTheme.hairline.opacity(0.7), lineWidth: 1)
+        }
     }
 }
 
@@ -109,13 +123,13 @@ struct BudgetCategorySummaryCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.Budget.spent)
                         .font(AppFont.regular(12))
-                        .foregroundStyle(AppTheme.ink.opacity(0.5))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                     Text(CurrencyFormatter.rupiah(category.spent))
                         .font(AppFont.medium(20))
                         .foregroundStyle(AppTheme.sageDark)
                     Text(L10n.Budget.percentOfTotal(spentPercentOfBudget))
                         .font(AppFont.regular(11))
-                        .foregroundStyle(AppTheme.ink.opacity(0.45))
+                        .foregroundStyle(AppTheme.captionOnLightSurface)
                 }
 
                 Spacer()
@@ -124,25 +138,25 @@ struct BudgetCategorySummaryCard: View {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text(L10n.Budget.allocation)
                             .font(AppFont.regular(12))
-                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                         Text(CurrencyFormatter.rupiah(category.plannedAllocation))
                             .font(AppFont.medium(16))
                             .foregroundStyle(AppTheme.sageDark)
                         Text(L10n.Budget.categoryPlan)
                             .font(AppFont.regular(11))
-                            .foregroundStyle(AppTheme.ink.opacity(0.45))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                     }
                 } else if category.commitment > 0 {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text(L10n.Budget.commitment)
                             .font(AppFont.regular(12))
-                            .foregroundStyle(AppTheme.ink.opacity(0.5))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                         Text(CurrencyFormatter.rupiah(category.commitment))
                             .font(AppFont.medium(16))
-                            .foregroundStyle(AppTheme.gold)
+                            .foregroundStyle(AppTheme.goldOnLightSurface)
                         Text(L10n.Budget.awaitingPayment)
                             .font(AppFont.regular(11))
-                            .foregroundStyle(AppTheme.ink.opacity(0.45))
+                            .foregroundStyle(AppTheme.captionOnLightSurface)
                     }
                 }
             }
@@ -156,10 +170,10 @@ struct BudgetCategorySummaryCard: View {
                     : footerRecordedPaymentText
             )
                 .font(AppFont.regular(11))
-                .foregroundStyle(AppTheme.ink.opacity(0.45))
+                .foregroundStyle(AppTheme.captionOnLightSurface)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var footerRecordedPaymentText: String {
@@ -185,12 +199,12 @@ struct BudgetDonut: View {
 
     var body: some View {
         ZStack {
-            Circle().stroke(AppTheme.mist.opacity(0.5), lineWidth: 15)
+            Circle().stroke(AppTheme.mist.opacity(0.5), lineWidth: 10)
 
             ForEach(Array(cumulative.enumerated()), id: \.offset) { _, seg in
                 Circle()
                     .trim(from: seg.start, to: seg.end)
-                    .stroke(seg.color, style: StrokeStyle(lineWidth: 15, lineCap: .butt))
+                    .stroke(seg.color, style: StrokeStyle(lineWidth: 10, lineCap: .butt))
                     .rotationEffect(.degrees(-90))
             }
         }
@@ -214,13 +228,14 @@ struct BudgetBar: View {
     let color: Color
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Capsule().fill(AppTheme.mist.opacity(0.7))
-                Capsule().fill(color)
-                    .frame(width: max(0, min(1, progress)) * proxy.size.width)
+        Capsule()
+            .fill(AppTheme.mist.opacity(0.7))
+            .overlay(alignment: .leading) {
+                Capsule()
+                    .fill(color)
+                    .scaleEffect(x: max(0.001, min(1, progress)), y: 1, anchor: .leading)
             }
-        }
+            .clipShape(Capsule())
     }
 }
 
@@ -256,9 +271,24 @@ enum CurrencyFormatter {
 
     /// Formats live amount typing with Indonesian thousand separators (e.g. `350.000.000`).
     static func formatAmountInput(_ value: String) -> String {
+        let digits = String(value.filter(\.isNumber).prefix(15))
+        guard !digits.isEmpty else { return "" }
+
+        var grouped = ""
+        for (index, character) in digits.reversed().enumerated() {
+            if index > 0 && index % 3 == 0 {
+                grouped.append(".")
+            }
+            grouped.append(character)
+        }
+        return String(grouped.reversed())
+    }
+
+    /// Digits-only amount parsed from a live-formatted input field.
+    static func parseAmountInput(_ value: String) -> Double? {
         let digits = value.filter(\.isNumber)
-        guard !digits.isEmpty, let number = Int(digits) else { return "" }
-        return formatter.string(from: NSNumber(value: number)) ?? digits
+        guard !digits.isEmpty, let number = Double(digits) else { return nil }
+        return number
     }
 }
 

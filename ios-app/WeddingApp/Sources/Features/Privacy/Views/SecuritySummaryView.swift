@@ -5,7 +5,8 @@ struct SecuritySummaryView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
@@ -14,7 +15,10 @@ struct SecuritySummaryView: View {
                     )
 
                     if viewModel.isLoading && viewModel.summary == nil {
-                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
+                        ProgressView()
+                            .tint(AppTheme.titleOnBackground)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
                     } else if let errorMessage = viewModel.errorMessage, viewModel.summary == nil {
                         errorState(errorMessage)
                     } else if let summary = viewModel.summary {
@@ -40,13 +44,13 @@ struct SecuritySummaryView: View {
             Text(L10n.Privacy.securityScore(summary.score))
                 .font(AppFont.medium(16))
                 .foregroundStyle(AppTheme.ink)
-            Text(summary.status == "secure" ? "Status: Aman" : "Status: Perlu perhatian")
+            Text(summary.status == "secure" ? L10n.Privacy.statusSecure : L10n.Privacy.statusAttention)
                 .font(AppFont.regular(13))
                 .foregroundStyle(AppTheme.ink.opacity(0.55))
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private func checkRow(_ check: PrivacySecurityCheck) -> some View {
@@ -60,7 +64,7 @@ struct SecuritySummaryView: View {
             Spacer()
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private func errorState(_ message: String) -> some View {

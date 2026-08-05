@@ -7,12 +7,12 @@ struct MoreSubpageHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(AppFont.serifBold(32))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             Text(subtitle)
-                .font(.system(size: 12, weight: .regular, design: .serif))
-                .foregroundStyle(AppTheme.gold)
+                .font(AppFont.serifRegular(12))
+                .foregroundStyle(AppTheme.mutedOnBackground)
                 .lineSpacing(2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -33,18 +33,13 @@ struct MoreSubpageNavigationHeader: View {
                 } label: {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.iconOnChip)
+                        .foregroundStyle(AppTheme.iconOnChrome)
                         .frame(width: 42, height: 42)
-                        .background {
-                            Circle()
-                                .fill(AppTheme.iconChipFill)
-                                .background(.ultraThinMaterial, in: Circle())
-                        }
+                        .background(AppTheme.chrome, in: Circle())
                         .overlay {
                             Circle()
-                                .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                                .stroke(AppTheme.hairline, lineWidth: 1)
                         }
-                        .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
                 }
                 .buttonStyle(.plain)
 
@@ -52,11 +47,11 @@ struct MoreSubpageNavigationHeader: View {
 
                 VStack(spacing: 4) {
                     Text(title)
-                        .font(.system(size: 18, weight: .semibold, design: .serif))
-                        .foregroundStyle(AppTheme.titleOnGlass)
+                        .font(AppFont.serifSemibold(18))
+                        .foregroundStyle(AppTheme.titleOnBackground)
                     Text(subtitle)
-                        .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundStyle(AppTheme.inkMuted(0.65))
+                        .font(AppFont.regular(12))
+                        .foregroundStyle(AppTheme.mutedOnBackground)
                         .multilineTextAlignment(.center)
                 }
 
@@ -75,14 +70,14 @@ struct MoreFormSection<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.system(size: 14, weight: .semibold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(AppFont.serifSemibold(14))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             VStack(spacing: 10) {
                 content()
             }
             .padding(14)
-            .premiumGlassCard(cornerRadius: 20)
+            .premiumListRow(cornerRadius: 20)
         }
     }
 }
@@ -99,7 +94,7 @@ struct MoreInputRow: View {
             MoreFieldIcon(name: icon)
 
             TextField(placeholder, text: $text, axis: axis)
-                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .font(AppFont.regular(14))
                 .foregroundStyle(AppTheme.titleOnGlass)
                 .lineLimit(axis == .vertical ? 3...5 : 1...1)
                 .keyboardType(keyboard)
@@ -118,26 +113,17 @@ struct MoreFieldIcon: View {
             .font(.system(size: 16, weight: .regular))
             .foregroundStyle(AppTheme.iconOnChip)
             .frame(width: 36, height: 36)
-            .background {
-                Circle()
-                    .fill(AppTheme.iconChipFill)
-                    .background(.ultraThinMaterial, in: Circle())
-            }
-            .overlay {
-                Circle()
-                    .stroke(AppTheme.iconChipStroke, lineWidth: 1)
-            }
+            .background(AppTheme.iconChipFill, in: Circle())
     }
 }
 
 struct MoreFieldBackground: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(AppTheme.nestedGlassFill)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .fill(AppTheme.surface)
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                    .stroke(AppTheme.hairline.opacity(0.7), lineWidth: 1)
             }
     }
 }
@@ -153,29 +139,53 @@ struct MoreEmptyState: View {
                 .font(.system(size: 34, weight: .light))
                 .foregroundStyle(AppTheme.iconOnChip)
                 .frame(width: 64, height: 64)
-                .background {
-                    Circle()
-                        .fill(AppTheme.iconChipFill)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .overlay {
-                    Circle()
-                        .stroke(AppTheme.iconChipStroke, lineWidth: 1)
-                }
+                .background(AppTheme.iconChipFill, in: Circle())
 
             Text(title)
-                .font(.system(size: 16, weight: .semibold, design: .serif))
+                .font(AppFont.semibold(16))
                 .foregroundStyle(AppTheme.titleOnGlass)
 
             Text(message)
-                .font(.system(size: 13, weight: .regular, design: .rounded))
+                .font(AppFont.regular(13))
                 .foregroundStyle(AppTheme.captionOnGlass)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 36)
         .padding(.horizontal, 20)
-        .premiumGlassCard(cornerRadius: 28)
+        .premiumListRow(cornerRadius: 28)
+    }
+}
+
+/// Empty-state copy that stays on Poppins + SF Serif. Prefer over `ContentUnavailableView` (SF Pro).
+struct AppEmptyState: View {
+    let icon: String
+    let title: String
+    let message: String
+    var onBackground: Bool = true
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 40, weight: .light))
+                .foregroundStyle(AppTheme.iconOnChip)
+                .frame(width: 72, height: 72)
+                .background(AppTheme.iconChipFill, in: Circle())
+
+            Text(title)
+                .font(AppFont.semibold(17))
+                .foregroundStyle(onBackground ? AppTheme.titleOnBackground : AppTheme.titleOnGlass)
+                .multilineTextAlignment(.center)
+
+            Text(message)
+                .font(AppFont.regular(13))
+                .foregroundStyle(onBackground ? AppTheme.mutedOnBackground : AppTheme.captionOnLightSurface)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .padding(.horizontal, 20)
     }
 }
 
@@ -190,38 +200,27 @@ struct MorePrimaryButton: View {
             HStack(spacing: 8) {
                 if isLoading {
                     ProgressView()
-                        .tint(.white)
+                        .tint(AppTheme.primaryActionForeground(enabled: isEnabled))
                 } else {
                     Image(systemName: "square.and.arrow.down")
                         .font(.system(size: 16, weight: .semibold))
                 }
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(AppFont.semibold(16))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.primaryActionForeground(enabled: isEnabled))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(
-                        isEnabled
-                            ? AnyShapeStyle(
-                                LinearGradient(
-                                    colors: [AppTheme.sage, AppTheme.sageDark],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            : AnyShapeStyle(AppTheme.sageDark.opacity(0.45))
-                    )
+                    .fill(AppTheme.primaryActionFill(enabled: isEnabled))
             }
-            .shadow(color: AppTheme.sageDark.opacity(isEnabled ? 0.18 : 0), radius: 14, y: 6)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled || isLoading)
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 }

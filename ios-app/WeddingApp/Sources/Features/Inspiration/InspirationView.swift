@@ -7,6 +7,7 @@ struct InspirationView: View {
 
     @State private var items: [InspirationItem] = []
     @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
     @State private var filter = InspirationFilter()
     @State private var draftFilter = InspirationFilter()
     @State private var selectedCategory: InspirationCategory = .all
@@ -17,13 +18,14 @@ struct InspirationView: View {
     @State private var showPaywall = false
     @ObservedObject private var savedStore = SavedInspirationStore.shared
     @ObservedObject private var likedStore = LikedInspirationStore.shared
+    @State private var displayedItems: [InspirationItem] = []
 
     private var isPremium: Bool {
         premium.isPremium(user: session.currentUser)
     }
 
-    private var filteredItems: [InspirationItem] {
-        items
+    private func recomputeDisplayedItems() {
+        displayedItems = items
             .filter { item in
                 let matchCategory: Bool
                 if selectedCategory == .all {
@@ -49,7 +51,8 @@ struct InspirationView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
@@ -75,6 +78,7 @@ struct InspirationView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 28)
             }
+            .scrollDismissesKeyboard(.interactively)
             .premiumContentLock(isPremium: isPremium, showPaywall: $showPaywall)
         }
         .statusBarBlur()
@@ -91,6 +95,11 @@ struct InspirationView: View {
                 await loadPreview()
             }
         }
+        .onChange(of: searchText) { _, _ in recomputeDisplayedItems() }
+        .onChange(of: selectedCategory) { _, _ in recomputeDisplayedItems() }
+        .onChange(of: filter) { _, _ in recomputeDisplayedItems() }
+        .onChange(of: showSavedOnly) { _, _ in recomputeDisplayedItems() }
+        .onChange(of: savedStore.ids) { _, _ in recomputeDisplayedItems() }
         .refreshable {
             if isPremium {
                 await load()
@@ -129,17 +138,12 @@ struct InspirationView: View {
             } label: {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.iconOnChip)
+                    .foregroundStyle(AppTheme.iconOnChrome)
                     .frame(width: 42, height: 42)
-                    .background {
-                        Circle()
-                            .fill(AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
+                    .background(AppTheme.chrome, in: Circle())
                     .overlay {
-                        Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
+                        Circle().stroke(AppTheme.hairline, lineWidth: 1)
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
 
@@ -147,11 +151,11 @@ struct InspirationView: View {
 
             VStack(spacing: 4) {
                 Text(L10n.Inspiration.title)
-                    .font(.system(size: 20, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.titleOnGlass)
+                    .font(AppFont.serifSemibold(20))
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Text(L10n.Inspiration.subtitle)
-                    .font(.system(size: 12, weight: .regular, design: .serif))
-                    .foregroundStyle(AppTheme.gold)
+                    .font(AppFont.serifRegular(12))
+                    .foregroundStyle(AppTheme.accentOnBackground)
                     .multilineTextAlignment(.center)
             }
 
@@ -164,21 +168,16 @@ struct InspirationView: View {
             } label: {
                 Image(systemName: showSavedOnly ? "bookmark.fill" : "bookmark")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(showSavedOnly ? AppTheme.labelOnLightSurface : AppTheme.iconOnChip)
+                    .foregroundStyle(showSavedOnly ? AppTheme.labelOnLightSurface : AppTheme.iconOnChrome)
                     .frame(width: 42, height: 42)
-                    .background {
-                        Circle()
-                            .fill(showSavedOnly ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
+                    .background((showSavedOnly ? AppTheme.selectedChipFill : AppTheme.chrome), in: Circle())
                     .overlay {
                         Circle()
                             .stroke(
-                                showSavedOnly ? AppTheme.sage.opacity(0.35) : AppTheme.iconChipStroke,
+                                showSavedOnly ? AppTheme.sage.opacity(0.35) : AppTheme.hairline,
                                 lineWidth: 1
                             )
                     }
-                    .shadow(color: AppTheme.sageDark.opacity(0.08), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
         }
@@ -197,6 +196,12 @@ struct InspirationView: View {
                     .font(AppFont.regular(14))
                     .foregroundStyle(AppTheme.titleOnGlass)
                     .autocorrectionDisabled()
+                    .focused($isSearchFocused)
+                    .submitLabel(.search)
+                    .onSubmit {
+                        isSearchFocused = false
+                        KeyboardDismiss.resign()
+                    }
 
                 if !searchText.isEmpty {
                     Button { searchText = "" } label: {
@@ -227,7 +232,7 @@ struct InspirationView: View {
                 .background {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(filter.isActive ? AppTheme.selectedChipFill : AppTheme.chipIdleFill)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(AppTheme.nestedGlassFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .overlay {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -248,7 +253,7 @@ struct InspirationView: View {
             HStack {
                 Text(L10n.Common.category)
                     .font(AppFont.medium(15))
-                    .foregroundStyle(AppTheme.titleOnGlass)
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 Spacer()
                 NavigationLink {
                     InspirationCategoriesView(items: items)
@@ -259,7 +264,7 @@ struct InspirationView: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 10, weight: .semibold))
                     }
-                    .foregroundStyle(AppTheme.sageMuted(0.85))
+                    .foregroundStyle(AppTheme.titleOnBackground)
                 }
                 .buttonStyle(.plain)
             }
@@ -309,7 +314,7 @@ struct InspirationView: View {
                 } else {
                     Capsule()
                         .fill(AppTheme.chipIdleFill)
-                        .background(.ultraThinMaterial, in: Capsule())
+                        .background(AppTheme.iconChipFill, in: Capsule())
                 }
             }
             .overlay {
@@ -335,10 +340,10 @@ struct InspirationView: View {
     private var latestSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(showSavedOnly ? L10n.Inspiration.saved : L10n.Inspiration.latest)
-                .font(.system(size: 15, weight: .semibold, design: .serif))
-                .foregroundStyle(AppTheme.titleOnGlass)
+                .font(AppFont.serifSemibold(15))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
-            if filteredItems.isEmpty {
+            if displayedItems.isEmpty {
                 emptyStateCard
             } else {
                 LazyVGrid(
@@ -348,7 +353,7 @@ struct InspirationView: View {
                     ],
                     spacing: 16
                 ) {
-                    ForEach(filteredItems) { item in
+                    ForEach(displayedItems) { item in
                         NavigationLink {
                             InspirationDetailView(item: item)
                         } label: {
@@ -441,6 +446,7 @@ struct InspirationView: View {
             items = envelope.data
             savedStore.sync(with: envelope.data)
             likedStore.sync(with: envelope.data)
+            recomputeDisplayedItems()
         } catch {
             errorMessage = error.userFacingMessage
         }
@@ -451,6 +457,7 @@ struct InspirationView: View {
         if let envelope: Envelope<[InspirationItem]> = try? await APIClient.shared.request("inspirations"),
            !envelope.data.isEmpty {
             items = envelope.data
+            recomputeDisplayedItems()
             return
         }
 
@@ -465,6 +472,7 @@ struct InspirationView: View {
         ]
         """
         items = (try? decoder.decode([InspirationItem].self, from: Data(json.utf8))) ?? []
+        recomputeDisplayedItems()
     }
 }
 
@@ -496,7 +504,7 @@ private struct InspirationGridCard: View {
                         .background {
                             Circle()
                                 .fill(isSaved ? AppTheme.selectedChipFill : AppTheme.iconChipFill)
-                                .background(.ultraThinMaterial, in: Circle())
+                                .background(AppTheme.iconChipFill, in: Circle())
                         }
                         .overlay {
                             Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
@@ -556,7 +564,7 @@ private struct InspirationGridCard: View {
             }
         }
         .padding(10)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     private func formattedCount(_ value: Int) -> String {
@@ -595,7 +603,7 @@ private struct InspirationFilterSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.cancel) { dismiss() }
-                        .foregroundStyle(AppTheme.ink.opacity(0.7))
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -623,7 +631,7 @@ private struct InspirationFilterSheet: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
                 .padding(.bottom, 8)
-                .background(.ultraThinMaterial)
+                .background(AppTheme.surface)
             }
         }
         .presentationDetents([.medium, .large])
@@ -706,7 +714,7 @@ private struct InspirationFilterSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.semibold(15))
-                .foregroundStyle(AppTheme.sageDark)
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             content()
                 .padding(14)
@@ -750,7 +758,7 @@ struct InspirationDetailView: View {
 
                         Text(item.title)
                             .font(AppFont.semibold(22))
-                            .foregroundStyle(AppTheme.sageDark)
+                            .foregroundStyle(AppTheme.titleOnBackground)
                             .fixedSize(horizontal: false, vertical: true)
 
                         statsRow
@@ -806,7 +814,7 @@ struct InspirationDetailView: View {
                     .background {
                         Circle()
                             .fill(AppTheme.selectedChipFill)
-                            .background(.ultraThinMaterial, in: Circle())
+                            .background(AppTheme.iconChipFill, in: Circle())
                     }
                     .overlay {
                         Circle().stroke(AppTheme.iconChipStroke, lineWidth: 1)
@@ -843,10 +851,10 @@ struct InspirationDetailView: View {
                 HStack(spacing: 6) {
                     Image(systemName: isLiked ? "heart.fill" : "heart")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(isLiked ? AppTheme.peachDark : AppTheme.inkMuted(0.5))
+                        .foregroundStyle(isLiked ? AppTheme.peachDark : AppTheme.mutedOnBackground)
                     Text(L10n.Inspiration.likes(formattedCount(displayLikes)))
                         .font(AppFont.regular(13))
-                        .foregroundStyle(AppTheme.inkMuted(0.6))
+                        .foregroundStyle(AppTheme.mutedOnBackground)
                 }
             }
             .buttonStyle(.plain)
@@ -854,10 +862,10 @@ struct InspirationDetailView: View {
             HStack(spacing: 6) {
                 Image(systemName: "eye.fill")
                     .font(.system(size: 13))
-                    .foregroundStyle(AppTheme.sageMuted(0.85))
+                    .foregroundStyle(AppTheme.accentOnBackground)
                 Text(L10n.Inspiration.views(formattedCount(item.views)))
                     .font(AppFont.regular(13))
-                    .foregroundStyle(AppTheme.inkMuted(0.6))
+                    .foregroundStyle(AppTheme.mutedOnBackground)
             }
         }
     }
@@ -881,7 +889,7 @@ struct InspirationDetailView: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.surface)
     }
 
     private func formattedCount(_ value: Int) -> String {
@@ -1059,18 +1067,9 @@ struct InspirationCategoryItemsView: View {
 @ViewBuilder
 private func inspirationImage(imageUrl: String?, symbol: String, tint: Color) -> some View {
     if let imageUrl, let url = URL(string: imageUrl) {
-        AsyncImage(url: url) { phase in
-            switch phase {
-            case let .success(image):
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            case .failure:
-                inspirationPlaceholder(symbol: symbol, tint: tint)
-            default:
-                inspirationPlaceholder(symbol: symbol, tint: tint)
-                    .overlay { ProgressView() }
-            }
+        DownsampledAsyncImage(url: url, maxPixelSize: 360) {
+            inspirationPlaceholder(symbol: symbol, tint: tint)
+                .overlay { ProgressView() }
         }
     } else {
         inspirationPlaceholder(symbol: symbol, tint: tint)

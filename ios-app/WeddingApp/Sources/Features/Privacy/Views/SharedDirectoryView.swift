@@ -5,7 +5,8 @@ struct SharedDirectoryView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
@@ -29,6 +30,7 @@ struct SharedDirectoryView: View {
 
                     if viewModel.isLoading && viewModel.users.isEmpty {
                         ProgressView()
+                            .tint(AppTheme.titleOnBackground)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 40)
                     } else if viewModel.users.isEmpty && viewModel.errorMessage == nil {
@@ -37,7 +39,7 @@ struct SharedDirectoryView: View {
                             .foregroundStyle(AppTheme.inkMuted(0.6))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(16)
-                            .premiumGlassCard(cornerRadius: 18)
+                            .premiumListRow(cornerRadius: 18)
                     } else {
                         LazyVStack(spacing: 10) {
                             ForEach(viewModel.users) { user in
@@ -90,19 +92,14 @@ struct SharedDirectoryView: View {
                 .foregroundStyle(AppTheme.inkMuted(0.4))
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 18)
+        .premiumListRow(cornerRadius: 18)
     }
 
     @ViewBuilder
     private func avatar(for user: SharedDirectoryUser) -> some View {
         if let avatarUrl = user.avatarUrl, let url = URL(string: avatarUrl) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                default:
-                    placeholderAvatar(initials: initials(from: user.name))
-                }
+            DownsampledAsyncImage(url: url, maxPixelSize: 88) {
+                placeholderAvatar(initials: initials(from: user.name))
             }
             .frame(width: 44, height: 44)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

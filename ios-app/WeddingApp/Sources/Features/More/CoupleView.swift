@@ -6,6 +6,7 @@ struct CoupleView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var session: SessionStore
     @ObservedObject private var premium = PremiumStore.shared
+    @ObservedObject private var photoStore = CouplePhotoStore.shared
 
     @State private var brideName = ""
     @State private var brideFullName = ""
@@ -30,10 +31,6 @@ struct CoupleView: View {
     @State private var showRemovePhotoConfirm = false
     @State private var isRemovingPhoto = false
 
-    /// Keep under PHP `post_max_size` (often 2M) after multipart overhead.
-    private let maxPhotoBytes = 1_850_000
-    private let maxPhotoLimitBytes = 2 * 1_024 * 1_024
-
     private var isPremium: Bool {
         premium.isPremium(user: session.currentUser)
     }
@@ -50,16 +47,22 @@ struct CoupleView: View {
         return "\(bride) & \(groom)"
     }
 
+    /// Prefer local pick / shared store (same source as Beranda), then remote URL.
+    private var displayedCouplePhoto: UIImage? {
+        photoPreview ?? photoStore.previewImage
+    }
+
     private var hasCouplePhoto: Bool {
-        photoPreview != nil || couplePhotoURL != nil
+        displayedCouplePhoto != nil || couplePhotoURL != nil
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Couple.title,
                         subtitle: L10n.Couple.subtitle
@@ -141,7 +144,7 @@ struct CoupleView: View {
     private var photoPickerLabel: some View {
         HStack(spacing: 8) {
             Image(systemName: "photo.badge.plus")
-            Text(photoPreview == nil && couplePhotoURL == nil
+            Text(displayedCouplePhoto == nil && couplePhotoURL == nil
                   ? L10n.Couple.photoUpload
                   : L10n.Couple.photoChange)
         }
@@ -174,7 +177,7 @@ struct CoupleView: View {
             Spacer(minLength: 0)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var photoUploadSection: some View {
@@ -244,20 +247,13 @@ struct CoupleView: View {
 
     private func couplePhotoThumb(size: CGFloat) -> some View {
         Group {
-            if let photoPreview {
-                Image(uiImage: photoPreview)
+            if let displayedCouplePhoto {
+                Image(uiImage: displayedCouplePhoto)
                     .resizable()
                     .scaledToFill()
             } else if let couplePhotoURL {
-                AsyncImage(url: couplePhotoURL) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable().scaledToFill()
-                    case .failure:
-                        placeholderPhoto
-                    default:
-                        ProgressView()
-                    }
+                DownsampledAsyncImage(url: couplePhotoURL, maxPixelSize: size * 2) {
+                    placeholderPhoto
                 }
             } else {
                 placeholderPhoto
@@ -281,17 +277,30 @@ struct CoupleView: View {
         !brideName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !groomName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || photoFileData != nil
+            || photoStore.pendingUploadData != nil
     }
 
     private func load() async {
         isLoading = true
         defer { isLoading = false }
 
+        restorePendingPhotoIfNeeded()
+
         do {
             let envelope: Envelope<WeddingInfo> = try await APIClient.shared.request("wedding-info")
             apply(envelope.data)
         } catch {
             errorMessage = error.userFacingMessage
+        }
+    }
+
+    /// Keep an unsaved pick visible after navigating away (Beranda already reads the same store).
+    private func restorePendingPhotoIfNeeded() {
+        if photoPreview == nil, let stored = photoStore.previewImage {
+            photoPreview = stored
+        }
+        if photoFileData == nil, let pending = photoStore.pendingUploadData {
+            photoFileData = pending
         }
     }
 
@@ -321,12 +330,8 @@ struct CoupleView: View {
 
         do {
             let saved: WeddingInfo
-            if let photoFileData {
-                guard photoFileData.count <= maxPhotoBytes else {
-                    photoSizeWarning = L10n.Couple.photoTooLarge
-                    return
-                }
-
+            let uploadData = photoFileData ?? photoStore.pendingUploadData
+            if let uploadData {
                 let envelope: Envelope<WeddingInfo> = try await APIClient.shared.uploadMultipart(
                     "wedding-info",
                     method: "POST",
@@ -334,11 +339,13 @@ struct CoupleView: View {
                     fileFieldName: "couple_photo",
                     fileName: "couple.jpg",
                     mimeType: "image/jpeg",
-                    fileData: photoFileData
+                    fileData: uploadData
                 )
                 saved = envelope.data
                 self.photoFileData = nil
                 self.selectedPhotoItem = nil
+                photoStore.clearPendingUpload()
+                MediaImageCache.invalidateAll()
             } else {
                 let envelope: Envelope<WeddingInfo> = try await APIClient.shared.request(
                     "wedding-info",
@@ -349,9 +356,11 @@ struct CoupleView: View {
             }
 
             apply(saved)
-            if photoPreview != nil, saved.couplePhotoUrl != nil {
-                photoPreview = nil
+            if let preview = photoPreview ?? photoStore.previewImage, saved.couplePhotoUrl != nil {
+                // Keep shared preview so Beranda + Pasangan stay in sync; remote cache was invalidated above.
+                photoStore.setPreview(preview)
             }
+            NotificationCenter.default.post(name: .weddingInfoDidChange, object: nil)
             dismiss()
         } catch {
             errorMessage = error.userFacingMessage
@@ -365,10 +374,13 @@ struct CoupleView: View {
         defer { isRemovingPhoto = false }
 
         // Local-only selection (not yet saved): clear without API call.
-        if photoFileData != nil || (photoPreview != nil && couplePhotoURL == nil) {
+        if photoFileData != nil
+            || photoStore.pendingUploadData != nil
+            || (displayedCouplePhoto != nil && couplePhotoURL == nil) {
             selectedPhotoItem = nil
             photoPreview = nil
             photoFileData = nil
+            photoStore.clear()
             return
         }
 
@@ -381,6 +393,9 @@ struct CoupleView: View {
             selectedPhotoItem = nil
             photoPreview = nil
             photoFileData = nil
+            photoStore.clear()
+            MediaImageCache.invalidateAll()
+            NotificationCenter.default.post(name: .weddingInfoDidChange, object: nil)
         } catch {
             errorMessage = error.userFacingMessage
         }
@@ -438,60 +453,25 @@ struct CoupleView: View {
                 return
             }
 
-            if picked.data.count > maxPhotoLimitBytes {
-                photoSizeWarning = L10n.Couple.photoTooLarge
+            // Always compress under ~2 MB — no size warning for large originals.
+            guard let compressed = CouplePhotoCompressor.jpegData(from: image) else {
+                photoSizeWarning = nil
+                errorMessage = L10n.Couple.photoReadError
                 selectedPhotoItem = nil
                 photoPreview = nil
                 photoFileData = nil
                 return
             }
 
-            guard let compressed = compressJPEG(image, maxBytes: maxPhotoBytes) else {
-                photoSizeWarning = L10n.Couple.photoTooLarge
-                selectedPhotoItem = nil
-                photoPreview = nil
-                photoFileData = nil
-                return
-            }
-
-            photoPreview = image
+            photoPreview = UIImage(data: compressed) ?? image
             photoFileData = compressed
+            photoStore.setPreview(photoPreview, uploadData: compressed)
             photoSizeWarning = nil
             errorMessage = nil
         } catch {
             photoSizeWarning = nil
             errorMessage = L10n.Couple.photoReadError
             selectedPhotoItem = nil
-        }
-    }
-
-    private func compressJPEG(_ image: UIImage, maxBytes: Int) -> Data? {
-        var working = image
-        if let resized = resizedForUpload(image) {
-            working = resized
-        }
-
-        var quality: CGFloat = 0.85
-        var data = working.jpegData(compressionQuality: quality)
-        while let current = data, current.count > maxBytes, quality > 0.2 {
-            quality -= 0.1
-            data = working.jpegData(compressionQuality: quality)
-        }
-        guard let data, data.count <= maxBytes else { return nil }
-        return data
-    }
-
-    private func resizedForUpload(_ image: UIImage) -> UIImage? {
-        let maxDimension: CGFloat = 1600
-        let size = image.size
-        let longest = max(size.width, size.height)
-        guard longest > maxDimension else { return image }
-
-        let scale = maxDimension / longest
-        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: newSize)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: newSize))
         }
     }
 }

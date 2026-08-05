@@ -54,10 +54,11 @@ struct RemindersPreferencesView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: 18) {
                     MoreSubpageNavigationHeader(
                         title: L10n.Reminders.title,
                         subtitle: L10n.Reminders.subtitle
@@ -75,7 +76,7 @@ struct RemindersPreferencesView: View {
                         if let message = pushManager.lastTestMessage {
                             Text(message)
                                 .font(AppFont.regular(12))
-                                .foregroundStyle(AppTheme.inkMuted(0.55))
+                                .foregroundStyle(AppTheme.mutedOnBackground)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
@@ -139,7 +140,7 @@ struct RemindersPreferencesView: View {
             Spacer(minLength: 0)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var preferenceCard: some View {
@@ -175,7 +176,7 @@ struct RemindersPreferencesView: View {
             }
             .padding(14)
         }
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 
     private var testBannerButton: some View {
@@ -202,7 +203,7 @@ struct RemindersPreferencesView: View {
             }
             .foregroundStyle(AppTheme.sageDark)
             .padding(14)
-            .premiumGlassCard(cornerRadius: 16)
+            .premiumListRow(cornerRadius: 16)
         }
         .buttonStyle(.plain)
         .disabled(isSendingTest)
@@ -252,7 +253,7 @@ struct RemindersPreferencesView: View {
             }
             .foregroundStyle(AppTheme.sageDark)
             .padding(14)
-            .premiumGlassCard(cornerRadius: 16)
+            .premiumListRow(cornerRadius: 16)
         }
         .buttonStyle(.plain)
     }
@@ -271,7 +272,7 @@ struct RemindersPreferencesView: View {
                 .lineSpacing(3)
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 
     private func handleToggleChange(wantsEnabled: Bool) {
@@ -320,7 +321,8 @@ private struct AdminNotificationComposerView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 14) {
@@ -329,7 +331,7 @@ private struct AdminNotificationComposerView: View {
                             .foregroundStyle(AppTheme.titleOnGlass)
                             .tint(AppTheme.sageDark)
                             .padding(14)
-                            .premiumGlassCard(cornerRadius: 16)
+                            .premiumListRow(cornerRadius: 16)
 
                         if !sendToAll {
                             TextField(L10n.Reminders.recipientEmail, text: $recipientEmail)
@@ -338,20 +340,20 @@ private struct AdminNotificationComposerView: View {
                                 .autocorrectionDisabled()
                                 .font(AppFont.regular(14))
                                 .padding(14)
-                                .premiumGlassCard(cornerRadius: 16)
+                                .premiumListRow(cornerRadius: 16)
                         }
 
                         TextField(L10n.Reminders.notificationTitle, text: $title)
                             .font(AppFont.regular(14))
                             .padding(14)
-                            .premiumGlassCard(cornerRadius: 16)
+                            .premiumListRow(cornerRadius: 16)
 
                         TextEditor(text: $message)
                             .font(AppFont.regular(14))
                             .scrollContentBackground(.hidden)
                             .frame(minHeight: 130)
                             .padding(10)
-                            .premiumGlassCard(cornerRadius: 16)
+                            .premiumListRow(cornerRadius: 16)
                             .overlay(alignment: .topLeading) {
                                 if message.isEmpty {
                                     Text(L10n.Reminders.notificationMessage)
@@ -368,7 +370,7 @@ private struct AdminNotificationComposerView: View {
                         } label: {
                             HStack(spacing: 8) {
                                 if isSending {
-                                    ProgressView().tint(.white)
+                                    ProgressView().tint(AppTheme.primaryActionForeground(enabled: canSend))
                                 } else {
                                     Image(systemName: "paperplane.fill")
                                 }
@@ -376,17 +378,16 @@ private struct AdminNotificationComposerView: View {
                                 Text(isSending ? L10n.Reminders.sending : L10n.Reminders.sendButton)
                                     .font(AppFont.medium(15))
                             }
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.primaryActionForeground(enabled: canSend))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(
-                                AppTheme.quoteGradientMid,
+                                AppTheme.primaryActionFill(enabled: canSend),
                                 in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                             )
                         }
                         .buttonStyle(.plain)
                         .disabled(!canSend)
-                        .opacity(canSend ? 1 : 0.55)
                     }
                     .padding(20)
                 }
@@ -396,6 +397,7 @@ private struct AdminNotificationComposerView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.close) { dismiss() }
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
             }
             .alert(didSend ? L10n.Common.success : L10n.Common.warning, isPresented: $showFeedback) {

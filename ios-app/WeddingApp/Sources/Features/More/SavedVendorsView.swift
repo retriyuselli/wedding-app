@@ -15,10 +15,11 @@ struct SavedVendorsView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
                         title: L10n.More.savedVendors,
                         subtitle: L10n.More.savedVendorsSub
@@ -41,18 +42,16 @@ struct SavedVendorsView: View {
                             message: L10n.Vendor.savedEmptyMessage
                         )
                     } else {
-                        VStack(spacing: 12) {
-                            ForEach(savedVendors) { vendor in
-                                NavigationLink {
-                                    VendorDetailView(slug: vendor.slug)
-                                } label: {
-                                    SavedVendorRow(
-                                        vendor: vendor,
-                                        onRemove: { savedStore.toggle(vendor.id) }
-                                    )
-                                }
-                                .buttonStyle(.plain)
+                        ForEach(savedVendors) { vendor in
+                            NavigationLink {
+                                VendorDetailView(slug: vendor.slug)
+                            } label: {
+                                SavedVendorRow(
+                                    vendor: vendor,
+                                    onRemove: { savedStore.toggle(vendor.id) }
+                                )
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -91,17 +90,12 @@ private struct SavedVendorRow: View {
                 Circle()
                     .fill(vendor.logoTint)
 
-                if let raw = vendor.logoUrl ?? vendor.coverImageUrl,
+                if let raw = vendor.logoUrl,
                    let url = URL(string: raw) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image.resizable().scaledToFill()
-                        default:
-                            Image(systemName: vendor.logoSymbol)
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundStyle(.white)
-                        }
+                    DownsampledAsyncImage(url: url, maxPixelSize: 96) {
+                        Image(systemName: vendor.logoSymbol)
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundStyle(.white)
                     }
                     .frame(width: 48, height: 48)
                     .clipShape(Circle())
@@ -147,6 +141,6 @@ private struct SavedVendorRow: View {
             }
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 20)
+        .premiumListRow(cornerRadius: 20)
     }
 }

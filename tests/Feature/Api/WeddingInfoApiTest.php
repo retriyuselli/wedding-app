@@ -86,6 +86,78 @@ class WeddingInfoApiTest extends TestCase
         Storage::disk('public')->assertMissing($path);
     }
 
+    public function test_authenticated_user_can_download_couple_photo(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $path = 'couple-photos/'.$user->id.'/photo.jpg';
+        Storage::disk('public')->put($path, 'fake-image-bytes');
+
+        WeddingInfo::factory()->create([
+            'user_id' => $user->id,
+            'couple_photo' => $path,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->get('/api/v1/wedding-info/photo')
+            ->assertOk();
+
+        $this->assertSame('fake-image-bytes', $response->streamedContent());
+    }
+
+    public function test_couple_photo_url_points_to_authenticated_endpoint(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $path = 'couple-photos/'.$user->id.'/photo.jpg';
+        Storage::disk('public')->put($path, 'fake-image-bytes');
+
+        WeddingInfo::factory()->create([
+            'user_id' => $user->id,
+            'couple_photo' => $path,
+        ]);
+
+        $url = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/wedding-info')
+            ->assertOk()
+            ->json('data.couple_photo_url');
+
+        $this->assertIsString($url);
+        $this->assertStringContainsString('/api/v1/wedding-info/photo', $url);
+    }
+
+    public function test_user_can_upload_couple_photo_via_wedding_info_multipart(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'is_premium' => false,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->post('/api/v1/wedding-info', [
+                'bride_name' => 'Retri',
+                'groom_name' => 'Rama',
+                'budaya' => 'Adat Jawa',
+                'couple_photo' => UploadedFile::fake()->image('couple.jpg', 400, 500),
+            ]);
+
+        $response
+            ->assertSuccessful()
+            ->assertJsonPath('data.bride_name', 'Retri')
+            ->assertJsonPath('data.groom_name', 'Rama');
+
+        $url = $response->json('data.couple_photo_url');
+        $this->assertIsString($url);
+        $this->assertStringContainsString('/api/v1/wedding-info/photo', $url);
+
+        $info = WeddingInfo::query()->where('user_id', $user->id)->first();
+        $this->assertNotNull($info?->couple_photo);
+        Storage::disk('public')->assertExists($info->couple_photo);
+    }
+
     public function test_non_premium_user_cannot_upload_couple_photo_endpoint(): void
     {
         Storage::fake('public');

@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         Task { @MainActor in
             PushNotificationManager.shared.configure()
         }
+        AppFont.applyNavigationTitleFonts()
 
         return true
     }
@@ -75,6 +76,7 @@ extension Notification.Name {
     static let appDidBecomeActive = Notification.Name("appDidBecomeActive")
     static let sessionExpired = Notification.Name("WeddingApp.sessionExpired")
     static let openMessages = Notification.Name("WeddingApp.openMessages")
+    static let weddingInfoDidChange = Notification.Name("WeddingApp.weddingInfoDidChange")
 }
 
 private struct AppLanguageModifier: ViewModifier {

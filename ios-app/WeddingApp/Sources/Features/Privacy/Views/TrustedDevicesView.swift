@@ -7,7 +7,8 @@ struct TrustedDevicesView: View {
 
     var body: some View {
         ZStack {
-            LuxuryWeddingBackground()
+            AppTheme.background
+                .ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     MoreSubpageNavigationHeader(
@@ -24,7 +25,10 @@ struct TrustedDevicesView: View {
                     }
 
                     if viewModel.isLoading && viewModel.devices.isEmpty {
-                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
+                        ProgressView()
+                            .tint(AppTheme.titleOnBackground)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
                     }
 
                     Button {
@@ -33,12 +37,15 @@ struct TrustedDevicesView: View {
                             if viewModel.successMessage != nil { showSuccess = true }
                         }
                     } label: {
-                        Text(viewModel.isBusy ? "Menyimpan…" : "Percayai perangkat ini")
+                        Text(viewModel.isBusy ? L10n.Privacy.saving : L10n.Privacy.trustThisDevice)
                             .font(AppFont.medium(15))
+                            .foregroundStyle(AppTheme.primaryActionForeground(enabled: !viewModel.isBusy))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(AppTheme.sageDark, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .foregroundStyle(.white)
+                            .background(
+                                AppTheme.primaryActionFill(enabled: !viewModel.isBusy),
+                                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            )
                     }
                     .disabled(viewModel.isBusy)
 
@@ -55,12 +62,12 @@ struct TrustedDevicesView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
         .refreshable { await viewModel.retry() }
-        .alert("Berhasil", isPresented: $showSuccess) {
+        .alert(L10n.Common.success, isPresented: $showSuccess) {
             Button(L10n.Common.ok, role: .cancel) {}
         } message: {
             Text(viewModel.successMessage ?? "")
         }
-        .alert("Hapus perangkat?", isPresented: Binding(
+        .alert(L10n.Privacy.deleteDeviceTitle, isPresented: Binding(
             get: { deviceToDelete != nil },
             set: { if !$0 { deviceToDelete = nil } }
         )) {
@@ -83,7 +90,7 @@ struct TrustedDevicesView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(device.deviceName).font(AppFont.medium(14)).foregroundStyle(AppTheme.ink)
-                    Text(device.isTrusted ? "Tepercaya" : "Tidak dipercaya")
+                    Text(device.isTrusted ? L10n.Privacy.deviceTrusted : L10n.Privacy.deviceUntrusted)
                         .font(AppFont.regular(12))
                         .foregroundStyle(AppTheme.ink.opacity(0.45))
                     if device.isCurrent == true {
@@ -108,10 +115,10 @@ struct TrustedDevicesView: View {
             Button(role: .destructive) {
                 deviceToDelete = device
             } label: {
-                Text("Hapus").font(AppFont.medium(12))
+                Text(L10n.Common.delete).font(AppFont.medium(12))
             }
         }
         .padding(14)
-        .premiumGlassCard(cornerRadius: 16)
+        .premiumListRow(cornerRadius: 16)
     }
 }

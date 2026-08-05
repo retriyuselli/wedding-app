@@ -26,16 +26,18 @@ struct NotificationsSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LuxuryWeddingBackground()
+                AppTheme.background
+                    .ignoresSafeArea()
 
                 Group {
                     if isLoading && notifications.isEmpty {
                         ProgressView()
+                            .tint(AppTheme.titleOnBackground)
                     } else if let errorMessage, notifications.isEmpty {
-                        ContentUnavailableView(
-                            L10n.Dashboard.notificationsLoadError,
-                            systemImage: "exclamationmark.triangle",
-                            description: Text(errorMessage)
+                        AppEmptyState(
+                            icon: "exclamationmark.triangle",
+                            title: L10n.Dashboard.notificationsLoadError,
+                            message: errorMessage
                         )
                     } else if visibleNotifications.isEmpty {
                         emptyState
@@ -50,7 +52,7 @@ struct NotificationsSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.Common.close) { dismiss() }
                         .font(AppFont.medium(15))
-                        .foregroundStyle(AppTheme.sageDark)
+                        .foregroundStyle(AppTheme.titleOnBackground)
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -77,7 +79,7 @@ struct NotificationsSheet: View {
                         }
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
-                            .foregroundStyle(AppTheme.sageDark)
+                            .foregroundStyle(AppTheme.titleOnBackground)
                     }
                     .accessibilityLabel(L10n.Common.filter)
                 }
@@ -91,22 +93,22 @@ struct NotificationsSheet: View {
         VStack(spacing: 20) {
             Image(systemName: unreadOnly ? "envelope.open" : "bell.slash")
                 .font(.system(size: 48, weight: .light))
-                .foregroundStyle(AppTheme.sageDark.opacity(0.4))
+                .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.7))
 
             VStack(spacing: 6) {
                 Text(unreadOnly ? L10n.Dashboard.noUnreadNotifications : L10n.Dashboard.noNotifications)
-                    .font(.system(size: 20, weight: .semibold, design: .serif))
-                    .foregroundStyle(AppTheme.sageDark)
+                    .font(AppFont.serifSemibold(20))
+                    .foregroundStyle(AppTheme.titleOnBackground)
 
                 Text(unreadOnly ? L10n.Dashboard.noUnreadNotificationsSub : L10n.Dashboard.noNotificationsSub)
                     .font(AppFont.regular(13))
-                    .foregroundStyle(AppTheme.ink.opacity(0.5))
+                    .foregroundStyle(AppTheme.mutedOnBackground)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
 
                 Text(L10n.Dashboard.notificationsAccountHint(signedInEmail))
                     .font(AppFont.regular(11))
-                    .foregroundStyle(AppTheme.ink.opacity(0.4))
+                    .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.85))
                     .multilineTextAlignment(.center)
                     .padding(.top, 8)
             }
@@ -114,7 +116,7 @@ struct NotificationsSheet: View {
             #if DEBUG
             Text("API: \(APIConfig.baseURL.host ?? APIConfig.baseURL.absoluteString)")
                 .font(AppFont.regular(10))
-                .foregroundStyle(AppTheme.ink.opacity(0.35))
+                .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.7))
             #endif
         }
         .padding(.horizontal, 32)
@@ -208,7 +210,7 @@ struct NotificationsSheet: View {
         }
         .padding(14)
         .background(
-            notification.isUnread ? AppTheme.lightSage.opacity(0.55) : AppTheme.surface,
+            notification.isUnread ? AppTheme.selectedChipFill : AppTheme.surface,
             in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
         .overlay {

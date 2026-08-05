@@ -63,7 +63,14 @@ class WeddingInfo extends Model
             return $this->couple_photo;
         }
 
-        return asset('storage/'.ltrim($this->couple_photo, '/'));
+        // Serve via authenticated API so clients do not depend on public /storage access
+        // (some hosts block or misconfigure the storage symlink).
+        $url = url('/api/v1/wedding-info/photo');
+        if ($this->updated_at) {
+            $url .= '?t='.$this->updated_at->getTimestamp();
+        }
+
+        return $url;
     }
 
     public function getCoupleNamesAttribute(): string

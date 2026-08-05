@@ -5,13 +5,32 @@ enum APIConfig {
     static let productionURL = URL(string: "https://weddingapp.co.id/api/v1")!
 
     #if DEBUG
-    /// Physical devices can't reach the Mac's localhost, so they need the Mac's LAN IP instead.
-    /// Update this if the Mac's IP changes (check with `ipconfig getifaddr en0` on the Mac).
+    /// UserDefaults override key for physical-device LAN host.
+    /// Example: `UserDefaults.standard.set("192.168.1.13", forKey: APIConfig.lanHostDefaultsKey)`
+    static let lanHostDefaultsKey = "APIConfig.lanHost"
+
+    /// Fallback Mac LAN IP when no UserDefaults override is set.
+    /// Check with `ipconfig getifaddr en0` on the Mac, then either update this
+    /// or set `lanHostDefaultsKey` without rebuilding.
     /// Start backend with: `php artisan serve --host=0.0.0.0 --port=8000`
-    private static let lanHost = "192.168.1.3"
+    private static let defaultLanHost = "192.168.1.13"
+
+    static var lanHost: String {
+        if let override = UserDefaults.standard.string(forKey: lanHostDefaultsKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !override.isEmpty {
+            return override
+        }
+        return defaultLanHost
+    }
 
     /// Set `true` untuk memaksa build Debug memakai server production HTTPS.
     static var usesProductionAPI = false
+
+    /// When `false` (default), Debug stays on the local candidate if `/up` fails
+    /// instead of silently falling back to production (avoids token/data mixups).
+    /// Set `true` only when you intentionally want production as a Debug fallback.
+    static var allowsProductionFallback = false
 
     static var localCandidateBaseURLs: [URL] {
         #if targetEnvironment(simulator)

@@ -34,7 +34,7 @@ final class TrustedDevicesViewModel: ObservableObject {
 
         do {
             _ = try await repository.trustCurrentDevice()
-            successMessage = "Perangkat ini ditandai sebagai tepercaya."
+            successMessage = L10n.Privacy.deviceTrustedSuccess
             await load()
         } catch {
             guard !error.isRequestCancelled else { return }
@@ -49,7 +49,7 @@ final class TrustedDevicesViewModel: ObservableObject {
 
         do {
             _ = try await repository.setDeviceTrusted(id: device.id, trusted: !device.isTrusted)
-            successMessage = device.isTrusted ? "Kepercayaan perangkat dicabut." : "Perangkat dipercaya."
+            successMessage = device.isTrusted ? L10n.Privacy.deviceTrustRevoked : L10n.Privacy.deviceTrustGranted
             await load()
         } catch {
             guard !error.isRequestCancelled else { return }
@@ -64,7 +64,7 @@ final class TrustedDevicesViewModel: ObservableObject {
 
         do {
             try await repository.removeTrustedDevice(id: device.id)
-            successMessage = "Perangkat dihapus dari daftar."
+            successMessage = L10n.Privacy.deviceDeletedSuccess
             await load()
         } catch {
             guard !error.isRequestCancelled else { return }

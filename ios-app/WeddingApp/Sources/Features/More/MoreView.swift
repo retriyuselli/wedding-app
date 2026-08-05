@@ -7,6 +7,14 @@ struct MoreView: View {
     @State private var showLogoutConfirmation = false
     @State private var showComingSoon = false
     @State private var showPaywall = false
+    @State private var lastLoadAt: Date?
+
+    private var couplePhotoURL: URL? {
+        guard let raw = info.couplePhotoUrl?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !raw.isEmpty,
+              let url = URL(string: raw) else { return nil }
+        return url
+    }
 
     private var coupleName: String {
         let bride = info.brideName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -53,29 +61,32 @@ struct MoreView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                LuxuryWeddingBackground()
-
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        header
-                        profileCard
-                        weddingProCard
-                        sectionGroup(title: L10n.More.planningSection, items: planningItems)
-                        sectionGroup(title: L10n.More.accountSection, items: accountItems)
-                        shareCard
-                        logoutButton
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 20)
+            ScrollView(showsIndicators: false) {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    header
+                    profileCard
+                    weddingProCard
+                    sectionGroup(title: L10n.More.planningSection, items: planningItems)
+                    sectionGroup(title: L10n.More.accountSection, items: accountItems)
+                    shareCard
+                    logoutButton
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 20)
+            }
+            .background {
+                AppTheme.background.ignoresSafeArea()
             }
             .statusBarBlur()
             .toolbar(.hidden, for: .navigationBar)
             .task { await load() }
             .refreshable { await load() }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
+                if let lastLoadAt, Date().timeIntervalSince(lastLoadAt) < 60 { return }
+                Task { await load() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .weddingInfoDidChange)) { _ in
                 Task { await load() }
             }
             .alert(L10n.More.logoutTitle, isPresented: $showLogoutConfirmation) {
@@ -101,12 +112,12 @@ struct MoreView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(L10n.More.title)
-                .font(.system(size: 32, weight: .bold, design: .serif))
-                .foregroundStyle(AppTheme.sageDark)
+                .font(AppFont.serifBold(32))
+                .foregroundStyle(AppTheme.titleOnBackground)
 
             Text(L10n.More.subtitle)
-                .font(.system(size: 12, weight: .regular, design: .serif))
-                .foregroundStyle(AppTheme.gold)
+                .font(AppFont.serifRegular(12))
+                .foregroundStyle(AppTheme.mutedOnBackground)
                 .lineSpacing(2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -117,7 +128,11 @@ struct MoreView: View {
     private var profileCard: some View {
         VStack(spacing: 14) {
             HStack(spacing: 14) {
-                UserAvatarCircle(url: session.currentUser?.avatarUrl, size: 66)
+                UserAvatarCircle(
+                    couplePhotoURL: couplePhotoURL,
+                    avatarURL: session.currentUser?.avatarUrl,
+                    size: 66
+                )
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(coupleName)
@@ -153,20 +168,12 @@ struct MoreView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 11)
-                .background {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(AppTheme.lightSage.opacity(0.72))
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.white.opacity(0.55), lineWidth: 1)
-                }
+                .background(AppTheme.lightSage.opacity(0.72), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 28)
+        .premiumListRow(cornerRadius: 28)
     }
 
     private var weddingProCard: some View {
@@ -203,25 +210,14 @@ struct MoreView: View {
                     .padding(.vertical, 6)
                     .background {
                         if session.isPremium {
-                            Capsule()
-                                .fill(AppTheme.lightSage)
-                                .overlay {
-                                    Capsule()
-                                        .stroke(AppTheme.sageDark.opacity(0.22), lineWidth: 1)
-                                }
+                            Capsule().fill(AppTheme.lightSage)
                         } else {
-                            Capsule().fill(
-                                LinearGradient(
-                                    colors: [AppTheme.sage, AppTheme.sageDark],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            Capsule().fill(AppTheme.sageDark)
                         }
                     }
             }
             .padding(16)
-            .premiumGlassCard(cornerRadius: 22)
+            .premiumListRow(cornerRadius: 22)
         }
         .buttonStyle(.plain)
         // Avoid `.disabled` — it greys out the whole card when Pro is active.
@@ -233,7 +229,7 @@ struct MoreView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(AppFont.medium(15))
-                .foregroundStyle(AppTheme.ink.opacity(0.6))
+                .foregroundStyle(AppTheme.mutedOnBackground)
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {
@@ -245,7 +241,7 @@ struct MoreView: View {
                     }
                 }
             }
-            .premiumGlassCard(cornerRadius: 22)
+            .premiumListRow(cornerRadius: 22)
         }
     }
 
@@ -315,7 +311,7 @@ struct MoreView: View {
             }
         }
         .padding(16)
-        .premiumGlassCard(cornerRadius: 22)
+        .premiumListRow(cornerRadius: 22)
     }
 
     private var logoutButton: some View {
@@ -327,7 +323,7 @@ struct MoreView: View {
                 .foregroundStyle(Color.red.opacity(0.85))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .premiumGlassCard(cornerRadius: 16)
+                .premiumListRow(cornerRadius: 16)
                 .overlay {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(Color.red.opacity(0.22), lineWidth: 1)
@@ -337,6 +333,7 @@ struct MoreView: View {
     }
 
     private func load() async {
+        lastLoadAt = Date()
         do {
             let infoEnvelope: Envelope<WeddingInfo> = try await APIClient.shared.request("wedding-info")
             info = infoEnvelope.data
@@ -408,15 +405,7 @@ private struct MoreRow: View {
                 .font(.system(size: 16, weight: .regular))
                 .foregroundStyle(AppTheme.sageDark)
                 .frame(width: 34, height: 34)
-                .background {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(AppTheme.sage.opacity(0.12))
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(Color.white.opacity(0.45), lineWidth: 1)
-                }
+                .background(AppTheme.sage.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title)
@@ -441,24 +430,24 @@ private struct MoreRow: View {
 }
 
 private struct UserAvatarCircle: View {
-    let url: String?
+    var couplePhotoURL: URL? = nil
+    var avatarURL: String? = nil
     let size: CGFloat
+
+    @ObservedObject private var photoStore = CouplePhotoStore.shared
 
     var body: some View {
         Group {
-            if let urlString = url, !urlString.isEmpty, let imageURL = URL(string: urlString) {
-                AsyncImage(url: imageURL) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable().aspectRatio(contentMode: .fill)
-                    case .failure, .empty:
-                        fallbackAvatar
-                    @unknown default:
-                        fallbackAvatar
-                    }
+            if let local = photoStore.previewImage {
+                Image(uiImage: local)
+                    .resizable()
+                    .scaledToFill()
+            } else if let couplePhotoURL {
+                DownsampledAsyncImage(url: couplePhotoURL, maxPixelSize: size * 2) {
+                    avatarOrPlaceholder
                 }
             } else {
-                fallbackAvatar
+                avatarOrPlaceholder
             }
         }
         .frame(width: size, height: size)
@@ -466,7 +455,18 @@ private struct UserAvatarCircle: View {
         .overlay { Circle().stroke(AppTheme.gold.opacity(0.5), lineWidth: 1.5) }
     }
 
-    private var fallbackAvatar: some View {
+    @ViewBuilder
+    private var avatarOrPlaceholder: some View {
+        if let urlString = avatarURL, !urlString.isEmpty, let imageURL = URL(string: urlString) {
+            DownsampledAsyncImage(url: imageURL, maxPixelSize: size * 2) {
+                placeholderAvatar
+            }
+        } else {
+            placeholderAvatar
+        }
+    }
+
+    private var placeholderAvatar: some View {
         Image("CouplePortrait")
             .resizable()
             .aspectRatio(contentMode: .fill)
