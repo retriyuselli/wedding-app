@@ -1,4 +1,0 @@
-module third_party_IsAppEncrypted {
-umbrella "/Applications/MAMP/htdocs/wedding-app/ios-app/WeddingApp/.build/DerivedData/SourcePackages/checkouts/GoogleUtilities/third_party/IsAppEncrypted/Public"
-export *
-}

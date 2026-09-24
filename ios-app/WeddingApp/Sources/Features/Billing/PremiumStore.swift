@@ -69,7 +69,10 @@ final class PremiumStore: ObservableObject {
         defer { isLoading = false }
         do {
             products = try await Product.products(for: BillingProduct.allProIds)
-            if proProduct == nil {
+                .sorted { lhs, rhs in
+                    Self.productOrder(lhs.id) < Self.productOrder(rhs.id)
+                }
+            if products.isEmpty {
                 errorMessage = L10n.Premium.productUnavailable
             } else {
                 errorMessage = nil
@@ -104,6 +107,56 @@ final class PremiumStore: ObservableObject {
             #if DEBUG
             print("[Premium] entitlement refresh failed: \(error)")
             #endif
+        }
+    }
+
+    private static func productOrder(_ productId: String) -> Int {
+        switch productId {
+        case BillingProduct.monthly: return 0
+        default: return 1
+        }
+    }
+
+    @discardableResult
+    func purchase(_ product: Product, session: SessionStore) async -> Bool {
+        bind(session: session)
+
+        do {
+            purchaseInFlight = true
+            errorMessage = nil
+            defer { purchaseInFlight = false }
+
+            let result = try await product.purchase()
+            switch result {
+            case .success(let verification):
+                let transaction = try checkVerified(verification)
+                let synced = await syncToServer(
+                    productId: transaction.productID,
+                    transactionId: String(transaction.id),
+                    originalTransactionId: String(transaction.originalID),
+                    signedTransaction: verification.jwsRepresentation,
+                    session: session
+                )
+                if synced {
+                    await transaction.finish()
+                    await refreshLocalEntitlements()
+                    return true
+                }
+
+                await refreshLocalEntitlements()
+                return false
+            case .userCancelled:
+                return false
+            case .pending:
+                errorMessage = L10n.Premium.purchasePending
+                return false
+            @unknown default:
+                errorMessage = L10n.Premium.purchaseFailed
+                return false
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
         }
     }
 

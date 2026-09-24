@@ -9,6 +9,7 @@ struct APIErrorResponse: Decodable {
 enum APIError: LocalizedError {
     case server(String)
     case premiumRequired(String)
+    case checklistFreeLimit(String)
     case unauthorized
     case decoding(String?)
     case unknown
@@ -18,6 +19,8 @@ enum APIError: LocalizedError {
         case .server(let message):
             return message
         case .premiumRequired(let message):
+            return message
+        case .checklistFreeLimit(let message):
             return message
         case .unauthorized:
             return "Sesi berakhir, silakan login kembali."
@@ -42,7 +45,19 @@ extension Error {
         return false
     }
 
+    var checklistFreeLimit: Bool {
+        if case .checklistFreeLimit = self as? APIError {
+            return true
+        }
+
+        return false
+    }
+
     var premiumRequired: Bool {
+        if case .checklistFreeLimit = self as? APIError {
+            return false
+        }
+
         if case .premiumRequired = self as? APIError {
             return true
         }

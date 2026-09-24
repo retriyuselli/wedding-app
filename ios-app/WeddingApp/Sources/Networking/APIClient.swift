@@ -275,6 +275,9 @@ final class APIClient {
             if statusCode == 403, errorResponse.code == "premium_required" {
                 return .premiumRequired(message)
             }
+            if statusCode == 403, errorResponse.code == "checklist_free_limit" {
+                return .checklistFreeLimit(message)
+            }
             return .server(message)
         }
 

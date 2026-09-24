@@ -20,6 +20,9 @@ struct ChecklistView: View {
     @State private var showAddTaskSheet = false
     @State private var addTaskPreferredEventId: Int?
     @State private var showPaywall = false
+    @State private var showCompletionLimit = false
+
+    private static let freeDoneLimit = 20
     @State private var cachedAllGroups: [ChecklistGroup] = []
     @State private var cachedGroups: [ChecklistGroup] = []
     @State private var scrollItems: [ChecklistScrollItem] = []
@@ -122,15 +125,6 @@ struct ChecklistView: View {
                     .padding(.bottom, 24)
                 }
                 .scrollDismissesKeyboard(.interactively)
-                .opacity(isPremium ? 1 : 0.55)
-                .allowsHitTesting(isPremium)
-
-                if !isPremium {
-                    PremiumLockedOverlay {
-                        showPaywall = true
-                    }
-                    .padding(.horizontal, 24)
-                }
             }
             .background {
                 AppTheme.background.ignoresSafeArea()
@@ -138,31 +132,19 @@ struct ChecklistView: View {
             .statusBarBlur()
             .toolbar(.hidden, for: .navigationBar)
             .task {
-                if isPremium {
-                    await load()
-                } else {
-                    await loadPreview()
-                }
+                await load()
             }
             .refreshable {
-                if isPremium {
-                    await load()
-                } else {
-                    await loadPreview()
-                }
+                await load()
             }
             .onReceive(NotificationCenter.default.publisher(for: .appDidBecomeActive)) { _ in
-                guard isPremium else { return }
                 if let lastLoadAt, Date().timeIntervalSince(lastLoadAt) < 60 { return }
                 Task { await load() }
             }
             .onChange(of: isPremium) { _, premium in
-                Task {
-                    if premium {
-                        await load()
-                    } else {
-                        await loadPreview()
-                    }
+                if premium {
+                    showCompletionLimit = false
+                    showPaywall = false
                 }
             }
             .onChange(of: selectedFilter) { _, _ in recomputeChecklistCaches() }
@@ -185,7 +167,9 @@ struct ChecklistView: View {
                     onSubTasksUpdated: { taskId, status, subTasks in
                         syncTaskStatus(taskId: taskId, status: status.rawValue, subTasks: subTasks)
                     },
-                    onTaskEdited: { taskId, result in applyTaskEdit(taskId: taskId, result: result) }
+                    onTaskEdited: { taskId, result in applyTaskEdit(taskId: taskId, result: result) },
+                    canMarkTaskDone: { anotherTaskCanBeMarkedDone(taskId: task.id) },
+                    onFreeLimit: { showCompletionLimit = true }
                 )
             }
             .sheet(isPresented: $showAddTaskSheet, onDismiss: {
@@ -205,10 +189,27 @@ struct ChecklistView: View {
                 }
             }
         }
+        .overlay {
+            if showCompletionLimit {
+                ZStack {
+                    Color.black.opacity(0.12)
+                        .ignoresSafeArea()
+                        .onTapGesture { showCompletionLimit = false }
+
+                    PremiumLockedOverlay {
+                        showCompletionLimit = false
+                        showPaywall = true
+                    }
+                    .padding(.horizontal, 24)
+                }
+            }
+        }
     }
 
-    private func runPremiumOrPaywall(_ action: @escaping () -> Void) {
-        PremiumGate.presentOrRun(session: session, showPaywall: $showPaywall, action: action)
+    private func anotherTaskCanBeMarkedDone(taskId: Int) -> Bool {
+        if isPremium { return true }
+        if tasks.first(where: { $0.id == taskId })?.statusValue == .done { return true }
+        return doneTasks < Self.freeDoneLimit
     }
 
     private var preferredAddEventId: Int? {
@@ -233,12 +234,21 @@ struct ChecklistView: View {
         return sectionTitles[sectionId]
     }
 
-    private func changeStatus(_ task: PreparationTask, to status: PreparationTask.Status) {
+    @discardableResult
+    private func changeStatus(_ task: PreparationTask, to status: PreparationTask.Status) -> Bool {
+        if status == .done, !anotherTaskCanBeMarkedDone(taskId: task.id) {
+            showCompletionLimit = true
+            return false
+        }
+
+        let previousStatus = task.status
         syncTaskStatus(taskId: task.id, status: status.rawValue, subTasks: nil)
-        persistTaskStatus(task, status: status)
+        persistTaskStatus(task, status: status, previousStatus: previousStatus)
+        return true
     }
 
     private func syncTaskStatus(taskId: Int, status: String, subTasks: [PreparationSubTask]?) {
+        let previousDone = doneTasks
         if let index = tasks.firstIndex(where: { $0.id == taskId }) {
             tasks[index].status = status
             if let subTasks {
@@ -252,6 +262,12 @@ struct ChecklistView: View {
             }
         }
         recomputeChecklistCaches()
+        if !isPremium,
+           status == PreparationTask.Status.done.rawValue,
+           previousDone < Self.freeDoneLimit,
+           doneTasks >= Self.freeDoneLimit {
+            showCompletionLimit = true
+        }
     }
 
     private func applyTaskEdit(taskId: Int, result: TaskEditResult) {
@@ -272,15 +288,22 @@ struct ChecklistView: View {
         recomputeChecklistCaches()
     }
 
-    private func persistTaskStatus(_ task: PreparationTask, status: PreparationTask.Status) {
+    private func persistTaskStatus(_ task: PreparationTask, status: PreparationTask.Status, previousStatus: String) {
         guard !tasks.isEmpty else { return }
 
         Task {
-            try? await APIClient.shared.requestNoContent(
-                "customer-preparation-tasks/\(task.id)",
-                method: "PUT",
-                json: ["title": task.title, "status": status.rawValue]
-            )
+            do {
+                try await APIClient.shared.requestNoContent(
+                    "customer-preparation-tasks/\(task.id)",
+                    method: "PUT",
+                    json: ["title": task.title, "status": status.rawValue]
+                )
+            } catch {
+                syncTaskStatus(taskId: task.id, status: previousStatus, subTasks: nil)
+                if error.checklistFreeLimit {
+                    showCompletionLimit = true
+                }
+            }
         }
     }
 
@@ -301,20 +324,16 @@ struct ChecklistView: View {
 
             HStack(spacing: 10) {
                 Button {
-                    runPremiumOrPaywall {
-                        isSearching = true
-                        isSearchFocused = true
-                    }
+                    isSearching = true
+                    isSearchFocused = true
                 } label: {
                     circleButton("magnifyingglass")
                 }
                 .buttonStyle(.plain)
 
                 Button {
-                    runPremiumOrPaywall {
-                        addTaskPreferredEventId = nil
-                        showAddTaskSheet = true
-                    }
+                    addTaskPreferredEventId = nil
+                    showAddTaskSheet = true
                 } label: {
                     circleButton("plus")
                 }
@@ -556,9 +575,7 @@ struct ChecklistView: View {
 
         case .task(_, let task):
             Button {
-                runPremiumOrPaywall {
-                    selectedTask = task
-                }
+                selectedTask = task
             } label: {
                 TaskRow(task: task)
                     .equatable()
@@ -586,10 +603,8 @@ struct ChecklistView: View {
 
         case .addTask(let groupId):
             Button {
-                runPremiumOrPaywall {
-                    addTaskPreferredEventId = groupId
-                    showAddTaskSheet = true
-                }
+                addTaskPreferredEventId = groupId
+                showAddTaskSheet = true
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle.fill")

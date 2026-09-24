@@ -1222,9 +1222,13 @@ enum L10n {
         static var benefitPartner: String { "premium.benefit_partner".localized }
         static var benefitVisibility: String { "premium.benefit_visibility".localized }
         static func buy(_ price: String) -> String { "premium.buy".localized(price) }
+        static func planMonthly(_ price: String) -> String { "premium.plan_monthly".localized(price) }
+        static func planLifetime(_ price: String) -> String { "premium.plan_lifetime".localized(price) }
         static var buyFallback: String { "premium.buy_fallback".localized }
         static var restore: String { "premium.restore".localized }
         static var footnote: String { "premium.footnote".localized }
+        static var privacyLink: String { "premium.privacy_link".localized }
+        static var termsLink: String { "premium.terms_link".localized }
         static var productUnavailable: String { "premium.product_unavailable".localized }
         static var reloadProducts: String { "premium.reload_products".localized }
         static var purchasePending: String { "premium.purchase_pending".localized }

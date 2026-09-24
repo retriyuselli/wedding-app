@@ -6,9 +6,11 @@ struct TaskDetailView: View {
     let sectionTitle: String?
     let createdAt: String?
     let attachments: [PreparationTaskAttachment]
-    let onChangeStatus: (PreparationTask.Status) -> Void
+    let onChangeStatus: (PreparationTask.Status) -> Bool
     let onSubTasksUpdated: (Int, PreparationTask.Status, [PreparationSubTask]) -> Void
     let onTaskEdited: (Int, TaskEditResult) -> Void
+    let canMarkTaskDone: () -> Bool
+    let onFreeLimit: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var status: PreparationTask.Status
@@ -24,9 +26,11 @@ struct TaskDetailView: View {
         task: PreparationTask,
         eventTitle: String,
         sectionTitle: String?,
-        onChangeStatus: @escaping (PreparationTask.Status) -> Void,
+        onChangeStatus: @escaping (PreparationTask.Status) -> Bool,
         onSubTasksUpdated: @escaping (Int, PreparationTask.Status, [PreparationSubTask]) -> Void,
-        onTaskEdited: @escaping (Int, TaskEditResult) -> Void
+        onTaskEdited: @escaping (Int, TaskEditResult) -> Void,
+        canMarkTaskDone: @escaping () -> Bool = { true },
+        onFreeLimit: @escaping () -> Void = {}
     ) {
         taskId = task.id
         self.eventTitle = eventTitle
@@ -36,6 +40,8 @@ struct TaskDetailView: View {
         self.onChangeStatus = onChangeStatus
         self.onSubTasksUpdated = onSubTasksUpdated
         self.onTaskEdited = onTaskEdited
+        self.canMarkTaskDone = canMarkTaskDone
+        self.onFreeLimit = onFreeLimit
         _status = State(initialValue: task.statusValue)
         _subTasks = State(initialValue: task.subTasks ?? [])
         _taskTitle = State(initialValue: task.title)
@@ -372,8 +378,8 @@ struct TaskDetailView: View {
     private var bottomBar: some View {
         Button {
             let next: PreparationTask.Status = status == .done ? .pending : .done
+            guard onChangeStatus(next) else { return }
             withAnimation(.easeInOut(duration: 0.2)) { status = next }
-            onChangeStatus(next)
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: status == .done ? "arrow.uturn.backward.circle" : "checkmark.circle")
@@ -418,6 +424,13 @@ struct TaskDetailView: View {
 
         let previous = subTasks[index]
         let next = PreparationTask.nextStatus(after: sub.statusValue)
+        var projected = subTasks
+        projected[index].status = next.rawValue
+        let parentNext = PreparationTask.status(from: projected)
+        if parentNext == .done, status != .done, !canMarkTaskDone() {
+            onFreeLimit()
+            return
+        }
         subTasks[index].status = next.rawValue
         subTasks[index].completedAt = next == .done ? Self.todayString() : nil
         syncParentStatusFromSubTasks()
@@ -443,6 +456,9 @@ struct TaskDetailView: View {
                     subTasks[revertIndex] = previous
                 }
                 syncParentStatusFromSubTasks()
+                if error.checklistFreeLimit {
+                    onFreeLimit()
+                }
             }
         }
     }

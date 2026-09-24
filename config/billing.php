@@ -11,9 +11,20 @@ return [
     */
     'pro_product_ids' => [
         'wedding_pro_unlock',
+        'wedding_pro_monthly',
+    ],
+
+    // Auto-renewable. Lifetime unlock stays in pro_product_ids with no expiry.
+    'subscription_product_ids' => [
+        'wedding_pro_monthly',
     ],
 
     'pro_required_message' => 'Fitur ini tersedia di Wedding Pro. Silakan upgrade untuk melanjutkan.',
+
+    // Non-premium users can mark this many checklist tasks done before the Pro prompt.
+    'free_checklist_done_limit' => 20,
+
+    'checklist_free_limit_message' => 'Batas 20 tugas selesai untuk akun gratis sudah tercapai.',
 
     /*
     |--------------------------------------------------------------------------

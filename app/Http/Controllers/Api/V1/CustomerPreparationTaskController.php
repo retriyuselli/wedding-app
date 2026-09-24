@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\CustomerPreparationTaskResource;
 use App\Models\CustomerPreparationSubTask;
 use App\Models\CustomerPreparationTask;
+use App\Services\ChecklistFreeCompletionQuota;
 use App\Services\CustomerPreparationSummaryCalculator;
 use App\Services\DefaultWeddingChecklistProvisioner;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ class CustomerPreparationTaskController extends Controller
 {
     public function __construct(
         private readonly CustomerPreparationSummaryCalculator $summaryCalculator,
+        private readonly ChecklistFreeCompletionQuota $completionQuota,
     ) {}
 
     public function summary(Request $request): JsonResponse
@@ -69,6 +71,10 @@ class CustomerPreparationTaskController extends Controller
         $data['priority'] ??= 'medium';
         $data['user_id'] = $request->user()->id;
 
+        if ($data['status'] === 'done' && ! $this->completionQuota->allowsCreatingDoneTask($request->user())) {
+            $this->completionQuota->deny();
+        }
+
         if (! array_key_exists('sort_order', $data) || $data['sort_order'] === null) {
             unset($data['sort_order']);
         }
@@ -105,6 +111,11 @@ class CustomerPreparationTaskController extends Controller
         $data = $this->validated($request, isUpdate: true);
 
         $task = $this->findOwned($request, $customerPreparationTask);
+
+        if (($data['status'] ?? null) === 'done' && ! $this->completionQuota->allowsMarkingDone($request->user(), $task)) {
+            $this->completionQuota->deny();
+        }
+
         $task->update($data);
 
         return new CustomerPreparationTaskResource($task->load(['subTasks', 'attachments']));
@@ -120,7 +131,13 @@ class CustomerPreparationTaskController extends Controller
     public function toggle(Request $request, int $customerPreparationTask): CustomerPreparationTaskResource
     {
         $task = $this->findOwned($request, $customerPreparationTask);
-        $task->status = $task->status === 'done' ? 'pending' : 'done';
+        $markingDone = $task->status !== 'done';
+
+        if ($markingDone && ! $this->completionQuota->allowsMarkingDone($request->user(), $task)) {
+            $this->completionQuota->deny();
+        }
+
+        $task->status = $markingDone ? 'done' : 'pending';
         $task->save();
 
         return new CustomerPreparationTaskResource($task->load(['subTasks', 'attachments']));

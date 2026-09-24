@@ -32,6 +32,7 @@ use Spatie\Permission\Traits\HasRoles;
     'is_premium',
     'premium_product_id',
     'premium_activated_at',
+    'premium_expires_at',
     'apple_original_transaction_id',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -51,12 +52,21 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'password_changed_at' => 'datetime',
             'is_premium' => 'boolean',
             'premium_activated_at' => 'datetime',
+            'premium_expires_at' => 'datetime',
         ];
     }
 
     public function isPremium(): bool
     {
-        return (bool) $this->is_premium;
+        if (! $this->is_premium) {
+            return false;
+        }
+
+        if ($this->premium_expires_at === null) {
+            return true;
+        }
+
+        return $this->premium_expires_at->isFuture();
     }
 
     public function trustedDevices(): HasMany

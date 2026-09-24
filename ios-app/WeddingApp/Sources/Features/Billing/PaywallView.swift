@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 struct PaywallView: View {
@@ -32,13 +33,14 @@ struct PaywallView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
 
-                        if premium.proProduct == nil {
+                        if premium.products.isEmpty {
                             reloadProductsButton
                         }
 
-                        purchaseButton
+                        purchaseButtons
                         restoreButton
                         footnote
+                        legalLinks
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
@@ -57,7 +59,9 @@ struct PaywallView: View {
             .alert(alertTitle, isPresented: $showAlert) {
                 if alertOffersPurchase {
                     Button(L10n.Premium.buyFallback) {
-                        Task { await runPurchase() }
+                        if let product = premium.proProduct ?? premium.products.first {
+                            Task { await runPurchase(product) }
+                        }
                     }
                     Button(L10n.Common.close, role: .cancel) {}
                 } else {
@@ -137,38 +141,57 @@ struct PaywallView: View {
         .disabled(premium.isLoading || premium.purchaseInFlight)
     }
 
-    private var purchaseButton: some View {
-        Button {
-            Task { await runPurchase() }
-        } label: {
-            HStack {
-                if premium.purchaseInFlight {
-                    ProgressView().tint(.white)
-                } else {
-                    Text(purchaseTitle)
-                        .font(AppFont.semibold(15))
-                }
-            }
-            .foregroundStyle(AppTheme.primaryActionForeground(enabled: premium.proProduct != nil))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 15)
-            .background {
-                Group {
-                    if premium.proProduct != nil {
-                        LinearGradient(
-                            colors: [AppTheme.brandGradientEnd, AppTheme.quoteGradientMid],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+    private var purchaseButtons: some View {
+        VStack(spacing: 10) {
+            if premium.products.isEmpty {
+                purchaseLabel(L10n.Premium.buyFallback, emphasized: false)
+            } else {
+                ForEach(premium.products, id: \.id) { product in
+                    Button {
+                        Task { await runPurchase(product) }
+                    } label: {
+                        purchaseLabel(
+                            BillingProduct.planTitle(for: product.id, price: product.displayPrice),
+                            emphasized: product.id == BillingProduct.monthly
                         )
-                    } else {
-                        AppTheme.primaryActionFill(enabled: false)
                     }
+                    .buttonStyle(.plain)
+                    .disabled(premium.purchaseInFlight || premium.isLoading)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
         }
-        .buttonStyle(.plain)
-        .disabled(premium.purchaseInFlight || premium.isLoading || premium.proProduct == nil)
+    }
+
+    private func purchaseLabel(_ title: String, emphasized: Bool) -> some View {
+        HStack {
+            if premium.purchaseInFlight && emphasized {
+                ProgressView().tint(.white)
+            } else {
+                Text(title)
+                    .font(AppFont.semibold(15))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+            }
+        }
+        .foregroundStyle(AppTheme.primaryActionForeground(enabled: emphasized || !premium.products.isEmpty))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 15)
+        .padding(.horizontal, 12)
+        .background {
+            Group {
+                if emphasized {
+                    LinearGradient(
+                        colors: [AppTheme.brandGradientEnd, AppTheme.quoteGradientMid],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                } else {
+                    AppTheme.primaryActionFill(enabled: !premium.products.isEmpty)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
     }
 
     private var restoreButton: some View {
@@ -190,18 +213,32 @@ struct PaywallView: View {
             .font(AppFont.regular(11))
             .foregroundStyle(AppTheme.mutedOnBackground.opacity(0.85))
             .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
     }
 
-    private var purchaseTitle: String {
-        if let product = premium.proProduct {
-            return L10n.Premium.buy(product.displayPrice)
+    private var legalLinks: some View {
+        VStack(spacing: 10) {
+            Link(destination: AboutContent.privacyPolicyURL) {
+                Text(L10n.Premium.privacyLink)
+                    .font(AppFont.medium(13))
+                    .underline()
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
+            Link(destination: AboutContent.termsURL) {
+                Text(L10n.Premium.termsLink)
+                    .font(AppFont.medium(13))
+                    .underline()
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
         }
-        return L10n.Premium.buyFallback
+        .foregroundStyle(AppTheme.titleOnBackground)
     }
 
-    private func runPurchase() async {
-        let ok = await premium.purchasePro(session: session)
+    private func runPurchase(_ product: Product) async {
+        let ok = await premium.purchase(product, session: session)
         if ok {
             onUnlocked?()
             dismiss()

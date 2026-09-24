@@ -195,6 +195,61 @@ class BillingAppleVerifyApiTest extends TestCase
         $this->assertStringStartsWith('sk_', (string) $user->apple_original_transaction_id);
     }
 
+    public function test_subscription_sets_an_expiry_and_lifetime_does_not(): void
+    {
+        $user = User::factory()->create([
+            'is_premium' => false,
+        ]);
+
+        $expiresAt = now()->addMonth()->startOfSecond();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/billing/apple/verify', [
+                'product_id' => 'wedding_pro_monthly',
+                'transaction_id' => '2000000999000001',
+                'original_transaction_id' => '1000000999000001',
+                'signed_transaction' => $this->fakeSignedTransaction(
+                    productId: 'wedding_pro_monthly',
+                    transactionId: '2000000999000001',
+                    originalTransactionId: '1000000999000001',
+                    extraClaims: ['expiresDate' => $expiresAt->getTimestampMs()],
+                ),
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.is_premium', true);
+
+        $user->refresh();
+
+        $this->assertTrue($user->isPremium());
+        $this->assertSame('wedding_pro_monthly', $user->premium_product_id);
+        $this->assertNotNull($user->premium_expires_at);
+        $this->assertTrue($user->premium_expires_at->equalTo($expiresAt));
+    }
+
+    public function test_expired_subscription_is_rejected(): void
+    {
+        $user = User::factory()->create([
+            'is_premium' => false,
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/billing/apple/verify', [
+                'product_id' => 'wedding_pro_monthly',
+                'transaction_id' => '2000000999000002',
+                'original_transaction_id' => '1000000999000002',
+                'signed_transaction' => $this->fakeSignedTransaction(
+                    productId: 'wedding_pro_monthly',
+                    transactionId: '2000000999000002',
+                    originalTransactionId: '1000000999000002',
+                    extraClaims: ['expiresDate' => now()->subDay()->getTimestampMs()],
+                ),
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['original_transaction_id']);
+
+        $this->assertFalse($user->fresh()->isPremium());
+    }
+
     private function fakeSignedTransaction(
         string $productId,
         string $transactionId,

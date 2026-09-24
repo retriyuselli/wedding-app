@@ -128,16 +128,16 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('wedding-events', WeddingEventController::class)
             ->parameters(['wedding-events' => 'weddingEvent']);
 
-        Route::middleware('premium')->group(function () {
-            Route::apiResource('customer-preparation-sections', CustomerPreparationSectionController::class)
-                ->parameters(['customer-preparation-sections' => 'customerPreparationSection']);
+        // Checklist is available to every account. Marking a task done is capped
+        // at billing.free_checklist_done_limit unless the user is Wedding Pro.
+        Route::apiResource('customer-preparation-sections', CustomerPreparationSectionController::class)
+            ->parameters(['customer-preparation-sections' => 'customerPreparationSection']);
 
-            Route::get('customer-preparation-tasks/summary', [CustomerPreparationTaskController::class, 'summary']);
-            Route::apiResource('customer-preparation-tasks', CustomerPreparationTaskController::class)
-                ->parameters(['customer-preparation-tasks' => 'customerPreparationTask']);
-            Route::patch('customer-preparation-tasks/{customerPreparationTask}/toggle', [CustomerPreparationTaskController::class, 'toggle']);
-            Route::patch('customer-preparation-sub-tasks/{customerPreparationSubTask}/toggle', [CustomerPreparationSubTaskController::class, 'toggle']);
-        });
+        Route::get('customer-preparation-tasks/summary', [CustomerPreparationTaskController::class, 'summary']);
+        Route::apiResource('customer-preparation-tasks', CustomerPreparationTaskController::class)
+            ->parameters(['customer-preparation-tasks' => 'customerPreparationTask']);
+        Route::patch('customer-preparation-tasks/{customerPreparationTask}/toggle', [CustomerPreparationTaskController::class, 'toggle']);
+        Route::patch('customer-preparation-sub-tasks/{customerPreparationSubTask}/toggle', [CustomerPreparationSubTaskController::class, 'toggle']);
 
         Route::middleware('premium')->group(function () {
             Route::apiResource('family-members', FamilyMemberController::class)

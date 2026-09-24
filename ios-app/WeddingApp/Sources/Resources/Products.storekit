@@ -37,7 +37,57 @@
     ]
   },
   "subscriptionGroups" : [
+    {
+      "id" : "20F2A1B1",
+      "localizations" : [
+        {
+          "description" : "Akses Wedding Pro selama masa langganan.",
+          "displayName" : "Wedding Pro",
+          "locale" : "id"
+        },
+        {
+          "description" : "Wedding Pro access for the subscription period.",
+          "displayName" : "Wedding Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "Wedding Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
 
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "D2E3F4A5B6C74789A0B1C2D6",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Wedding Pro selama 1 bulan.",
+              "displayName" : "Wedding Pro Bulanan",
+              "locale" : "id"
+            },
+            {
+              "description" : "Wedding Pro for 1 month.",
+              "displayName" : "Wedding Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wedding_pro_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Wedding Pro Monthly",
+          "subscriptionGroupID" : "20F2A1B1",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
   ],
   "version" : {
     "major" : 3,

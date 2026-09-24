@@ -222,6 +222,7 @@ class UsersTable
                             'is_premium' => true,
                             'premium_product_id' => $productId,
                             'premium_activated_at' => $record->premium_activated_at ?? now(),
+                            'premium_expires_at' => null,
                             // Keep existing Apple entitlement key if present; never invent fake Apple IDs.
                         ])->save();
                     }),
@@ -240,6 +241,7 @@ class UsersTable
                             'is_premium' => false,
                             'premium_product_id' => null,
                             'premium_activated_at' => null,
+                            'premium_expires_at' => null,
                             'apple_original_transaction_id' => null,
                         ])->save();
                     }),
@@ -282,6 +284,7 @@ class UsersTable
                                     'is_premium' => true,
                                     'premium_product_id' => $productId,
                                     'premium_activated_at' => now(),
+                                    'premium_expires_at' => null,
                                 ])->save();
                             });
                         }),
@@ -304,6 +307,7 @@ class UsersTable
                                     'is_premium' => false,
                                     'premium_product_id' => null,
                                     'premium_activated_at' => null,
+                                    'premium_expires_at' => null,
                                     'apple_original_transaction_id' => null,
                                 ])->save();
                             });

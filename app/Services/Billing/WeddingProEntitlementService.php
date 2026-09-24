@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -38,7 +39,9 @@ class WeddingProEntitlementService
             throw new InvalidArgumentException('Produk tidak dikenali sebagai Wedding Pro.');
         }
 
-        return DB::transaction(function () use ($user, $entitlementKey, $productId): array {
+        $expiresAt = $this->subscriptionExpiresAt($productId, $payload);
+
+        return DB::transaction(function () use ($user, $entitlementKey, $productId, $expiresAt): array {
             /** @var User $user */
             $user = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
 
@@ -60,8 +63,12 @@ class WeddingProEntitlementService
                 ]);
             }
 
-            if ($user->isPremium()
-                && $user->apple_original_transaction_id === $entitlementKey) {
+            if ($user->apple_original_transaction_id === $entitlementKey && $user->is_premium) {
+                $user->forceFill([
+                    'premium_product_id' => $productId,
+                    'premium_expires_at' => $expiresAt,
+                ])->save();
+
                 return [
                     'user' => $user->fresh(),
                     'message' => 'Wedding Pro sudah aktif.',
@@ -73,6 +80,7 @@ class WeddingProEntitlementService
                 'is_premium' => true,
                 'premium_product_id' => $productId,
                 'premium_activated_at' => $user->premium_activated_at ?? now(),
+                'premium_expires_at' => $expiresAt,
                 'apple_original_transaction_id' => $entitlementKey,
             ])->save();
 
@@ -124,6 +132,33 @@ class WeddingProEntitlementService
         return 'jws_'.hash('sha256', $signedTransaction);
     }
 
+    /**
+     * Lifetime unlocks have no expiry. Subscriptions must include a future expiresDate.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function subscriptionExpiresAt(string $productId, array $payload): ?Carbon
+    {
+        if (! in_array($productId, config('billing.subscription_product_ids', []), true)) {
+            return null;
+        }
+
+        $raw = $payload['expiresDate'] ?? null;
+        $expiresAt = null;
+
+        if (is_numeric($raw)) {
+            $expiresAt = Carbon::createFromTimestampMs((int) $raw);
+        } elseif (is_string($raw) && trim($raw) !== '') {
+            $expiresAt = Carbon::parse($raw);
+        }
+
+        if ($expiresAt === null || $expiresAt->isPast()) {
+            throw new InvalidArgumentException('Langganan Wedding Pro sudah berakhir.');
+        }
+
+        return $expiresAt;
+    }
+
     public function isUsableAppleTransactionId(string $originalTransactionId): bool
     {
         $normalized = trim($originalTransactionId);
@@ -146,6 +181,7 @@ class WeddingProEntitlementService
             'is_premium' => false,
             'premium_product_id' => null,
             'premium_activated_at' => null,
+            'premium_expires_at' => null,
             'apple_original_transaction_id' => null,
         ])->save();
     }

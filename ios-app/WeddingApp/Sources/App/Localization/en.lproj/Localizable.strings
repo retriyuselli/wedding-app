@@ -1177,9 +1177,13 @@
 "premium.benefit_partner" = "Let your partner use Pro on the data you share";
 "premium.benefit_visibility" = "Control who can see your wedding data";
 "premium.buy" = "Unlock Pro · %@";
+"premium.plan_monthly" = "Wedding Pro · 1 month · %@";
+"premium.plan_lifetime" = "Wedding Pro · one-time · %@";
 "premium.buy_fallback" = "Unlock Wedding Pro";
 "premium.restore" = "Restore Purchases";
-"premium.footnote" = "One-time purchase linked to your Apple ID. If you switch Wedding App accounts, tap Restore Purchases — Pro will activate on the account you’re signed into.";
+"premium.footnote" = "Payment is charged to your Apple ID at confirmation. The subscription renews automatically unless turned off at least 24 hours before the end of the current period. Your account is charged for renewal within 24 hours before the period ends. Manage or cancel in your Apple ID account settings. A one-time purchase stays active and does not renew.";
+"premium.privacy_link" = "Privacy Policy";
+"premium.terms_link" = "Terms of Use (EULA)";
 "premium.product_unavailable" = "Wedding Pro is not available from the App Store yet. Check your connection, then tap Reload products. If it still fails, the IAP may not be Ready in App Store Connect.";
 "premium.reload_products" = "Reload products";
 "premium.purchase_pending" = "Purchase is pending confirmation.";
